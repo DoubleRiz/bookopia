@@ -1,6 +1,6 @@
 # Modèle de données
 
-Le schéma Prisma (`packages/db/schema.prisma`) fait foi pour les types exacts. Ce document porte les **invariants et les justifications** qu'un schéma ne peut pas exprimer.
+Le schéma Prisma (`packages/db/prisma/schema.prisma`) fait foi pour les types exacts. Ce document porte les **invariants et les justifications** qu'un schéma ne peut pas exprimer.
 
 ## Vue d'ensemble
 
