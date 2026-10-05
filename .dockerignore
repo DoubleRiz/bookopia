@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+.env
+.git
+donnees
+docs
+maquettes
+packages/db/src/generated

@@ -1,0 +1,64 @@
+# `docker compose up` : la base seule, pour développer avec `npm run dev`.
+# `docker compose --profile app up --build` : l'application complète, comme sur le VPS.
+
+x-env-app: &env-app
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+  DOSSIER_FICHIERS: /donnees/fichiers
+  PORT_API: 3000
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - base:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: infra/node.Dockerfile
+    command: sh -c "npm run db:deploy -w packages/db && npm start -w apps/api"
+    environment: *env-app
+    volumes:
+      - fichiers:/donnees/fichiers
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: infra/node.Dockerfile
+    command: npm start -w apps/worker
+    environment: *env-app
+    volumes:
+      - fichiers:/donnees/fichiers
+    depends_on:
+      api:
+        condition: service_started
+
+  web:
+    profiles: [app]
+    build:
+      context: .
+      dockerfile: infra/web.Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+
+volumes:
+  base:
+  fichiers:

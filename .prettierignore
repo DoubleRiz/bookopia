@@ -1,0 +1,6 @@
+docs/
+maquettes/
+*.md
+package-lock.json
+packages/db/src/generated/
+dist/
