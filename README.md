@@ -30,6 +30,7 @@ apps/api        API HTTP, authentification, règles métier
 apps/worker     ingestion des photos et rendu PDF
 packages/db     schéma Prisma, migrations
 packages/shared types et validations partagés
+infra/          Dockerfiles et configuration nginx
 docs/           documentation technique
 ```
 
@@ -41,17 +42,17 @@ Le **worker** est un processus séparé parce que traiter trois cents photos pre
 
 ### Prérequis
 
-- Node.js 20 ou supérieur
-- Docker et Docker Compose
+- Node.js 24 (voir `.nvmrc`) et npm 10 ou supérieur
+- Docker et Docker Compose v2
 
 ### Installation
 
 ```bash
-git clone <url-du-depot>
+git clone https://github.com/DoubleRiz/bookopia.git
 cd bookopia
 cp .env.example .env
-npm install
-docker compose up -d
+npm install                          # génère aussi le client Prisma
+docker compose up -d                 # lance la base PostgreSQL seule
 npm run db:migrate -w packages/db
 ```
 
@@ -63,12 +64,23 @@ npm run dev -w apps/api      # http://localhost:3000
 npm run dev -w apps/worker
 ```
 
+Le front appelle l'API sous `/api`, relayé par le proxy de Vite. Si le port 3000 est déjà pris, changer `PORT_API` dans `.env` : l'API et le proxy le lisent tous les deux.
+
+### Application complète en conteneurs
+
+```bash
+docker compose --profile app up -d --build   # http://localhost:8080
+```
+
+Lance la base, l'API, le worker et le front servi par nginx, comme sur le serveur. Les migrations sont appliquées au démarrage de l'API.
+
 ### Vérifications
 
 ```bash
-npm run lint
+npm run lint         # ESLint et Prettier
 npm run typecheck
-npm test
+npm test             # Vitest
+npm run format       # reformate le code avec Prettier
 ```
 
 ---
