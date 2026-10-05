@@ -59,10 +59,11 @@ npm run db:migrate -w packages/db
 ### Développement
 
 ```bash
-npm run dev -w apps/web      # http://localhost:5173
-npm run dev -w apps/api      # http://localhost:3000
-npm run dev -w apps/worker
+docker compose up -d         # la base, si elle n'est pas déjà lancée
+npm run dev                  # web, API et worker en parallèle
 ```
+
+Le front est sur http://localhost:5173, l'API sur http://localhost:3000. Chaque ligne de journal est préfixée par le nom de l'application ; Ctrl+C arrête les trois. Pour lancer une application seule : `npm run dev -w apps/api`.
 
 Le front appelle l'API sous `/api`, relayé par le proxy de Vite. Si le port 3000 est déjà pris, changer `PORT_API` dans `.env` : l'API et le proxy le lisent tous les deux.
 
