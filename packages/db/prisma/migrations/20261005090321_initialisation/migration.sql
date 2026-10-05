@@ -1,0 +1,2 @@
+-- Migration volontairement vide : elle pose l'historique des migrations
+-- (table _prisma_migrations) avant l'arrivée du schéma métier.
