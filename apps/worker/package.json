@@ -10,10 +10,8 @@
   "dependencies": {
     "@bookopia/db": "*",
     "@bookopia/shared": "*",
-    "exifr": "^7.1.3",
     "pdf-lib": "^1.17.1",
     "pg": "^8.23.1",
-    "sharp": "^0.35.5",
     "tsx": "^4.23.15"
   },
   "devDependencies": {

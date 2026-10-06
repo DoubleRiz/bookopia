@@ -11,7 +11,7 @@ const prisma = creerClientPrisma(URL_BASE);
 // Échouer au démarrage plutôt qu'au premier job : Compose relance le conteneur et l'erreur est visible tout de suite.
 await prisma.$queryRaw`SELECT 1`;
 
-// La boucle de dépilage arrivera avec le premier type de tâche (ingestion).
+// La boucle de dépilage arrivera avec le rendu PDF, qui lira la table `export`.
 // D'ici là, le processus reste vivant pour que Compose ne le relance pas en boucle.
 console.log("worker démarré, base joignable");
 setInterval(() => {}, 1 << 30);
