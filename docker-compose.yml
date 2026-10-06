@@ -54,11 +54,18 @@ services:
     build:
       context: .
       dockerfile: infra/web.Dockerfile
+    environment:
+      ADRESSE_SITE: ${ADRESSE_SITE:-:80}
     ports:
-      - "8080:80"
+      - "${PORT_HTTP:-8080}:80"
+      - "${PORT_HTTPS:-8443}:443"
+    volumes:
+      - caddy:/data
     depends_on:
       - api
 
 volumes:
   base:
   fichiers:
+  # Certificats obtenus par Caddy : les perdre ferait redemander un certificat à chaque redémarrage.
+  caddy:

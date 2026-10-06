@@ -1,0 +1,15 @@
+# ADRESSE_SITE vaut « :80 » par défaut (voir docker-compose.yml) : HTTP simple, pour le poste de développement.
+# ADRESSE_SITE = nom de domaine : Caddy obtient et renouvelle le certificat Let's Encrypt.
+{$ADRESSE_SITE} {
+	# handle_path retire le préfixe /api avant de relayer à Fastify.
+	# Caddy transmet le flux SSE au fil de l'eau sans réglage supplémentaire.
+	handle_path /api/* {
+		reverse_proxy api:3000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -3,6 +3,6 @@ WORKDIR /app
 COPY . .
 RUN npm ci && npm run build -w apps/web
 
-FROM nginx:1-alpine
-COPY infra/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=construction /app/apps/web/dist /usr/share/nginx/html
+FROM caddy:2-alpine
+COPY infra/Caddyfile /etc/caddy/Caddyfile
+COPY --from=construction /app/apps/web/dist /srv
