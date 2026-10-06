@@ -6,28 +6,26 @@
 Navigateur                     React + Vite
    │  HTTP (REST, JSON)
    ▼
-API                            Fastify + Prisma
-   │  écrit en base, dépose une tâche
+API                            Fastify + Prisma + sharp
+   │  traite les photos à l'import, passe l'export en « demande »
    ▼
-PostgreSQL                     données + file d'attente
+PostgreSQL                     données + file (table export)
    │  SELECT … FOR UPDATE SKIP LOCKED
    ▼
-Worker                         Node + sharp + pdf-lib
-   │  écrit le résultat en base, les fichiers sur disque
-   └─► LISTEN/NOTIFY ─► SSE ─► Navigateur (avancement)
+Worker                         Node + pdf-lib
+   │  écrit le statut en base, le PDF sur disque
+   └─► LISTEN/NOTIFY ─► SSE ─► Navigateur (avancement du rendu)
 ```
 
-Tout tourne dans Docker Compose : `web`, `api`, `worker`, `db`, plus un volume pour les fichiers. Le même fichier Compose sert en local et sur le serveur.
+Tout tourne dans Docker Compose : `web`, `api`, `worker`, `db`, plus un volume pour les fichiers. Le conteneur `web` est Caddy : il sert le front compilé, relaie `/api/*` vers Fastify et gère le HTTPS, certificat Let's Encrypt compris. Le même fichier Compose sert en local et sur le serveur.
 
 | Composant | Rôle |
 |---|---|
-| `apps/web` | Interface, moteur de gabarits, écran de curation |
-| `apps/api` | Authentification, autorisation, règles métier, dépôt des tâches, flux SSE |
-| `apps/worker` | Ingestion des photos, rendu PDF, purges |
+| `apps/web` | Interface, moteur de gabarits, reprise d'un envoi interrompu |
+| `apps/api` | Authentification, autorisation, règles métier, traitement des photos à l'import, flux SSE |
+| `apps/worker` | Rendu PDF, purge des fichiers orphelins |
 | PostgreSQL | Données, contraintes, file d'attente |
 | Disque | Originaux, vignettes, PDF — monté en volume |
-
-L'application ne dépend d'aucun service tiers.
 
 ---
 
@@ -35,73 +33,108 @@ L'application ne dépend d'aucun service tiers.
 
 Le navigateur n'a aucun accès direct à la base. Tout passe par l'API, qui porte :
 
-- **L'authentification** et l'autorisation. Chaque requête vérifie que la ressource visée appartient à un projet dont l'appelant est propriétaire — une comparaison sur `projetId`, colonne indexée présente sur toutes les tables de l'arbre projet.
-- **Les règles métier** : création de la couverture avec le projet, copie de la géométrie du gabarit dans les emplacements, renumérotation des doubles pages, propagation de `projetId`.
+- **L'authentification** : JWT seul, mot de passe haché en argon2id. Pas de jeton de rafraîchissement ni de révocation côté serveur — choix de simplicité assumé.
+- **L'autorisation**. L'identifiant utilisateur vient du jeton vérifié, jamais d'un paramètre. Aucun service n'appelle `prisma` directement : tout passe par un dépôt construit à partir de l'utilisateur authentifié, et une règle ESLint interdit l'import de `prisma` ailleurs. La vérification est une comparaison sur `projetId`, colonne indexée présente sur toutes les tables de l'arbre projet.
+- **Les règles métier** : création de la couverture et de la 4e avec le projet, copie de la géométrie du gabarit dans les emplacements, renumérotation des doubles pages intérieures, propagation de `projetId`.
+- **Le traitement des photos à l'import**, de façon synchrone.
 - **La validation** de toute entrée, avec Zod.
-- **Le dépôt des tâches** destinées au worker.
-- **Le flux SSE** qui pousse l'avancement vers le navigateur.
+- **Le flux SSE** qui pousse l'avancement du rendu vers le navigateur.
 
-Les contraintes d'unicité, d'intégrité référentielle et les vérifications simples vivent dans PostgreSQL. Il n'y a pas de triggers : la logique procédurale est en TypeScript.
+Des tests d'accès vérifient l'autorisation : deux utilisateurs, chacun ne voit que ses projets.
+
+Les contraintes d'unicité, d'intégrité référentielle et les vérifications simples vivent dans PostgreSQL. Il n'y a pas de triggers : la logique procédurale est en TypeScript. → [`modele-donnees.md`](modele-donnees.md#contraintes-hors-schéma-prisma)
+
+### Routes
+
+| Opération | Route |
+|---|---|
+| Créer un projet, le renommer | `POST /api/projets`, `PATCH /api/projets/:id` |
+| Créer, déplacer, supprimer une double page | `/api/projets/:id/doubles-pages` |
+| Changer le gabarit d'une double page | `PATCH /api/doubles-pages/:id` |
+| Poser une photo, la recadrer | `PATCH /api/emplacements/:id` |
+| Supprimer une photo | `DELETE /api/photos/:id` |
+| Modifier la couverture ou la 4e | Mêmes routes que les doubles pages (rôle `couverture` / `quatrieme`) |
+| Importer des fichiers (traitement synchrone) | `POST /api/projets/:id/imports` |
+| Démarrer un export PDF | `POST /api/projets/:id/exports` |
+| Suivre l'avancement du rendu | `GET /api/projets/:id/avancement` (SSE) |
+| Orchestrer le parcours Google Photos | `/api/projets/:id/google-photos/*` |
+
+---
+
+## L'import
+
+Sans curation, il ne reste qu'une vignette et une date à extraire : un travail court, fait dans la requête. Le passer par le worker coûterait une table de tâches, des reprises et un état « en traitement » pour rien.
+
+1. Le front envoie les fichiers par lots à `POST /api/projets/:id/imports` et affiche l'avancement de l'envoi (n sur N).
+2. Pour chaque fichier : empreinte SHA-256 calculée, `sharp` produit la vignette et lit dimensions et date de prise de vue, l'original est redimensionné à ce que 300 DPI exigent pour le plus grand cadre du catalogue, les fichiers sont écrits sur le volume, la ligne `Photo` est créée.
+3. Un doublon strict est rejeté par l'unicité `(projetId, empreinteFichier)`.
+4. L'API répond avec les photos créées et la liste des fichiers refusés.
+
+Une photo n'existe en base qu'une fois traitée : il n'y a pas d'état « en traitement ».
+
+**Échecs** : un fichier trop lourd ou d'un format non pris en charge est refusé à la sélection par le front, et l'API revérifie. Un fichier corrompu n'est détecté qu'à l'ouverture par `sharp` : aucune ligne n'est créée, son nom est renvoyé au front. Pas de reprise : le fichier est resté sur le disque du Créateur, un réessai serveur n'aurait rien à traiter.
 
 ---
 
 ## Le worker
 
-Un processus séparé, parce que traiter trois cents photos prend plusieurs minutes alors que l'API doit répondre en quelques millisecondes. L'API dépose une tâche et répond immédiatement ; le worker dépile et travaille ; l'écran ne se fige jamais.
+Un processus séparé, parce qu'un rendu PDF prend trop longtemps pour tenir dans une requête. L'API enregistre la demande et répond immédiatement ; le worker dépile et rend ; l'écran ne se fige jamais.
 
 Le worker ne reçoit jamais rien du navigateur. La seule chose qui les relie est la file.
 
-Il traite quatre familles de travaux :
-
 | Travail | Grain | Contenu |
 |---|---|---|
-| Ingestion | Un job par photo | Vignettes, extraction EXIF, dHash, variance du laplacien, analyse d'histogramme |
-| Similarité | Un job par projet | Regroupement des quasi-doublons, une fois l'ingestion terminée |
-| Rendu PDF | Un job par projet | Composition avec `pdf-lib` |
-| Google Photos | Un job par média | Copie des fichiers — lot ultérieur |
-
-Il assure aussi les purges périodiques : exports expirés (environ sept jours) et fichiers orphelins.
-
-Les algorithmes d'analyse d'image sont écrits à la main — une quarantaine de lignes chacun — et non importés.
+| Rendu PDF | Un job par export | Composition avec `pdf-lib` |
+| Purge | Planifié | Fichiers orphelins |
 
 ---
 
 ## La file d'attente
 
-Une table PostgreSQL. Le worker dépile avec `SELECT … FOR UPDATE SKIP LOCKED` : plusieurs instances peuvent tourner côte à côte sans se marcher dessus, et l'état d'un travail s'inspecte en SQL ordinaire.
+La table `export` est sa propre file : un seul export par projet, son statut dit où il en est. Pas de seconde table à garder synchrone.
 
-**Reprises** : trois tentatives espacées de 2 s, 10 s puis 30 s. Au-delà, la photo bascule en échec avec un motif. Le compteur et la date de prochaine tentative sont portés par la ligne `Photo`.
+```sql
+SELECT * FROM export
+WHERE statut = 'demande'
+ORDER BY demande_le
+FOR UPDATE SKIP LOCKED
+LIMIT 1;
+```
 
-**Enchaînement ingestion → similarité** : à la fin de chaque job d'ingestion, dans la même transaction, le worker vérifie s'il reste des photos `en_attente` dans le projet. S'il n'en reste aucune, il dépose le job de similarité. Une contrainte d'unicité sur `(projetId, type)` pour les jobs non démarrés empêche d'en déposer deux.
-
----
-
-## La similarité
-
-Repérer les quasi-doublons demande de comparer chaque photo à toutes les autres : ce n'est pas un travail par photo, mais par projet.
-
-1. **Comparaison de toutes les paires** par distance de Hamming entre dHash. Pour 300 photos : environ 45 000 comparaisons d'entiers de 64 bits, quelques millisecondes.
-2. **Deux photos sont liées** si la distance est inférieure au seuil — environ 10 bits sur 64, à calibrer sur un jeu de photos réel — **et** si leurs `priseLe` sont proches de quelques minutes. La fenêtre de temps limite les faux positifs et l'effet de chaîne (A ressemble à B, B à C, A pas à C).
-3. **Les groupes** sont formés par union-find, écrit à la main.
-4. **Dans chaque groupe**, la photo au meilleur `scoreNettete` est gardée ; les autres reçoivent une suggestion « similaire ».
-
-Le job réécrit `groupeSimilarite` pour tout le projet : il est recalculable à volonté et se rejoue après chaque nouvel import. C'est une fonction pure sur une liste de photos, testable unitairement.
-
-**Alternative écartée** : comparer dans le job d'ingestion de chaque photo, avec les photos déjà prêtes. Deux photos traitées en parallèle par deux workers ne se voient pas, et le résultat dépend de l'ordre d'arrivée — il faudrait un verrou par projet pour le rendre juste.
+1. `POST /api/projets/:id/exports` passe la ligne `export` en `demande`.
+2. Le worker la prend, la passe `en_cours`, rend le PDF sous une nouvelle clé, puis `reussi`, et remplace l'ancien fichier.
+3. En cas d'échec : statut `echec` avec un `messageErreur` libre. Le PDF précédent reste téléchargeable, le Créateur relance quand il veut.
 
 ---
 
 ## L'avancement
 
-Le worker écrit son résultat en base et émet un `NOTIFY`. L'API écoute et pousse l'événement au navigateur sur une connexion SSE ouverte pendant l'import ou le rendu. Le repli, si la connexion ne tient pas, est un polling sur l'état du projet.
+Chaque changement de statut de l'export émet un `NOTIFY`. L'API écoute et pousse l'événement au navigateur sur une connexion SSE ouverte pendant le rendu. Le repli, si la connexion ne tient pas, est un polling sur l'état de l'export.
 
 ---
 
 ## Le rendu PDF
 
-`pdf-lib` construit le PDF page par page, en millimètres, et écrit les boîtes attendues par un imprimeur : MediaBox, TrimBox, BleedBox, fonds perdus et traits de coupe.
+Une seule source de vérité géométrique, deux consommateurs :
 
-Il existe donc deux moteurs de rendu — l'aperçu HTML dans le navigateur et le PDF — qui doivent produire le même résultat. **Le recadrage est le point à valider en premier** : c'est là qu'ils risquent le plus de diverger.
+```
+Gabarit (JSON, mm)  ──┬──►  rendu React    ──►  écran
+                      └──►  rendu pdf-lib  ──►  PDF
+```
+
+Les deux moteurs doivent produire le même résultat. **Le recadrage est le point à valider en premier** : c'est là qu'ils risquent le plus de diverger.
+
+Le rendu PDF est une fonction pure — `rendre(projet) → Buffer` — qui vit dans `packages/shared` et se teste sans navigateur, sans base et sans conteneur.
+
+| Contrainte d'impression | Traitement |
+|---|---|
+| Boîtes PDF | MediaBox, TrimBox et BleedBox posées explicitement |
+| Fond perdu | 3 mm sur les photos pleine page, plus traits de coupe |
+| 300 DPI effectifs | `largeurPx / largeurMm × 25,4 ≥ 300` par emplacement photo, avertissement sinon |
+| Colorimétrie | RVB, pas de conversion CMJN : l'imprimeur convertit |
+| Typographie | Mêmes fichiers de police des deux côtés, mesure via `fontkit`, limite de caractères plutôt que retour à la ligne automatique |
+
+Ces contraintes sont intégrées dès le premier lot.
 
 ---
 
@@ -109,13 +142,68 @@ Il existe donc deux moteurs de rendu — l'aperçu HTML dans le navigateur et le
 
 Originaux, vignettes et PDF sont écrits sur le disque du serveur, dans un volume Docker.
 
-Ils ne sont jamais servis par l'API : celle-ci vérifie l'autorisation puis délivre une **URL signée à durée courte**. La sauvegarde doit couvrir le volume et la base de façon cohérente.
+Ils ne sont jamais servis par l'API : celle-ci vérifie l'autorisation puis délivre une **URL signée à durée courte**.
+
+L'accès passe par une interface unique, implémentée sur disque aujourd'hui, remplaçable par un stockage objet sans toucher au reste :
+
+```ts
+interface StockageFichiers {
+  ranger(chemin: string, contenu: Buffer): Promise<void>;
+  lire(chemin: string): Promise<Buffer>;
+  supprimer(chemin: string): Promise<void>;
+  urlSignee(chemin: string, dureeSecondes: number): Promise<string>;
+}
+```
+
+Jeu de test courant à 30 photos, 300 pour la démonstration.
 
 ---
 
 ## Hébergement
 
-VPS KVM (Hostinger, France). Déploiement par Docker Compose, à l'identique du poste de développement.
+VPS KVM chez Hostinger (France), 2 vCPU / 8 Go / 100 Go, souscrit pour la période d'examen. Après la soutenance, l'application continue de tourner en local. Déploiement par Docker Compose et le profil `app`, à l'identique du poste de développement : seules `ADRESSE_SITE`, `PORT_HTTP` et `PORT_HTTPS` changent dans le `.env`.
+
+| Point | Traitement |
+|---|---|
+| TLS | Caddy, certificat Let's Encrypt automatique |
+| Base | Port lié à `127.0.0.1` : Docker contourne `ufw`, le pare-feu seul ne suffirait pas |
+| Pare-feu | `ufw` : 80, 443 et SSH uniquement |
+| SSH | Authentification par clé, mot de passe désactivé |
+| Mises à jour | `unattended-upgrades` |
+| Secrets | Fichier `.env` hors dépôt |
+| Sauvegardes | `pg_dump` quotidien et archive du volume `fichiers`, hors du VPS |
+| Déploiement | Par Compose uniquement, jamais depuis le panneau d'administration |
+
+---
+
+## Intégrations
+
+### Google Photos — Picker API
+
+Chemin secondaire, prévu pour un lot ultérieur : l'envoi de fichiers reste le parcours par défaut.
+
+- Création de session, suivi, rapatriement et traitement des fichiers dans l'API, comme un import de fichiers.
+- Les `baseUrl` expirent en une heure environ : les fichiers sont copiés immédiatement sur le volume.
+- Scope sensible : rester en mode *Testing* dans la Google Cloud Console, avec le jury en utilisateurs de test.
+- URL de redirection OAuth à déclarer pour le local et pour le domaine du VPS.
+- Plan B : import d'un export Google Takeout (ZIP et JSON de métadonnées).
+
+### Réalité augmentée — conditionnelle
+
+À ne démarrer que si tout le reste est terminé.
+
+- Bibliothèque : MindAR (version épinglée), alternatives `webarkit` ou AR.js.
+- Cibles `.mind` précompilées par le worker, une par double page.
+- HTTPS obligatoire pour la caméra : Caddy en production, certificat de développement en local.
+- Cibles riches en texture, papier mat obligatoire.
+- Les champs AR sont absents du modèle : trois colonnes à ajouter le moment venu.
+
+---
+
+## Séquençage
+
+1. **Le socle d'abord** : base, migrations, authentification, une route de bout en bout, composition Docker fonctionnelle.
+2. **Un PDF laid mais complet dès la fin du premier lot fonctionnel**, même avec un gabarit unique codé en dur et trois photos.
 
 ---
 
@@ -123,11 +211,12 @@ VPS KVM (Hostinger, France). Déploiement par Docker Compose, à l'identique du 
 
 1. Le recadrage rend le même résultat dans l'aperçu HTML et dans le PDF.
 2. Les contraintes d'impression sont correctement écrites par `pdf-lib`.
-3. La chaîne dépôt de tâche → worker → `NOTIFY` → SSE fonctionne de bout en bout sur une photo.
+3. La chaîne demande d'export → worker → `NOTIFY` → SSE fonctionne de bout en bout.
 
 ## Questions ouvertes
 
-- Mécanisme d'authentification (session serveur ou jeton) et durée de vie.
-- Profil colorimétrique du PDF : sRGB ou CMJN, et moment de la conversion.
-- Stratégie de sauvegarde du volume de fichiers.
-- Google Photos : intégration par la Picker API uniquement.
+- Le `clip` de pdf-lib permet-il le recadrage sans ré-encodage ? À trancher par le code, semaines 1-2.
+- Durée de souscription du VPS.
+- Authentification : bibliothèque ou JWT écrit à la main.
+- Changement de gabarit avec perte de cadres : quelle photo est conservée.
+- Catalogue de thèmes : combien, et lesquels.

@@ -4,7 +4,7 @@
 
 Le projet est **en français** : documentation, commentaires, messages de commit, libellés d'interface, noms de branches.
 
-Les **identifiants de code suivent le vocabulaire métier français** : `doublePage`, `emplacement`, `gabarit`, `reserve`, `etatTraitement`. Le métier est français, les spécifications sont françaises, la soutenance sera française — traduire créerait un décalage permanent entre le code et tout le reste.
+Les **identifiants de code suivent le vocabulaire métier français** : `doublePage`, `emplacement`, `gabarit`, `reserve`, `modeleLivre`. Le métier est français, les spécifications sont françaises, la soutenance sera française — traduire créerait un décalage permanent entre le code et tout le reste.
 
 Restent en anglais les termes techniques universels sans équivalent métier : `id`, `request`, `response`, `cache`, ainsi que ce qu'un outil impose (`createdAt` de Prisma, hooks React).
 
@@ -14,11 +14,11 @@ Coût assumé : les noms sont parfois mixtes (`doublePage.createdAt`), et un rel
 
 | Élément | Casse | Exemple |
 |---|---|---|
-| Variables, fonctions | camelCase | `calculerDHash` |
+| Variables, fonctions | camelCase | `calculerDpiEffectif` |
 | Types, classes, composants React | PascalCase | `DoublePage`, `EditeurDoublePage` |
 | Constantes globales | SCREAMING_SNAKE | `TAILLE_VIGNETTE_PX` |
 | Fichiers de composants | PascalCase | `EditeurDoublePage.tsx` |
-| Autres fichiers | kebab-case | `calcul-nettete.ts` |
+| Autres fichiers | kebab-case | `calcul-dpi.ts` |
 | Tables et colonnes | camelCase via Prisma | `doublePage`, `projetId` |
 | Routes d'API | kebab-case, pluriel | `/projets/:projetId/doubles-pages` |
 
@@ -58,15 +58,15 @@ La validation côté front protège l'utilisateur de ses erreurs ; elle ne prot�
 
 ## Tests
 
-- Unitaires sur les algorithmes d'analyse d'image et le moteur de gabarits — c'est là que sont les bugs coûteux.
+- Unitaires sur le moteur de gabarits et le rendu PDF — c'est là que sont les bugs coûteux.
 - Tests d'intégration sur les routes d'API, base de test réelle en conteneur, pas de mock de Prisma.
-- Tests de bout en bout (Playwright) sur les parcours critiques uniquement : création de projet, import, curation, export.
+- Tests de bout en bout (Playwright) sur les parcours critiques uniquement : création de projet, import, composition, export.
 - Un test reproduit le bug avant qu'on le corrige.
 
 ## Git
 
 - Branches : `feat/nom-court`, `fix/nom-court`, `docs/nom-court`.
-- Commits en français, à l'impératif, sans point final : `ajoute le calcul du dHash`, `corrige la reprise d'import interrompu`.
+- Commits en français, à l'impératif, sans point final : `ajoute le calcul du DPI effectif`, `corrige la reprise d'import interrompu`.
 - Un commit = une intention. Pas de commit fourre-tout.
 - `npm run lint && npm run typecheck && npm test` passe avant tout commit.
 

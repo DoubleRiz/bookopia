@@ -4,7 +4,7 @@ Instructions pour les agents IA travaillant sur ce dépôt.
 
 ## Le projet
 
-Bookopia est une application web de création de **livres photo** avec export **PDF prêt pour l'impression**. Sa valeur propre : une **curation algorithmique** qui suggère des photos à écarter (floues, surexposées, quasi-doublons) — l'utilisateur décide seul.
+Bookopia est une application web de création de **livres photo** avec export **PDF prêt pour l'impression**.
 
 Parti pris produit : **retrancher plutôt qu'ajouter**. Un seul format, des gabarits contraints, pas de canvas libre.
 
@@ -17,16 +17,16 @@ Projet de diplôme CDA : chaque décision technique doit être explicable à un 
 | Composant | Technologie |
 |---|---|
 | `apps/web` | React · Vite · TypeScript |
-| `apps/api` | Fastify · Prisma · TypeScript |
-| `apps/worker` | Node · sharp · pdf-lib |
+| `apps/api` | Fastify · Prisma · sharp · TypeScript |
+| `apps/worker` | Node · pdf-lib |
 | `packages/db` | Schéma Prisma, migrations |
 | `packages/shared` | Types et schémas Zod partagés |
 | Base de données | PostgreSQL en conteneur |
-| File d'attente | Table PostgreSQL + `SKIP LOCKED` |
+| File d'attente | Table `export` + `SKIP LOCKED` |
 | Fichiers | Disque local, monté en volume |
 | Orchestration | Docker Compose |
 
-Monorepo npm workspaces. Le front appelle l'API ; l'API écrit en base et dépose une tâche ; le worker dépile et travaille ; l'avancement remonte en SSE. Le worker ne parle jamais au navigateur.
+Monorepo npm workspaces. Le front appelle l'API ; l'API écrit en base et traite les photos à l'import ; pour un export, elle passe la ligne `export` en `demande`, le worker la dépile et rend le PDF ; l'avancement remonte en SSE. Le worker ne parle jamais au navigateur.
 
 Détails et justification de chaque choix : [`docs/architecture.md`](docs/architecture.md).
 
@@ -46,11 +46,9 @@ npm test
 ## Règles non négociables
 
 1. **Vocabulaire métier français, littéral**, y compris dans les identifiants de code : `doublePage`, `gabarit`, `reserve`, `emplacement`. Jamais « album », « page », « layout », « template ». → [`docs/glossaire.md`](docs/glossaire.md)
-2. **Aucune dépendance à un service tiers.** L'application tourne à l'identique sur le VPS et en local.
-3. **Pas de triggers PostgreSQL.** Contraintes en base, logique procédurale en TypeScript dans l'API.
-4. **Validation Zod en entrée d'API**, même quand le front valide déjà.
-5. **Rendu PDF avec pdf-lib**, jamais Chromium headless.
-6. **Les algorithmes d'analyse d'image sont écrits à la main** (dHash, variance du laplacien, histogramme) : c'est un livrable de soutenance, pas une dépendance.
+2. **Pas de triggers PostgreSQL.** Contraintes en base, logique procédurale en TypeScript dans l'API.
+3. **Validation Zod en entrée d'API**, même quand le front valide déjà.
+4. **Rendu PDF avec pdf-lib**, jamais Chromium headless.
 
 ## Ce qu'un agent ne fait pas
 

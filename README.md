@@ -2,8 +2,6 @@
 
 Application web de création de **livres photo personnalisés**, avec export **PDF prêt pour l'impression**.
 
-Sa particularité : une **curation algorithmique**. Après l'import, l'application analyse les photos et propose d'écarter celles qui sont floues, mal exposées ou quasi identiques à une autre. Elle ne décide jamais à la place de l'utilisateur — elle lui évite de trier trois cents photos à la main.
-
 Le parti pris produit est de **retrancher plutôt que d'ajouter** : un seul format de livre, des gabarits contraints, pas de canvas libre. Moins de choix, moins d'occasions de produire un livre raté.
 
 > Projet réalisé dans le cadre du titre professionnel **Concepteur Développeur d'Applications (CDA)**.
@@ -15,26 +13,26 @@ Le parti pris produit est de **retrancher plutôt que d'ajouter** : un seul form
 | | |
 |---|---|
 | Front | React · Vite · TypeScript |
-| API | Fastify · TypeScript · Prisma |
-| Worker | Node · sharp · pdf-lib |
+| API | Fastify · TypeScript · Prisma · sharp |
+| Worker | Node · pdf-lib |
 | Base de données | PostgreSQL |
 | Orchestration | Docker Compose |
 
-L'ensemble est **auto-hébergé** et ne dépend d'aucun service tiers : la même commande lance le projet sur le serveur et sur une machine de développement.
+L'ensemble est **auto-hébergé** : la même commande lance le projet sur le serveur et sur une machine de développement.
 
 ### Organisation
 
 ```
 apps/web        interface et moteur de gabarits
-apps/api        API HTTP, authentification, règles métier
-apps/worker     ingestion des photos et rendu PDF
+apps/api        API HTTP, authentification, règles métier, import des photos
+apps/worker     rendu PDF
 packages/db     schéma Prisma, migrations
 packages/shared types et validations partagés
-infra/          Dockerfiles et configuration nginx
+infra/          Dockerfiles et configuration Caddy
 docs/           documentation technique
 ```
 
-Le **worker** est un processus séparé parce que traiter trois cents photos prend plusieurs minutes : l'API dépose une tâche et répond immédiatement, le worker dépile et travaille, l'avancement remonte au navigateur en temps réel. L'interface ne se fige jamais.
+Le **worker** est un processus séparé parce qu'un rendu PDF est trop long pour tenir dans une requête : l'API enregistre la demande et répond immédiatement, le worker la dépile et rend le PDF, l'avancement remonte au navigateur en temps réel. L'interface ne se fige jamais.
 
 ---
 
@@ -73,7 +71,7 @@ Le front appelle l'API sous `/api`, relayé par le proxy de Vite. Si le port 300
 docker compose --profile app up -d --build   # http://localhost:8080
 ```
 
-Lance la base, l'API, le worker et le front servi par nginx, comme sur le serveur. Les migrations sont appliquées au démarrage de l'API.
+Lance la base, l'API, le worker et le front servi par Caddy, comme sur le serveur. Sur le VPS, renseigner `ADRESSE_SITE` avec le nom de domaine et publier les ports 80 et 443 (`PORT_HTTP`, `PORT_HTTPS`) : Caddy obtient alors le certificat HTTPS tout seul. Les migrations sont appliquées au démarrage de l'API.
 
 ### Vérifications
 

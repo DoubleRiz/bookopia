@@ -531,8 +531,11 @@ Le HTML reprend la page d'accueil (E0) pour montrer le système appliqué. La ve
 
 Le design system v1.0 a été produit avant plusieurs décisions. Points en conflit, à corriger lors de la prochaine passe :
 
-1. **Curation réversible.** Le design system décrit « à écarter » comme un choix réversible jusqu'à la validation du bilan (tonalité `inactif`, vignette atténuée, toast « Annuler », carte info « vous pouvez changer d'avis »). Le modèle de données retient **une seule action, suppression immédiate et définitive**. À réfléchir.
+1. **Curation retirée.** Le modèle de données v3 ne porte plus de curation. À retirer : les états « Photo — curation » et « Curation à faire » (§ 6), l'écran E6 — Bilan de curation, l'étape « Trier » du parcours (§ 9), la section 10 « Tri des photos » et la mention « photos gardées au tri » de la réserve (§ 11).
 2. **Format unique.** La section 16 du HTML propose « Portrait A4 », « Livre libre · format au choix » et « Le format se change encore après ». Le format est unique (21 × 21) ; la maquette E0 est à jour.
 3. **Pas de canvas libre.** Les raccourcis (déplacer de 1 mm / 10 mm), les poignées et l'outil Pivoter supposent une géométrie modifiable et une rotation. La géométrie est copiée du gabarit et `cadrage` ne porte pas de rotation.
 4. **Bibliothèque.** La modale de suppression indique « Vos photos restent dans votre bibliothèque ». Les photos appartiennent au projet et sont supprimées avec lui.
 5. **Tutoiement.** « Convertis en JPEG depuis ton téléphone » ; le reste de l'interface vouvoie.
+6. **Photos traitées à l'import.** Une photo n'existe en base qu'une fois traitée : plus d'états `en_attente` / `prete` / `echec`, ni de motifs d'échec stockés. Les états « En traitement » (import, réserve, éditeur) n'ont plus de support ; un fichier illisible est refusé et listé à la réponse de l'import.
+7. **Export sans expiration.** Le dernier PDF reste disponible : l'état « Expiré » (export, E9) disparaît.
+8. **Brouillon.** L'état stocké du livre est un booléen `brouillon`, posé par le Créateur ; « Terminé » n'est plus un état stocké.
