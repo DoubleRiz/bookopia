@@ -100,7 +100,7 @@ Donnée de référence, créée par le script d'initialisation. Lecture pour tou
 
 Les clés étrangères vers `Theme` et `Gabarit` (`RESTRICT`) garantissent qu'un modèle ne peut pas référencer un gabarit inexistant. Le rôle des gabarits de couverture et de 4e est vérifié par le service.
 
-`gabaritQuatriemeId` découle de la 4e en double page distincte : **à valider**.
+`gabaritQuatriemeId` découle de la 4e en double page distincte, symétrique de `gabaritCouvertureId`. Le choisir dans la `famille` du modèle supposerait que chaque famille contienne un gabarit de 4e, sans que rien ne le garantisse en base.
 
 ### DoublePage
 
@@ -118,13 +118,17 @@ Le gabarit d'une double page a le même rôle qu'elle : vérifié par le service
 
 ### Emplacement
 
-`id`, `projetId`, `doublePageId`, `indice` (unique par double page), `nature` (`photo` | `texte`), `x`, `y`, `largeur`, `hauteur`, `photoId`, `cadrage {x, y, zoom}`, `contenuTexte`.
+`id`, `projetId`, `doublePageId`, `indice` (unique par double page), `nature` (`photo` | `texte`), `x`, `y`, `largeur`, `hauteur`, `photoId`, `cadrageX`, `cadrageY`, `cadrageZoom`, `contenuTexte`.
 
 `nature` et la géométrie sont **copiées du gabarit**, jamais choisies librement.
 
 Un emplacement **peut être vide** : c'est normal, pas une anomalie. Supprimer une photo vide les emplacements qui la portaient (`SET NULL`). La photo appartient au même projet que son emplacement : vérifié par le service. Deux emplacements peuvent référencer la **même photo** — c'est ce qui permet de dupliquer une page sans copier aucun fichier.
 
 Les champs non pertinents selon la nature restent vides : prix assumé d'une table unique pour deux natures, la cohérence étant garantie par un `CHECK`. Une hiérarchie de tables pour deux cas serait disproportionnée.
+
+**Le cadrage tient en trois colonnes, pas en JSON** : sa forme est fixe, et la base peut alors en vérifier la complétude et les bornes. `cadrageX` et `cadrageY` placent le centre visible dans la photo, normalisés entre 0 et 1 ; `cadrageZoom` vaut au moins 1. Ce repère ne dépend ni de la taille du cadre ni de la résolution de la photo.
+
+Une photo posée exige un cadrage complet. **Un emplacement vide peut garder un ancien cadrage** : le `SET NULL` qui suit la suppression d'une photo ne remet à vide que `photoId`, une clé étrangère ne pouvant agir sur d'autres colonnes. Ce résidu est sans effet et écrasé à la pose suivante. L'alternative — faire vider le cadrage par l'API avant chaque suppression — obligerait chaque chemin de suppression, cascade comprise, à y penser.
 
 ### Export
 
@@ -160,9 +164,22 @@ Prisma n'exprime ni `CHECK` ni unicité partielle : ces règles sont écrites en
 |---|---|
 | `position` vide si et seulement si la double page n'est pas intérieure | `CHECK ((position IS NULL) = (role <> 'interieur'))` |
 | Une seule couverture et une seule 4e par projet | Unicité partielle `(projetId, role) WHERE role <> 'interieur'` |
-| Cohérence d'un emplacement selon sa nature | `CHECK` sur `nature`, `photoId`, `cadrage`, `contenuTexte` |
+| Cohérence d'un emplacement selon sa nature | `CHECK` sur `nature`, `photoId`, `cadrageX`, `cadrageY`, `cadrageZoom`, `contenuTexte` |
+| Bornes du cadrage | `CHECK` : `cadrageX` et `cadrageY` entre 0 et 1, `cadrageZoom >= 1` |
+
+Ces règles vivent dans une migration à part, écrite à la main, distincte de celle générée par Prisma. Prisma ne les voit pas et ne cherche pas à les supprimer.
 
 Les énumérés (`role`, `nature`, `statut`, `sourceType`) sont des types PostgreSQL. Les clés étrangères sont en `ON DELETE CASCADE`, sauf mention contraire dans ce document.
+
+## Types de colonnes
+
+**Identifiants en UUID v7**, type `uuid` natif. Ils apparaissent dans les routes (`/projets/:projetId`) : un entier auto-incrémenté révélerait le volume et inviterait à essayer les identifiants voisins. La version 7 est ordonnée dans le temps, ce qui garde les index compacts, contrairement à la v4 aléatoire. Coût : l'identifiant est généré par le client Prisma, pas par la base ; une insertion en SQL direct doit le fournir.
+
+**Mesures en millimètres en `Float`** (`double precision`). C'est le type des nombres du JSON des gabarits, d'où la géométrie est copiée, et pdf-lib calcule en flottants. Un `Decimal` exact se justifie quand on additionne des montants qui doivent tomber juste ; ici, la géométrie finit convertie en points flottants, et l'imprécision binaire est sans effet à l'impression.
+
+**Horodatages en `timestamptz`** : le fuseau est stocké, pas supposé.
+
+**`email`** est unique et normalisé en minuscules par l'API, plutôt qu'avec l'extension `citext`.
 
 ---
 
