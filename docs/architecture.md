@@ -176,9 +176,24 @@ Ces contraintes sont intégrées dès le premier lot.
 
 ## Les fichiers
 
-Originaux, vignettes et PDF sont écrits sur le disque du serveur, dans un volume Docker.
+Originaux, vignettes et PDF sont écrits sur le disque du serveur, dans le volume Docker `fichiers`, monté dans l'API et le worker. Caddy ne le monte pas : aucun fichier n'est servi directement par le reverse proxy.
 
-Ils ne sont jamais servis par l'API : celle-ci vérifie l'autorisation puis délivre une **URL signée à durée courte**.
+### Arborescence
+
+```
+projets/
+  {projetId}/
+    originaux/{cle}.jpg
+    vignettes/{cle}.webp
+    exports/{cle}.pdf
+```
+
+`cleStockage` est un UUID nu, opaque ; le chemin se déduit de `(projetId, cle)` par les fonctions de `@bookopia/stockage`, qui refusent tout identifiant non UUID. L'original et la vignette d'une photo partagent la même clé. Regrouper par projet rend la suppression d'un projet ou d'un compte triviale.
+
+- **Original en JPEG** : pdf-lib n'intègre que JPEG et PNG, et l'original est ré-encodé de toute façon au redimensionnement. Coût : une perte de génération, invisible à qualité 90.
+- **Vignette en WebP** : lue seulement par le navigateur, environ 30 % plus légère qu'un JPEG sur une grille de 300. Coût : un second format, produit par `sharp` sans dépendance.
+
+### Accès
 
 L'accès passe par une interface unique, implémentée sur disque aujourd'hui, remplaçable par un stockage objet sans toucher au reste :
 
@@ -186,10 +201,27 @@ L'accès passe par une interface unique, implémentée sur disque aujourd'hui, r
 interface StockageFichiers {
   ranger(chemin: string, contenu: Buffer): Promise<void>;
   lire(chemin: string): Promise<Buffer>;
+  flux(chemin: string): Promise<Readable>;
   supprimer(chemin: string): Promise<void>;
   urlSignee(chemin: string, dureeSecondes: number): Promise<string>;
 }
 ```
+
+`flux` permet de diffuser un PDF de plusieurs dizaines de Mo sans le charger en mémoire. `ranger` écrit dans un fichier temporaire puis renomme : un fichier à moitié écrit n'est jamais lisible. Tout chemin est vérifié sous la racine.
+
+Le code vit dans `packages/stockage`, et non dans `packages/shared` : il lit le disque, le front ne doit pas pouvoir l'importer.
+
+### Distribution par URL signée
+
+L'API vérifie l'autorisation puis délivre une **URL signée à durée courte** : `/api/fichiers/{chemin}?expire=…&signature=…`, signature HMAC-SHA256 du chemin et de l'expiration avec `SECRET_URL_SIGNEE`.
+
+Sur disque, aucun fournisseur ne sert cette URL : c'est l'API qui la vérifie et diffuse le fichier, par `GET /fichiers/*`, **sans requête en base** — la signature prouve l'autorisation donnée à l'émission. Signature invalide ou expirée : 403 ; fichier absent : 404. Le navigateur garde le fichier en cache jusqu'à l'expiration. Avec un stockage objet, ce rôle passerait au fournisseur et la route disparaîtrait.
+
+| Option | Coût | Décision |
+|---|---|---|
+| **L'API vérifie la signature et diffuse** | Un secret à gérer ; l'API diffuse des octets | Retenue |
+| Caddy diffuse, l'API autorise par `forward_auth` | Volume monté dans Caddy, configuration difficile à tester | Écartée |
+| Route protégée par le cookie de session | Abandonne l'URL signée ; une requête en base par vignette | Écartée |
 
 Jeu de test courant à 30 photos, 300 pour la démonstration.
 
