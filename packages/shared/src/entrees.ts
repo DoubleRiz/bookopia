@@ -35,3 +35,23 @@ export type EntreeInsererDoublePage = z.infer<typeof insererDoublePageSchema>;
 export type EntreeDeplacerDoublePage = z.infer<typeof deplacerDoublePageSchema>;
 export type Cadrage = z.infer<typeof cadrageSchema>;
 export type EntreePoserPhoto = z.infer<typeof poserPhotoSchema>;
+
+// Normalisé ici plutôt qu'en base : l'unicité de l'email ne doit pas dépendre de la casse.
+const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
+
+export const inscriptionSchema = z.object({
+  email: emailSchema,
+  // Le plafond protège le serveur : argon2 sur une entrée d'un mégaoctet coûte cher pour rien.
+  motDePasse: z.string().min(8).max(128),
+  nomAffichage: z.string().trim().min(1).max(80),
+});
+
+// Aucune règle de longueur à la connexion : la refuser trahirait la règle d'inscription
+// sans rien protéger, la vérification du hachage tranche de toute façon.
+export const connexionSchema = z.object({
+  email: emailSchema,
+  motDePasse: z.string().min(1).max(128),
+});
+
+export type EntreeInscription = z.infer<typeof inscriptionSchema>;
+export type EntreeConnexion = z.infer<typeof connexionSchema>;

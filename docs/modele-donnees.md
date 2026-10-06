@@ -6,6 +6,7 @@ Le schéma Prisma (`packages/db/prisma/schema.prisma`) fait foi pour les types e
 
 ```
 Utilisateur
+ ├── Session                 (0..n)
  └── Projet                  (0..n)
       ├── Photo              (0..n)
       ├── Export             (0..1)
@@ -38,9 +39,15 @@ L'arbre est strictement hiérarchique et **rien n'est partagé entre utilisateur
 
 `id`, `email` (unique), `motDePasseHache` (argon2id), `nomAffichage`, `creeLe`.
 
-Un seul champ de nom : aucun usage ne sépare prénom et nom. Supprimer un compte supprime en cascade ses projets, leurs photos et les fichiers correspondants.
+Un seul champ de nom : aucun usage ne sépare prénom et nom. Supprimer un compte supprime en cascade ses sessions, ses projets, leurs photos et les fichiers correspondants.
 
-**Pas de table de jetons** : l'authentification repose sur un JWT seul, sans révocation côté serveur.
+L'email est normalisé en minuscules par l'API avant écriture : l'unicité ne dépend pas de la casse.
+
+### Session
+
+`id`, `utilisateurId`, `jetonHache` (unique), `creeLe`, `expireLe`.
+
+Une ligne par appareil connecté. Le cookie porte le jeton en clair, la base n'en garde que l'empreinte SHA-256 : une fuite de la table ne permet pas d'usurper une session. Une session expirée est refusée à la lecture ; les expirées d'un utilisateur sont purgées à sa connexion. Se déconnecter supprime la ligne. → [`architecture.md`](architecture.md#lauthentification)
 
 ### Projet
 

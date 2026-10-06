@@ -33,8 +33,8 @@ Tout tourne dans Docker Compose : `web`, `api`, `worker`, `db`, plus un volume p
 
 Le navigateur n'a aucun accès direct à la base. Tout passe par l'API, qui porte :
 
-- **L'authentification** : JWT seul, mot de passe haché en argon2id. Pas de jeton de rafraîchissement ni de révocation côté serveur — choix de simplicité assumé.
-- **L'autorisation**. L'identifiant utilisateur vient du jeton vérifié, jamais d'un paramètre. Aucun service n'appelle `prisma` directement : tout passe par un dépôt construit à partir de l'utilisateur authentifié, et une règle ESLint interdit l'import de `prisma` ailleurs. La vérification est une comparaison sur `projetId`, colonne indexée présente sur toutes les tables de l'arbre projet.
+- **L'authentification** : session opaque en base, transportée par un cookie `httpOnly`, mot de passe haché en argon2id. → [L'authentification](#lauthentification)
+- **L'autorisation**. L'identifiant utilisateur vient de la session vérifiée, jamais d'un paramètre. Aucun service n'appelle `prisma` directement : tout passe par un dépôt construit à partir de l'utilisateur authentifié, et une règle ESLint interdit l'import de `prisma` ailleurs. La vérification est une comparaison sur `projetId`, colonne indexée présente sur toutes les tables de l'arbre projet.
 - **Les règles métier** : création de la couverture et de la 4e avec le projet, copie de la géométrie du gabarit dans les emplacements, renumérotation des doubles pages intérieures, propagation de `projetId`.
 - **Le traitement des photos à l'import**, de façon synchrone.
 - **La validation** de toute entrée, avec Zod.
@@ -44,10 +44,33 @@ Des tests d'accès vérifient l'autorisation : deux utilisateurs, chacun ne voit
 
 Les contraintes d'unicité, d'intégrité référentielle et les vérifications simples vivent dans PostgreSQL. Il n'y a pas de triggers : la logique procédurale est en TypeScript. → [`modele-donnees.md`](modele-donnees.md#contraintes-hors-schéma-prisma)
 
+### L'authentification
+
+Écrite à la main, sans bibliothèque d'authentification : quatre routes et un contrôle de session.
+
+- **Mot de passe** haché en argon2id avec l'argon2 natif de Node (≥ 24.7), aux paramètres minimaux de l'OWASP (19 Mio, 2 passes). Les paramètres sont stockés avec l'empreinte, au format PHC : les durcir plus tard n'invalide aucun compte. Longueur de 8 à 128 caractères ; le plafond évite qu'une entrée énorme coûte cher à hacher.
+- **Session** : un jeton aléatoire de 32 octets dans un cookie `httpOnly`, `Secure`, `SameSite=Lax`. La table `session` n'en garde que l'empreinte SHA-256 : une fuite de la base ne permet pas d'usurper une session. Durée fixe de 30 jours, sans prolongation à l'usage.
+- **Déconnexion** : la ligne est supprimée, le jeton ne vaut plus rien, même copié ailleurs.
+- **Connexion** : même réponse pour un email inconnu et un mot de passe faux, et un hachage factice est vérifié quand l'email n'existe pas, pour que le temps de réponse ne trahisse pas les comptes existants. Un jeton neuf est émis à chaque connexion.
+
+**Pourquoi une session en base plutôt qu'un JWT** : l'intérêt d'un JWT est d'authentifier sans lire la base. Or l'API la lit à chaque requête de toute façon, pour l'autorisation. Le JWT n'apporterait que ses défauts : impossible à révoquer avant expiration, une clé de signature à protéger et faire tourner, des pièges d'algorithme. La session en base est plus simple et révocable.
+
+**Coût** : une lecture indexée sur `session.jetonHache` par requête authentifiée, et une table de plus. L'API ne peut pas se répartir sur plusieurs bases sans partager cette table — hors de propos pour un seul VPS.
+
+**Alternatives écartées** :
+
+- **JWT seul** : la déconnexion n'efface que le cookie, un jeton volé reste valide jusqu'à expiration, et changer de mot de passe ne coupe pas les sessions ouvertes.
+- **JWT + colonne de version sur `utilisateur`** : révocation possible, mais seulement de toutes les sessions d'un coup, en gardant la complexité du JWT et la lecture en base.
+- **JWT court + jetons de rafraîchissement en table** : révocable par appareil, mais deux jetons, une route de rafraîchissement et une logique de relance côté front. Conçu pour des API sans état partagées entre services, pas pour une API unique.
+
+**Reste à faire** : limiter le nombre de tentatives de connexion.
+
 ### Routes
 
 | Opération | Route |
 |---|---|
+| S'inscrire, se connecter, se déconnecter | `POST /api/auth/inscription`, `POST /api/auth/connexion`, `POST /api/auth/deconnexion` |
+| Lire l'utilisateur de la session | `GET /api/auth/moi` |
 | Créer un projet, le renommer | `POST /api/projets`, `PATCH /api/projets/:id` |
 | Créer, déplacer, supprimer une double page | `/api/projets/:id/doubles-pages` |
 | Changer le gabarit d'une double page | `PATCH /api/doubles-pages/:id` |
@@ -217,6 +240,5 @@ Chemin secondaire, prévu pour un lot ultérieur : l'envoi de fichiers reste le 
 
 - Le `clip` de pdf-lib permet-il le recadrage sans ré-encodage ? À trancher par le code, semaines 1-2.
 - Durée de souscription du VPS.
-- Authentification : bibliothèque ou JWT écrit à la main.
 - Changement de gabarit avec perte de cadres : quelle photo est conservée.
 - Catalogue de thèmes : combien, et lesquels.
