@@ -96,7 +96,7 @@ Donnée de référence, créée par le script d'initialisation. Lecture pour tou
 
 `id`, `nom`, `themeId`, `gabaritCouvertureId`, `gabaritQuatriemeId`, `famille`, `nombreDoublesPagesDepart`, `cleApercu`, `actif`.
 
-À la création d'un projet, l'API **copie** le modèle : le thème dans `projet.themeId`, la couverture et la 4e avec leurs gabarits, puis `nombreDoublesPagesDepart` doubles pages intérieures dont les gabarits sont pris dans la `famille` du modèle. Le projet ne garde qu'un `modeleOrigineId` informatif — modifier un modèle n'affecte aucun livre existant, et un livre créé depuis un modèle est modifiable sans restriction.
+À la création d'un projet, l'API **copie** le modèle : le thème dans `projet.themeId`, la couverture et la 4e avec leurs gabarits, puis `nombreDoublesPagesDepart` doubles pages intérieures. Leurs gabarits sont **choisis par le moteur de gabarits du front** et envoyés à la création ; l'API vérifie leur nombre, leur rôle et leur appartenance à la `famille` du modèle, puis crée le tout dans une seule transaction — un projet sans couverture ni 4e n'existe jamais. Le choix reste au moteur, qui vit côté front ; la création reste atomique. Le projet ne garde qu'un `modeleOrigineId` informatif — modifier un modèle n'affecte aucun livre existant, et un livre créé depuis un modèle est modifiable sans restriction.
 
 Les clés étrangères vers `Theme` et `Gabarit` (`RESTRICT`) garantissent qu'un modèle ne peut pas référencer un gabarit inexistant. Le rôle des gabarits de couverture et de 4e est vérifié par le service.
 
