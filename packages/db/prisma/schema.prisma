@@ -1,3 +1,7 @@
+// Les invariants et leurs justifications vivent dans docs/modele-donnees.md.
+// Ce que Prisma ne sait pas exprimer (CHECK, unicité partielle) est posé en SQL
+// dans une migration dédiée.
+
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -5,4 +9,199 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum RoleDoublePage {
+  couverture
+  interieur
+  quatrieme
+}
+
+enum NatureEmplacement {
+  photo
+  texte
+}
+
+enum StatutExport {
+  demande
+  en_cours
+  reussi
+  echec
+}
+
+enum SourcePhoto {
+  upload
+  google_photos
+}
+
+model Utilisateur {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  // Normalisé en minuscules par l'API : l'unicité ne doit pas dépendre de la casse.
+  email           String   @unique
+  motDePasseHache String
+  nomAffichage    String
+  creeLe          DateTime @default(now()) @db.Timestamptz(3)
+
+  projets Projet[]
+
+  @@map("utilisateur")
+}
+
+model Projet {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  utilisateurId   String   @db.Uuid
+  titre           String
+  themeId         String   @db.Uuid
+  brouillon       Boolean  @default(true)
+  modeleOrigineId String?  @db.Uuid
+  creeLe          DateTime @default(now()) @db.Timestamptz(3)
+  modifieLe       DateTime @updatedAt @db.Timestamptz(3)
+
+  utilisateur   Utilisateur  @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  theme         Theme        @relation(fields: [themeId], references: [id], onDelete: Restrict)
+  modeleOrigine ModeleLivre? @relation(fields: [modeleOrigineId], references: [id], onDelete: SetNull)
+
+  photos       Photo[]
+  doublesPages DoublePage[]
+  emplacements Emplacement[]
+  export       Export?
+
+  @@index([utilisateurId])
+  @@map("projet")
+}
+
+model Photo {
+  id                String      @id @default(uuid(7)) @db.Uuid
+  projetId          String      @db.Uuid
+  cleStockage       String      @unique
+  nomFichierOrigine String
+  // SHA-256 du fichier : bloque les doublons stricts au sein d'un projet.
+  empreinteFichier  String
+  largeurPx         Int
+  hauteurPx         Int
+  priseLe           DateTime?   @db.Timestamptz(3)
+  sourceType        SourcePhoto
+  creeLe            DateTime    @default(now()) @db.Timestamptz(3)
+
+  projet       Projet        @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  emplacements Emplacement[]
+
+  @@unique([projetId, empreinteFichier])
+  @@map("photo")
+}
+
+model Gabarit {
+  id         String         @id @default(uuid(7)) @db.Uuid
+  nom        String
+  role       RoleDoublePage
+  famille    String
+  // Cadres en millimètres, validés par Zod à la lecture.
+  definition Json
+  actif      Boolean        @default(true)
+
+  doublesPages        DoublePage[]
+  modelesEnCouverture ModeleLivre[] @relation("gabaritCouverture")
+  modelesEnQuatrieme  ModeleLivre[] @relation("gabaritQuatrieme")
+
+  @@index([role, famille])
+  @@map("gabarit")
+}
+
+model Theme {
+  id              String  @id @default(uuid(7)) @db.Uuid
+  nom             String
+  policeTitre     String
+  policeTexte     String
+  palette         Json
+  rayonAngles     Float
+  // Vide : cadres sans bordure.
+  bordureCadre    Json?
+  margeInterieure Float
+  actif           Boolean @default(true)
+
+  projets      Projet[]
+  modelesLivre ModeleLivre[]
+
+  @@map("theme")
+}
+
+model ModeleLivre {
+  id                       String  @id @default(uuid(7)) @db.Uuid
+  nom                      String
+  themeId                  String  @db.Uuid
+  gabaritCouvertureId      String  @db.Uuid
+  gabaritQuatriemeId       String  @db.Uuid
+  famille                  String
+  nombreDoublesPagesDepart Int
+  cleApercu                String
+  actif                    Boolean @default(true)
+
+  theme             Theme   @relation(fields: [themeId], references: [id], onDelete: Restrict)
+  gabaritCouverture Gabarit @relation("gabaritCouverture", fields: [gabaritCouvertureId], references: [id], onDelete: Restrict)
+  gabaritQuatrieme  Gabarit @relation("gabaritQuatrieme", fields: [gabaritQuatriemeId], references: [id], onDelete: Restrict)
+
+  projets Projet[]
+
+  @@map("modeleLivre")
+}
+
+model DoublePage {
+  id               String         @id @default(uuid(7)) @db.Uuid
+  projetId         String         @db.Uuid
+  role             RoleDoublePage
+  // Pas d'unicité : une renumérotation traverse des états où deux rangs coïncident.
+  position         Int?
+  gabaritOrigineId String?        @db.Uuid
+  creeLe           DateTime       @default(now()) @db.Timestamptz(3)
+
+  projet         Projet   @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  gabaritOrigine Gabarit? @relation(fields: [gabaritOrigineId], references: [id], onDelete: SetNull)
+
+  emplacements Emplacement[]
+
+  @@index([projetId])
+  @@map("doublePage")
+}
+
+model Emplacement {
+  id           String            @id @default(uuid(7)) @db.Uuid
+  projetId     String            @db.Uuid
+  doublePageId String            @db.Uuid
+  indice       Int
+  nature       NatureEmplacement
+  x            Float
+  y            Float
+  largeur      Float
+  hauteur      Float
+  photoId      String?           @db.Uuid
+  // Centre visible dans la photo, normalisé entre 0 et 1 ; zoom >= 1.
+  cadrageX     Float?
+  cadrageY     Float?
+  cadrageZoom  Float?
+  contenuTexte String?
+
+  projet     Projet     @relation(fields: [projetId], references: [id], onDelete: Cascade)
+  doublePage DoublePage @relation(fields: [doublePageId], references: [id], onDelete: Cascade)
+  photo      Photo?     @relation(fields: [photoId], references: [id], onDelete: SetNull)
+
+  @@unique([doublePageId, indice])
+  @@index([projetId])
+  @@index([photoId])
+  @@map("emplacement")
+}
+
+model Export {
+  id            String       @id @default(uuid(7)) @db.Uuid
+  projetId      String       @unique @db.Uuid
+  statut        StatutExport @default(demande)
+  demandeLe     DateTime     @default(now()) @db.Timestamptz(3)
+  termineLe     DateTime?    @db.Timestamptz(3)
+  cleStockage   String?
+  messageErreur String?
+
+  projet Projet @relation(fields: [projetId], references: [id], onDelete: Cascade)
+
+  // Sert au dépilage du worker (SKIP LOCKED).
+  @@index([statut, demandeLe])
+  @@map("export")
 }
