@@ -59,7 +59,7 @@ La validation côté front protège l'utilisateur de ses erreurs ; elle ne prot�
 ## Tests
 
 - Unitaires sur le moteur de gabarits et le rendu PDF — c'est là que sont les bugs coûteux.
-- Tests d'intégration sur les routes d'API, base de test réelle en conteneur, pas de mock de Prisma.
+- Tests d'intégration sur les services et les routes d'API, base de test réelle en conteneur, pas de mock de Prisma. La base `<nom>_test` est dérivée de `DATABASE_URL`, créée et migrée au lancement de `npm test` : les tests ne peuvent pas viser la base de développement par erreur.
 - Tests de bout en bout (Playwright) sur les parcours critiques uniquement : création de projet, import, composition, export.
 - Un test reproduit le bug avant qu'on le corrige.
 
