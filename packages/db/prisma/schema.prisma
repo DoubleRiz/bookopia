@@ -42,9 +42,25 @@ model Utilisateur {
   nomAffichage    String
   creeLe          DateTime @default(now()) @db.Timestamptz(3)
 
-  projets Projet[]
+  projets  Projet[]
+  sessions Session[]
 
   @@map("utilisateur")
+}
+
+// Le cookie porte le jeton en clair, la base n'en garde que l'empreinte SHA-256 :
+// une fuite de la table ne permet pas d'usurper une session.
+model Session {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  utilisateurId String   @db.Uuid
+  jetonHache    String   @unique
+  creeLe        DateTime @default(now()) @db.Timestamptz(3)
+  expireLe      DateTime @db.Timestamptz(3)
+
+  utilisateur Utilisateur @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+
+  @@index([utilisateurId])
+  @@map("session")
 }
 
 model Projet {
