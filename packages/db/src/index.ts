@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "./generated/prisma/client";
+import { type Prisma, PrismaClient } from "./generated/prisma/client";
 
 export function creerClientPrisma(urlBase: string): PrismaClient {
   return new PrismaClient({
@@ -7,4 +7,6 @@ export function creerClientPrisma(urlBase: string): PrismaClient {
   });
 }
 
+export type Transaction = Prisma.TransactionClient;
 export type { PrismaClient };
+export type { RoleDoublePage } from "./generated/prisma/client";
