@@ -2,19 +2,22 @@ import cookie from "@fastify/cookie";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import { ZodError, z } from "zod";
 import type { PrismaClient } from "@bookopia/db";
+import type { StockageDisque } from "@bookopia/stockage";
 import { routesAuthentification } from "./authentification";
+import { routesFichiers } from "./fichiers";
 import { type CodeErreurMetier, ErreurMetier } from "./services/erreurs";
 
 const STATUT_PAR_CODE: Record<CodeErreurMetier, number> = {
   invalide: 400,
   non_authentifie: 401,
+  interdit: 403,
   introuvable: 404,
   conflit: 409,
 };
 
 // Séparé du démarrage : les tests construisent l'application et l'interrogent sans ouvrir de port.
 export async function construireApp(
-  prisma: PrismaClient,
+  { prisma, stockage }: { prisma: PrismaClient; stockage: StockageDisque },
   options: FastifyServerOptions = {},
 ) {
   const app = Fastify(options);
@@ -49,6 +52,7 @@ export async function construireApp(
   });
 
   await app.register(routesAuthentification, { prisma });
+  await app.register(routesFichiers, { stockage });
 
   return app;
 }

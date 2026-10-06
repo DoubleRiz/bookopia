@@ -10,6 +10,7 @@
   "dependencies": {
     "@bookopia/db": "*",
     "@bookopia/shared": "*",
+    "@bookopia/stockage": "*",
     "@fastify/cookie": "^11.1.2",
     "@fastify/multipart": "^10.1.2",
     "exifr": "^7.1.3",
