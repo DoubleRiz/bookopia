@@ -42,7 +42,7 @@ const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
 export const inscriptionSchema = z.object({
   email: emailSchema,
   // Le plafond protège le serveur : argon2 sur une entrée d'un mégaoctet coûte cher pour rien.
-  motDePasse: z.string().min(12).max(128),
+  motDePasse: z.string().min(8).max(128),
   nomAffichage: z.string().trim().min(1).max(80),
 });
 
