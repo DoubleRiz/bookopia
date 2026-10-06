@@ -178,6 +178,26 @@ Ces règles vivent dans une migration à part, écrite à la main, distincte de 
 
 Les énumérés (`role`, `nature`, `statut`, `sourceType`) sont des types PostgreSQL. Les clés étrangères sont en `ON DELETE CASCADE`, sauf mention contraire dans ce document.
 
+## Règles garanties par l'API
+
+Ce que la base ne peut pas vérifier sans trigger — une règle qui compare deux tables, ou qui écrit plusieurs lignes ensemble — est garanti par les services de `apps/api/src/services`, dans une transaction. Leurs tests d'intégration, sur une base réelle, sont à côté de chaque service (`*.test.ts`).
+
+| Règle | Service |
+|---|---|
+| Un projet est créé avec sa couverture, ses intérieures et sa 4e, ou pas du tout | `creerProjet` |
+| Le modèle de livre doit être actif ; son thème est copié dans le projet | `creerProjet` |
+| Le nombre de gabarits intérieurs reçus est `nombreDoublesPagesDepart`, tous de la `famille` du modèle | `creerProjet` |
+| Le gabarit d'une double page a le même rôle qu'elle, couverture et 4e du modèle comprises | `creerDoublePageDepuisGabarit` |
+| Seul un gabarit actif est posé ; sa `definition` est validée par Zod avant usage | `creerDoublePageDepuisGabarit` |
+| La géométrie du gabarit est copiée dans les emplacements, avec `projetId` | `creerDoublePageDepuisGabarit` |
+| Les intérieures ont des rangs de 1 à N, sans doublon ni trou ; seule cette fonction écrit `position` | `renumeroterInterieures` |
+| Insertion entre les rangs 1 et N+1, déplacement entre 1 et N, trou refermé à la suppression | `insererDoublePage`, `deplacerDoublePage`, `supprimerDoublePage` |
+| La copie d'une double page se place juste après la source et référence les mêmes photos | `dupliquerDoublePage` |
+| La couverture et la 4e ne se déplacent, ne se suppriment ni ne se dupliquent | `deplacerDoublePage`, `supprimerDoublePage`, `dupliquerDoublePage` |
+| Les écritures d'ordre sur un même projet s'exécutent l'une après l'autre | `verrouillerProjet` → [`architecture.md`](architecture.md#le-verrou-de-projet) |
+| Une photo posée appartient au projet de son emplacement ; un emplacement de texte n'en reçoit pas | `poserPhoto` |
+| Une ressource d'un autre utilisateur est « introuvable », jamais « interdite » : la réponse ne confirme pas qu'elle existe | Tous |
+
 ## Types de colonnes
 
 **Identifiants en UUID v7**, type `uuid` natif. Ils apparaissent dans les routes (`/projets/:projetId`) : un entier auto-incrémenté révélerait le volume et inviterait à essayer les identifiants voisins. La version 7 est ordonnée dans le temps, ce qui garde les index compacts, contrairement à la v4 aléatoire. Coût : l'identifiant est généré par le client Prisma, pas par la base ; une insertion en SQL direct doit le fournir.

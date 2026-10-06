@@ -65,6 +65,19 @@ Les contraintes d'unicité, d'intégrité référentielle et les vérifications 
 
 **Reste à faire** : limiter le nombre de tentatives de connexion.
 
+### Le verrou de projet
+
+Les opérations d'ordre — insérer, déplacer, supprimer, dupliquer une double page — lisent le nombre et l'ordre des intérieures, puis réécrivent les rangs. Deux insertions simultanées liraient le même état et produiraient deux doubles pages au même rang.
+
+Chaque opération commence donc par `SELECT … FOR UPDATE` sur la ligne `projet`, dans sa transaction : les écritures d'ordre d'un même projet passent l'une après l'autre. La même requête filtre sur `utilisateurId` et sert de vérification d'autorisation.
+
+**Coût** : deux onglets ouverts sur le même livre attendent chacun leur tour, le temps d'une transaction de quelques millisecondes. Les projets distincts ne se gênent pas.
+
+**Alternatives écartées** :
+
+- **Unicité sur `(projetId, position)`** : une renumérotation traverse des états où deux rangs coïncident. Il faudrait une contrainte différée (`DEFERRABLE`), que Prisma n'exprime pas, et elle ne ferait que rejeter la seconde opération au lieu de la servir.
+- **Isolation `SERIALIZABLE`** : même garantie, mais l'opération perdante échoue et doit être rejouée par l'API. Le verrou fait attendre au lieu d'échouer.
+
 ### Routes
 
 | Opération | Route |
