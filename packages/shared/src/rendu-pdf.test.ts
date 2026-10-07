@@ -1,6 +1,20 @@
-import { PDFDocument, PDFName, PDFRawStream, type PDFPage } from "pdf-lib";
+import {
+  decodePDFRawStream,
+  PDFArray,
+  PDFDict,
+  PDFDocument,
+  PDFName,
+  type PDFPage,
+  PDFRawStream,
+} from "pdf-lib";
 import { describe, expect, it } from "vitest";
-import { type LivreARendre, rendre } from "./rendu-pdf";
+import { octetsDePolice } from "./polices-de-test";
+import {
+  type EmplacementARendre,
+  type LivreARendre,
+  rendre,
+} from "./rendu-pdf";
+import type { Theme } from "./typographie";
 
 // En-tête JPEG minimal : pdf-lib n'en lit que les dimensions, sans décoder l'image.
 // Pas de fichier binaire dans le dépôt, et un octet de remplissage par photo pour les distinguer.
@@ -46,11 +60,35 @@ const photo = (marque: number) => ({
 });
 
 const centre = { cadrage_x: 0.5, cadrage_y: 0.5, cadrage_zoom: 1 };
+const sansTexte = { style_texte: null, contenu_texte: null };
+
+const CLASSIQUE: Theme = {
+  palette: { fond: "#FAF7F2", texte: "#3E3856" },
+  bordure_cadre: null,
+  typographie: {
+    titre: {
+      police: "EB Garamond",
+      graisse: 500,
+      italique: false,
+      taille_pt: 18,
+    },
+    legende: {
+      police: "EB Garamond",
+      graisse: 400,
+      italique: true,
+      taille_pt: 10,
+    },
+    alignement: "centre",
+    ancrage: "haut",
+    styles_masques: [],
+  },
+};
 
 // Le gabarit « Trio », trois photos.
 function livreDeTroisPhotos(): LivreARendre {
   return {
-    fond: "#FAF7F2",
+    theme: CLASSIQUE,
+    polices: {},
     doubles_pages: [
       {
         emplacements: [
@@ -62,6 +100,7 @@ function livreDeTroisPhotos(): LivreARendre {
             nature: "photo",
             photo: photo(1),
             ...centre,
+            ...sansTexte,
           },
           {
             x: 220,
@@ -71,6 +110,7 @@ function livreDeTroisPhotos(): LivreARendre {
             nature: "photo",
             photo: photo(2),
             ...centre,
+            ...sansTexte,
           },
           {
             x: 220,
@@ -80,6 +120,7 @@ function livreDeTroisPhotos(): LivreARendre {
             nature: "photo",
             photo: photo(3),
             ...centre,
+            ...sansTexte,
           },
         ],
       },
@@ -146,9 +187,10 @@ describe("rendre", () => {
     expect(await imagesDu(await rendre(livre))).toHaveLength(1);
   });
 
-  it("rend un emplacement photo vide et ignore les emplacements texte", async () => {
+  it("rend un emplacement photo vide et ne dessine pas un emplacement texte vide", async () => {
     const livre: LivreARendre = {
-      fond: "#FFFFFF",
+      theme: CLASSIQUE,
+      polices: {},
       doubles_pages: [
         {
           emplacements: [
@@ -160,6 +202,7 @@ describe("rendre", () => {
               nature: "photo",
               photo: null,
               ...centre,
+              ...sansTexte,
             },
             {
               x: 15,
@@ -169,6 +212,7 @@ describe("rendre", () => {
               nature: "texte",
               photo: null,
               ...centre,
+              ...sansTexte,
             },
           ],
         },
@@ -177,5 +221,138 @@ describe("rendre", () => {
     const document = await PDFDocument.load(await rendre(livre));
     expect(document.getPageCount()).toBe(1);
     expect(await imagesDu(await rendre(livre))).toHaveLength(0);
+  });
+});
+
+describe("rendre, les textes", () => {
+  const POLICES = {
+    "eb-garamond-500": octetsDePolice("eb-garamond-500"),
+    "eb-garamond-400-italique": octetsDePolice("eb-garamond-400-italique"),
+  };
+
+  // Gabarit 08 : une photo vide, un titre, une légende.
+  function livreAvecTextes(
+    titre: string | null,
+    legende: string | null,
+    theme: Theme = CLASSIQUE,
+  ): LivreARendre {
+    const texte = (
+      x: number,
+      style: "titre" | "legende",
+      contenu: string | null,
+    ): EmplacementARendre => ({
+      x,
+      y: 155,
+      largeur: 180,
+      hauteur: 40,
+      nature: "texte",
+      photo: null,
+      ...centre,
+      style_texte: style,
+      contenu_texte: contenu,
+    });
+    return {
+      theme,
+      polices: POLICES,
+      doubles_pages: [
+        {
+          emplacements: [
+            texte(15, "titre", titre),
+            texte(225, "legende", legende),
+          ],
+        },
+      ],
+    };
+  }
+
+  // Les opérateurs de la page, décompressés : Tj dessine une ligne de texte, S un trait.
+  async function operateursDe(pdf: Uint8Array): Promise<string> {
+    const document = await PDFDocument.load(pdf);
+    const [page] = document.getPages();
+    if (!page) throw new Error("Aucune page");
+    const contenus = page.node.get(PDFName.of("Contents"));
+    const references =
+      contenus instanceof PDFArray ? contenus.asArray() : [contenus];
+    return references
+      .map((reference) => document.context.lookup(reference))
+      .filter((flux): flux is PDFRawStream => flux instanceof PDFRawStream)
+      .map((flux) =>
+        new TextDecoder("latin1").decode(decodePDFRawStream(flux).decode()),
+      )
+      .join("\n");
+  }
+
+  const compter = (operateurs: string, operateur: string) =>
+    operateurs
+      .split("\n")
+      .filter((ligne) => ligne === operateur || ligne.endsWith(` ${operateur}`))
+      .length;
+
+  async function policesDu(pdf: Uint8Array): Promise<number> {
+    const document = await PDFDocument.load(pdf);
+    return document.context
+      .enumerateIndirectObjects()
+      .filter(
+        ([, objet]) =>
+          objet instanceof PDFDict &&
+          objet.get(PDFName.of("Type")) === PDFName.of("Font") &&
+          objet.get(PDFName.of("Subtype")) === PDFName.of("Type0"),
+      ).length;
+  }
+
+  it("dessine chaque ligne avec la police de son style", async () => {
+    const pdf = await rendre(livreAvecTextes("Lisbonne", "Le Tage au matin"));
+    expect(compter(await operateursDe(pdf), "Tj")).toBe(2);
+    expect(await policesDu(pdf)).toBe(2);
+  });
+
+  it("n'intègre que les polices d'un texte dessiné", async () => {
+    const pdf = await rendre(livreAvecTextes(null, "Le Tage au matin"));
+    expect(compter(await operateursDe(pdf), "Tj")).toBe(1);
+    expect(await policesDu(pdf)).toBe(1);
+  });
+
+  it("ne dessine rien pour un style masqué par le thème", async () => {
+    const silence: Theme = {
+      ...CLASSIQUE,
+      typographie: {
+        ...CLASSIQUE.typographie,
+        styles_masques: ["titre", "legende"],
+      },
+    };
+    const pdf = await rendre(
+      livreAvecTextes("Lisbonne", "Le Tage au matin", silence),
+    );
+    expect(compter(await operateursDe(pdf), "Tj")).toBe(0);
+    expect(await policesDu(pdf)).toBe(0);
+  });
+
+  it("coupe un texte trop long au bas du cadre", async () => {
+    // Légende de 10 pt : 4,23 mm par ligne, neuf lignes dans 40 mm ; le texte en demande douze.
+    const pdf = await rendre(
+      livreAvecTextes(null, "Une longue légende qui ne tient pas. ".repeat(40)),
+    );
+    expect(compter(await operateursDe(pdf), "Tj")).toBe(9);
+  });
+
+  it("trace le filet du thème en haut des cadres texte écrits", async () => {
+    const carnet: Theme = { ...CLASSIQUE, bordure_cadre: { filet_pt: 0.5 } };
+    const sansFilet = compter(
+      await operateursDe(await rendre(livreAvecTextes("Lisbonne", null))),
+      "S",
+    );
+    const avecFilet = compter(
+      await operateursDe(
+        await rendre(livreAvecTextes("Lisbonne", null, carnet)),
+      ),
+      "S",
+    );
+    expect(avecFilet - sansFilet).toBe(1);
+  });
+
+  it("échoue plutôt que de substituer une police manquante", async () => {
+    const livre = livreAvecTextes("Lisbonne", null);
+    livre.polices = {};
+    await expect(rendre(livre)).rejects.toThrow("Police manquante");
   });
 });
