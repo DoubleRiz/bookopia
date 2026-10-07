@@ -9,16 +9,34 @@
 -- Thèmes
 -- ---------------------------------------------------------------------------
 
-insert into public.theme (id, nom, police_titre, police_texte, palette, rayon_angles, bordure_cadre, marge_interieure)
+insert into public.theme (id, nom, palette, rayon_angles, bordure_cadre, marge_interieure, typographie)
 values
-  ('00000000-0000-4000-a000-000000000001', 'Classique', 'EB Garamond', 'EB Garamond',
-   '{"fond": "#FAF7F2", "texte": "#3E3856"}', 0, null, 0),
-  ('00000000-0000-4000-a000-000000000002', 'Moderne', 'Nunito', 'Nunito',
-   '{"fond": "#F4EFFC", "texte": "#1E1B2E"}', 0, null, 0),
-  ('00000000-0000-4000-a000-000000000003', 'Carnet', 'Nunito', 'Caveat',
-   '{"fond": "#FFF5E6", "texte": "#2F4A80"}', 0, '{"filet_pt": 0.5}', 0),
-  ('00000000-0000-4000-a000-000000000004', 'Silence', 'Nunito', 'Nunito',
-   '{"fond": "#FFFFFF", "texte": "#1E1B2E"}', 0, null, 0);
+  ('00000000-0000-4000-a000-000000000001', 'Classique',
+   '{"fond": "#FAF7F2", "texte": "#3E3856"}', 0, null, 0, '{
+     "titre": {"police": "EB Garamond", "graisse": 500, "italique": false, "taille_pt": 18},
+     "legende": {"police": "EB Garamond", "graisse": 400, "italique": true, "taille_pt": 10},
+     "alignement": "centre", "ancrage": "haut", "styles_masques": []
+   }'),
+  ('00000000-0000-4000-a000-000000000002', 'Moderne',
+   '{"fond": "#F4EFFC", "texte": "#1E1B2E"}', 0, null, 0, '{
+     "titre": {"police": "Nunito", "graisse": 800, "italique": false, "taille_pt": 18},
+     "legende": {"police": "Nunito", "graisse": 400, "italique": false, "taille_pt": 9},
+     "alignement": "gauche", "ancrage": "haut", "styles_masques": []
+   }'),
+  ('00000000-0000-4000-a000-000000000003', 'Carnet',
+   '{"fond": "#FFF5E6", "texte": "#2F4A80"}', 0, '{"filet_pt": 0.5}', 0, '{
+     "titre": {"police": "Nunito", "graisse": 700, "italique": false, "taille_pt": 15},
+     "legende": {"police": "Caveat", "graisse": 600, "italique": false, "taille_pt": 15},
+     "alignement": "exterieur", "ancrage": "bas", "styles_masques": []
+   }'),
+  -- Silence : seul le titre de la page de titre reste visible. Sa légende n'est jamais dessinée,
+  -- elle existe pour que toutes les typographies aient la même forme.
+  ('00000000-0000-4000-a000-000000000004', 'Silence',
+   '{"fond": "#FFFFFF", "texte": "#1E1B2E"}', 0, null, 0, '{
+     "titre": {"police": "Nunito", "graisse": 600, "italique": false, "taille_pt": 14},
+     "legende": {"police": "Nunito", "graisse": 400, "italique": false, "taille_pt": 9},
+     "alignement": "centre", "ancrage": "haut", "styles_masques": ["titre", "legende"]
+   }');
 
 -- ---------------------------------------------------------------------------
 -- Gabarits intérieurs
@@ -64,25 +82,25 @@ values
   -- Raconté : photos et emplacements texte
   ('00000000-0000-4000-b000-000000000008', 'Panoramique et légende', 'interieur', 'raconte', '[
     {"indice": 0, "nature": "photo", "x": 0, "y": 0, "largeur": 420, "hauteur": 140},
-    {"indice": 1, "nature": "texte", "x": 15, "y": 155, "largeur": 180, "hauteur": 40},
-    {"indice": 2, "nature": "texte", "x": 225, "y": 155, "largeur": 180, "hauteur": 40}
+    {"indice": 1, "nature": "texte", "style": "titre", "x": 15, "y": 155, "largeur": 180, "hauteur": 40},
+    {"indice": 2, "nature": "texte", "style": "legende", "x": 225, "y": 155, "largeur": 180, "hauteur": 40}
   ]'),
   ('00000000-0000-4000-b000-000000000009', 'Photo et bloc texte', 'interieur', 'raconte', '[
     {"indice": 0, "nature": "photo", "x": 12, "y": 12, "largeur": 188, "hauteur": 186},
-    {"indice": 1, "nature": "texte", "x": 240, "y": 66, "largeur": 150, "hauteur": 22},
-    {"indice": 2, "nature": "texte", "x": 240, "y": 96, "largeur": 150, "hauteur": 48}
+    {"indice": 1, "nature": "texte", "style": "titre", "x": 240, "y": 66, "largeur": 150, "hauteur": 22},
+    {"indice": 2, "nature": "texte", "style": "legende", "x": 240, "y": 96, "largeur": 150, "hauteur": 48}
   ]'),
   ('00000000-0000-4000-b000-000000000010', 'Page de titre', 'interieur', 'raconte', '[
     {"indice": 0, "nature": "photo", "x": 270, "y": 48, "largeur": 90, "hauteur": 90},
-    {"indice": 1, "nature": "texte", "x": 240, "y": 150, "largeur": 150, "hauteur": 24}
+    {"indice": 1, "nature": "texte", "style": "titre_page", "x": 240, "y": 150, "largeur": 150, "hauteur": 24}
   ]'),
   ('00000000-0000-4000-b000-000000000011', 'Trio et légendes', 'interieur', 'raconte', '[
     {"indice": 0, "nature": "photo", "x": 14, "y": 30, "largeur": 186, "hauteur": 124},
     {"indice": 1, "nature": "photo", "x": 220, "y": 30, "largeur": 89, "hauteur": 124},
     {"indice": 2, "nature": "photo", "x": 319, "y": 30, "largeur": 89, "hauteur": 124},
-    {"indice": 3, "nature": "texte", "x": 15, "y": 162, "largeur": 180, "hauteur": 14},
-    {"indice": 4, "nature": "texte", "x": 225, "y": 162, "largeur": 79, "hauteur": 14},
-    {"indice": 5, "nature": "texte", "x": 319, "y": 162, "largeur": 81, "hauteur": 14}
+    {"indice": 3, "nature": "texte", "style": "legende", "x": 15, "y": 162, "largeur": 180, "hauteur": 14},
+    {"indice": 4, "nature": "texte", "style": "legende", "x": 225, "y": 162, "largeur": 79, "hauteur": 14},
+    {"indice": 5, "nature": "texte", "style": "legende", "x": 319, "y": 162, "largeur": 81, "hauteur": 14}
   ]');
 
 -- ---------------------------------------------------------------------------
@@ -98,8 +116,8 @@ from (values
 ) as couverture (id, nom, role, famille)
 cross join (values ('[
   {"indice": 0, "nature": "photo", "x": 210, "y": 0, "largeur": 210, "hauteur": 150},
-  {"indice": 1, "nature": "texte", "x": 225, "y": 160, "largeur": 180, "hauteur": 24},
-  {"indice": 2, "nature": "texte", "x": 225, "y": 186, "largeur": 180, "hauteur": 12}
+  {"indice": 1, "nature": "texte", "style": "titre", "x": 225, "y": 160, "largeur": 180, "hauteur": 24},
+  {"indice": 2, "nature": "texte", "style": "legende", "x": 225, "y": 186, "largeur": 180, "hauteur": 12}
 ]')) as geometrie (definition);
 
 insert into public.gabarit (id, nom, role, famille, definition)
@@ -111,7 +129,7 @@ from (values
 ) as quatrieme (id, nom, role, famille)
 cross join (values ('[
   {"indice": 0, "nature": "photo", "x": 60, "y": 30, "largeur": 90, "hauteur": 90},
-  {"indice": 1, "nature": "texte", "x": 15, "y": 135, "largeur": 180, "hauteur": 50}
+  {"indice": 1, "nature": "texte", "style": "legende", "x": 15, "y": 135, "largeur": 180, "hauteur": 50}
 ]')) as geometrie (definition);
 
 -- ---------------------------------------------------------------------------

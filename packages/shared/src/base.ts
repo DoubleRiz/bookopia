@@ -90,6 +90,7 @@ export type Database = {
           nature: Database["public"]["Enums"]["nature_emplacement"]
           photo_id: string | null
           projet_id: string
+          style_texte: Database["public"]["Enums"]["style_texte"] | null
           x: number
           y: number
         }
@@ -106,6 +107,7 @@ export type Database = {
           nature: Database["public"]["Enums"]["nature_emplacement"]
           photo_id?: string | null
           projet_id: string
+          style_texte?: Database["public"]["Enums"]["style_texte"] | null
           x: number
           y: number
         }
@@ -122,6 +124,7 @@ export type Database = {
           nature?: Database["public"]["Enums"]["nature_emplacement"]
           photo_id?: string | null
           projet_id?: string
+          style_texte?: Database["public"]["Enums"]["style_texte"] | null
           x?: number
           y?: number
         }
@@ -369,9 +372,8 @@ export type Database = {
           marge_interieure: number
           nom: string
           palette: Json
-          police_texte: string
-          police_titre: string
           rayon_angles: number
+          typographie: Json
         }
         Insert: {
           actif?: boolean
@@ -380,9 +382,8 @@ export type Database = {
           marge_interieure: number
           nom: string
           palette: Json
-          police_texte: string
-          police_titre: string
           rayon_angles: number
+          typographie: Json
         }
         Update: {
           actif?: boolean
@@ -391,9 +392,8 @@ export type Database = {
           marge_interieure?: number
           nom?: string
           palette?: Json
-          police_texte?: string
-          police_titre?: string
           rayon_angles?: number
+          typographie?: Json
         }
         Relationships: []
       }
@@ -422,6 +422,10 @@ export type Database = {
     Functions: {
       changer_gabarit: {
         Args: { p_double_page_id: string; p_gabarit_id: string }
+        Returns: undefined
+      }
+      changer_theme: {
+        Args: { p_projet_id: string; p_theme_id: string }
         Returns: undefined
       }
       composer_livre: {
@@ -494,6 +498,7 @@ export type Database = {
       nature_emplacement: "photo" | "texte"
       role_double_page: "couverture" | "interieur" | "quatrieme"
       source_photo: "upload" | "google_photos"
+      style_texte: "titre" | "titre_page" | "legende"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -628,6 +633,7 @@ export const Constants = {
       nature_emplacement: ["photo", "texte"],
       role_double_page: ["couverture", "interieur", "quatrieme"],
       source_photo: ["upload", "google_photos"],
+      style_texte: ["titre", "titre_page", "legende"],
     },
   },
 } as const

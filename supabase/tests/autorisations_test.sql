@@ -2,7 +2,7 @@
 -- Chacun ne voit et ne modifie que ses livres ; le navigateur n'écrit que ce qui lui est accordé.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(34);
+select plan(36);
 
 -- ---------------------------------------------------------------------------
 -- Mise en place, en superutilisateur
@@ -130,6 +130,18 @@ select throws_ok(
   $$ update public.emplacement set largeur = 1 $$,
   '42501', null,
   'La géométrie d''un emplacement ne se modifie pas'
+);
+
+select throws_ok(
+  $$ update public.emplacement set style_texte = 'titre' $$,
+  '42501', null,
+  'Le style d''un emplacement texte ne se modifie pas'
+);
+
+select throws_ok(
+  $$ update public.projet set theme_id = '00000000-0000-4000-a000-000000000002' $$,
+  '42501', null,
+  'Le thème ne change que par changer_theme'
 );
 
 select lives_ok(
