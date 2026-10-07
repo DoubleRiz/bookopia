@@ -1,0 +1,43 @@
+.doublePage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  margin: 0;
+}
+
+/* Double page en élévation sur le plan de travail. Unités du dessin : millimètres. */
+.feuille {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--rayon-page);
+  box-shadow: var(--ombre-page);
+}
+
+.cadreVide {
+  fill: var(--couleur-lavande-pale);
+  stroke: var(--couleur-bordure);
+  stroke-width: 0.6;
+  stroke-dasharray: 2 1.5;
+}
+
+.cadreTexte {
+  fill: none;
+  stroke: var(--couleur-pastille-neutre);
+  stroke-opacity: 0.5;
+  stroke-width: 0.4;
+  stroke-dasharray: 2 1.5;
+}
+
+/* Discret : il aide à lire la double page, il n'est pas imprimé. */
+.pli {
+  stroke: var(--couleur-encre);
+  stroke-opacity: 0.12;
+  stroke-width: 0.3;
+}
+
+.libelle {
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+  text-align: center;
+}
