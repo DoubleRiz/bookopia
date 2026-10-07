@@ -1,24 +1,15 @@
-import { type ReponseErreur, reponseErreurSchema } from "@bookopia/shared";
+import type { PostgrestError } from "@supabase/supabase-js";
 
-// Même chemin en développement (proxy Vite) et en production (Caddy) : le front n'a qu'une origine,
-// le cookie de session part donc sans réglage CORS.
-const RACINE_API = "/api";
-
-const STATUTS_PASSERELLE = new Set([502, 503, 504]);
-
-// L'API a répondu, avec une erreur au format partagé.
-export class ErreurApi extends Error {
-  constructor(
-    readonly statut: number,
-    readonly corps: ReponseErreur,
-  ) {
-    super(corps.message ?? corps.code);
-    this.name = "ErreurApi";
+// Aucune session : jamais connecté, déconnecté, ou session expirée.
+export class ErreurNonAuthentifie extends Error {
+  constructor() {
+    super("Aucune session");
+    this.name = "ErreurNonAuthentifie";
   }
 }
 
-// L'API n'a pas répondu du tout : réseau coupé, ou API arrêtée derrière le proxy.
-// L'écran ne dit pas la même chose qu'une erreur de l'API.
+// Supabase n'a pas répondu du tout : réseau coupé, ou Supabase arrêté.
+// L'écran ne dit pas la même chose qu'une erreur renvoyée par la base.
 export class ErreurReseau extends Error {
   constructor() {
     super("Le serveur ne répond pas");
@@ -26,61 +17,36 @@ export class ErreurReseau extends Error {
   }
 }
 
-// Le schéma de @bookopia/shared vérifie la réponse à l'exécution : un écart de contrat
-// entre l'API et le front casse ici, avec un message, plutôt que trois composants plus loin.
-type Schema<T> = { parse: (donnees: unknown) => T };
+// La base a répondu par une erreur. code : code stable levé par une fonction SQL
+// (« invalide », « introuvable »…) ou code PostgreSQL ; detail : explication pour le développeur.
+export class ErreurBase extends Error {
+  constructor(
+    readonly code: string,
+    readonly detail: string | null,
+  ) {
+    super(detail ?? code);
+    this.name = "ErreurBase";
+  }
+}
 
-type Options<T> = {
-  methode?: "GET" | "POST" | "PATCH" | "DELETE";
-  corps?: unknown;
-  schema?: Schema<T>;
+type Reponse<T> = {
+  data: T;
+  error: PostgrestError | null;
+  status: number;
 };
 
-export async function requete<T = void>(
-  chemin: string,
-  { methode = "GET", corps, schema }: Options<T> = {},
-): Promise<T> {
-  let reponse: Response;
-  try {
-    reponse = await fetch(`${RACINE_API}${chemin}`, {
-      method: methode,
-      headers:
-        corps === undefined
-          ? undefined
-          : { "Content-Type": "application/json" },
-      body: corps === undefined ? undefined : JSON.stringify(corps),
-    });
-  } catch {
+// Déballe une réponse de supabase-js : la donnée, ou une erreur typée.
+// Les fonctions SQL lèvent leur code stable dans message (voir les migrations).
+export function verifier<T>({ data, error, status }: Reponse<T>): T {
+  if (status === 0) {
     throw new ErreurReseau();
   }
-
-  // Le proxy (Vite en développement, Caddy en production) répond à la place d'une API injoignable.
-  if (STATUTS_PASSERELLE.has(reponse.status)) {
-    throw new ErreurReseau();
-  }
-  if (!reponse.ok) {
-    throw new ErreurApi(reponse.status, await lireErreur(reponse));
-  }
-  if (!schema) {
-    return undefined as T;
-  }
-  return schema.parse(await reponse.json());
-}
-
-// Un corps qui ne suit pas le contrat (absent, HTML d'un intermédiaire) devient une erreur interne
-// plutôt que de laisser fuir un corps inconnu.
-async function lireErreur(reponse: Response): Promise<ReponseErreur> {
-  try {
-    const resultat = reponseErreurSchema.safeParse(await reponse.json());
-    if (resultat.success) {
-      return resultat.data;
+  if (error) {
+    if (error.code === "PGRST301" || status === 401) {
+      throw new ErreurNonAuthentifie();
     }
-  } catch {
-    // corps absent ou non JSON
+    const codeMetier = error.code === "P0001" ? error.message : error.code;
+    throw new ErreurBase(codeMetier, error.details || null);
   }
-  return { code: "erreur_interne" };
-}
-
-export function estNonAuthentifie(erreur: unknown): boolean {
-  return erreur instanceof ErreurApi && erreur.statut === 401;
+  return data;
 }

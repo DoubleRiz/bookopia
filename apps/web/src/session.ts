@@ -1,5 +1,7 @@
 import { redirect } from "react-router";
-import { ErreurApi, ErreurReseau, estNonAuthentifie } from "./api/client";
+import type { z } from "zod";
+import { ErreurAuthentification } from "./api/authentification";
+import { ErreurNonAuthentifie, ErreurReseau } from "./api/client";
 
 const ADRESSE_PAR_DEFAUT = "/livres";
 
@@ -12,7 +14,7 @@ export async function sousSession<T>(
   try {
     return await charger();
   } catch (erreur) {
-    if (estNonAuthentifie(erreur)) {
+    if (erreur instanceof ErreurNonAuthentifie) {
       const { pathname, search } = new URL(request.url);
       throw redirect(
         `/connexion?retour=${encodeURIComponent(pathname + search)}`,
@@ -42,8 +44,23 @@ export type ResultatFormulaire = {
   champs?: Record<string, string[] | undefined>;
 };
 
+// Codes de Supabase Auth que le Créateur peut corriger. Un email inconnu et un mot de passe faux
+// donnent le même code : le message ne révèle pas si le compte existe.
+const ERREURS_AUTHENTIFICATION: Record<string, ResultatFormulaire> = {
+  invalid_credentials: { message: "Email ou mot de passe incorrect" },
+  user_already_exists: {
+    champs: { email: ["Un compte existe déjà avec cet email"] },
+  },
+  email_exists: { champs: { email: ["Un compte existe déjà avec cet email"] } },
+  email_address_invalid: { champs: { email: ["Adresse e-mail invalide"] } },
+  weak_password: { champs: { motDePasse: ["Mot de passe trop faible"] } },
+  over_request_rate_limit: {
+    message: "Trop de tentatives. Patientez un instant, puis réessayez.",
+  },
+};
+
 // Ce qu'un formulaire sait afficher : une erreur par champ, ou un message global.
-// Le reste (500, contrat rompu) remonte à l'élément d'erreur de la route.
+// Le reste (base en erreur, contrat rompu) remonte à l'élément d'erreur de la route.
 export function erreurDeFormulaire(erreur: unknown): ResultatFormulaire {
   if (erreur instanceof ErreurReseau) {
     return {
@@ -51,10 +68,24 @@ export function erreurDeFormulaire(erreur: unknown): ResultatFormulaire {
         "Le serveur ne répond pas. Vérifiez votre connexion, puis réessayez.",
     };
   }
-  if (erreur instanceof ErreurApi && erreur.statut < 500) {
-    return { message: erreur.corps.message, champs: erreur.corps.champs };
+  if (erreur instanceof ErreurAuthentification) {
+    return (
+      ERREURS_AUTHENTIFICATION[erreur.code] ?? {
+        message: "La demande a été refusée. Réessayez.",
+      }
+    );
   }
   throw erreur;
+}
+
+// Le front valide d'abord, pour le confort : erreurs affichées sous chaque champ.
+export function erreursDeValidation(erreur: z.ZodError): ResultatFormulaire {
+  const champs: Record<string, string[]> = {};
+  for (const probleme of erreur.issues) {
+    const champ = String(probleme.path[0] ?? "");
+    (champs[champ] ??= []).push(probleme.message);
+  }
+  return { champs };
 }
 
 export function texteDuChamp(donnees: FormData, nom: string): string {

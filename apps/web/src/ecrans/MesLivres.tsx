@@ -1,6 +1,5 @@
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
-import type { ResumeProjet } from "@bookopia/shared";
-import { listerProjets } from "../api/projets";
+import { listerProjets, type ResumeProjet } from "../api/projets";
 import { EtatVide } from "../composants/EtatVide";
 import { Squelette } from "../composants/Squelette";
 import { sousSession } from "../session";
@@ -31,7 +30,7 @@ function LigneLivre({ projet }: { projet: ResumeProjet }) {
           </span>
         </div>
         <span className={styles.meta}>
-          Modifié le {FORMAT_DATE.format(new Date(projet.modifieLe))}
+          Modifié le {FORMAT_DATE.format(new Date(projet.modifie_le))}
         </span>
       </div>
     </li>

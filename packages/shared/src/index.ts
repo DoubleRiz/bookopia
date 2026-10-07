@@ -1,5 +1,5 @@
-// Les schémas Zod partagés entre front, API et worker sont exportés d'ici.
+// Les schémas Zod et les types partagés sont exportés d'ici.
 export * from "./entrees";
-export * from "./erreurs";
 export * from "./gabarit";
-export * from "./reponses";
+// Types de la base, générés par « supabase gen types typescript --local ». Ne pas modifier à la main.
+export type * from "./base";

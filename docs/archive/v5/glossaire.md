@@ -36,9 +36,10 @@ Ces termes ont un sens précis. Ils s'utilisent tels quels dans le code, la docu
 
 | Terme | Sens |
 |---|---|
-| **Import** | L'ajout de photos à la réserve. Le navigateur prépare chaque photo avant l'envoi : original redimensionné, vignette, date de prise de vue, rejet des doublons stricts. |
+| **Import** | L'ajout de photos à la réserve. Chaque photo est traitée par l'API pendant l'envoi : vignette, date de prise de vue, rejet des doublons stricts. |
 | **Préflight** | Les contrôles effectués avant le rendu : DPI insuffisant, emplacements vides. Ce sont des avertissements, jamais des blocages. |
-| **Export** | Le dernier PDF rendu d'un projet. Le rendu se fait dans le navigateur ; seul le résultat est enregistré. |
+| **Export** | Une demande de rendu PDF, son état et son résultat. La ligne sert aussi de file au worker. |
+| **Job** | Un rendu PDF pris en charge par le worker : un job par export. |
 
 ## Interface
 

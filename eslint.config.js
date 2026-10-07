@@ -10,7 +10,8 @@ export default defineConfig(
     ignores: [
       "**/node_modules/",
       "**/dist/",
-      "packages/db/src/generated/",
+      "packages/shared/src/base.ts",
+      "archive/",
       "maquettes/",
       "test-results/",
       "playwright-report/",

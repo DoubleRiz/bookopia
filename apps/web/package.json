@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@bookopia/shared": "*",
+    "@supabase/supabase-js": "^2.117.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-router": "^8.4.0"
+    "react-router": "^8.4.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

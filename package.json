@@ -10,7 +10,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "concurrently -n web,api,worker -c blue,green,yellow --kill-others-on-fail \"npm:dev -w apps/web\" \"npm:dev -w apps/api\" \"npm:dev -w apps/worker\"",
+    "dev": "npm run dev -w apps/web",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "typecheck": "npm run typecheck --workspaces --if-present",
@@ -20,19 +20,13 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.19.1",
-    "concurrently": "^10.0.5",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
     "prettier": "^3.9.9",
-    "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.0",
     "vitest": "^5.0.3"
-  },
-  "overrides": {
-    "mysql2": "^3.24.0",
-    "shell-quote": "^1.11.0"
   }
 }

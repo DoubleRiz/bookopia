@@ -16,17 +16,12 @@ Projet de diplôme CDA : chaque décision technique doit être explicable à un 
 
 | Composant | Technologie |
 |---|---|
-| `apps/web` | React · Vite · TypeScript |
-| `apps/api` | Fastify · Prisma · sharp · TypeScript |
-| `apps/worker` | Node · pdf-lib |
-| `packages/db` | Schéma Prisma, migrations |
-| `packages/shared` | Types et schémas Zod partagés |
-| Base de données | PostgreSQL en conteneur |
-| File d'attente | Table `export` + `SKIP LOCKED` |
-| Fichiers | Disque local, monté en volume |
-| Orchestration | Docker Compose |
+| `apps/web` | React · Vite · TypeScript · supabase-js |
+| `packages/shared` | Schémas Zod, types générés, rendu PDF (pdf-lib) |
+| `supabase/` | Migrations SQL, RLS, fonctions, tests pgTAP, seed |
+| Base, authentification, fichiers | Supabase (PostgreSQL, Auth, Storage), en local via la CLI |
 
-Monorepo npm workspaces. Le front appelle l'API ; l'API écrit en base et traite les photos à l'import ; pour un export, elle passe la ligne `export` en `demande`, le worker la dépile et rend le PDF ; l'avancement remonte en SSE. Le worker ne parle jamais au navigateur.
+Monorepo npm workspaces. Pas de serveur applicatif : le front parle directement à Supabase. La RLS protège chaque table, les règles métier sont des fonctions SQL appelées par `rpc`. Le navigateur prépare les photos et rend le PDF.
 
 Détails et justification de chaque choix : [`docs/architecture.md`](docs/architecture.md).
 
@@ -34,20 +29,20 @@ Détails et justification de chaque choix : [`docs/architecture.md`](docs/archit
 
 ```bash
 npm install                          # racine, tous les workspaces
-docker compose up                    # base de données + services
+supabase start                       # base, auth, stockage et Studio en local (Docker)
+supabase db reset                    # rejoue les migrations et le seed
+supabase test db                     # tests pgTAP (RLS, fonctions)
+supabase gen types typescript --local > packages/shared/src/base.ts
 npm run dev -w apps/web              # front
-npm run dev -w apps/api              # API
-npm run dev -w apps/worker           # worker
-npm run db:migrate -w packages/db    # migrations
 npm run lint && npm run typecheck    # avant tout commit
 npm test
 ```
 
 ## Règles non négociables
 
-1. **Vocabulaire métier français, littéral**, y compris dans les identifiants de code : `doublePage`, `gabarit`, `reserve`, `emplacement`. Jamais « album », « page », « layout », « template ». → [`docs/glossaire.md`](docs/glossaire.md)
-2. **Pas de triggers PostgreSQL.** Contraintes en base, logique procédurale en TypeScript dans l'API.
-3. **Validation Zod en entrée d'API**, même quand le front valide déjà.
+1. **Vocabulaire métier français, littéral**, y compris dans les identifiants de code : `double_page`, `gabarit`, `reserve`, `emplacement`. Jamais « album », « page », « layout », « template ». → [`docs/glossaire.md`](docs/glossaire.md)
+2. **Les règles métier vivent dans Supabase** : contraintes, fonctions SQL appelées par `rpc`, triggers pour les automatismes mécaniques, chaque fonction commentée en français. Le navigateur ne fait que ce qu'une base ne sait pas faire : préparer les photos et rendre le PDF.
+3. **RLS activée sur toutes les tables**, et les entrées revérifiées dans chaque fonction SQL, même quand le front valide déjà. La clé `service_role` n'est jamais utilisée par l'application.
 4. **Rendu PDF avec pdf-lib**, jamais Chromium headless.
 
 ## Ce qu'un agent ne fait pas
@@ -70,3 +65,4 @@ Le dépôt fait foi. Notion héberge les spécifications fonctionnelles (écrans
 | [`docs/glossaire.md`](docs/glossaire.md) | Vocabulaire métier |
 | [`docs/conventions.md`](docs/conventions.md) | Nommage, structure, tests, commits |
 | [`docs/design-system.md`](docs/design-system.md) | Tokens, composants, états |
+| `docs/archive/` | Anciennes versions, pour mémoire : ne font pas foi |
