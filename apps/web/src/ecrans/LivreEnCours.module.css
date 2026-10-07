@@ -50,28 +50,9 @@
   gap: var(--espace-3);
 }
 
-.export {
-  display: flex;
-  flex-direction: column;
-  gap: var(--espace-4);
+.lienExport {
+  display: inline-block;
   margin-top: var(--espace-6);
-}
-
-.actionsExport {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--espace-3);
-}
-
-.telechargement {
   color: var(--couleur-encre);
   font-weight: 700;
-}
-
-.etat {
-  min-height: 1.5em;
-  margin: 0;
-  color: var(--couleur-texte-secondaire);
-  font-size: 14px;
 }

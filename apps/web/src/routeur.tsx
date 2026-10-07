@@ -8,6 +8,7 @@ import {
   EcranCreateurProvisoire,
 } from "./ecrans/EcranCreateur";
 import { ErreurChargement } from "./ecrans/ErreurChargement";
+import { chargerExport, Export } from "./ecrans/Export";
 import { chargerImport, ImportPhotos } from "./ecrans/ImportPhotos";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
 import {
@@ -95,6 +96,12 @@ export const routeur = createBrowserRouter([
                     Component: ImportPhotos,
                   },
                 ],
+              },
+              // E9 : écran à part entière, pas une surcouche de l'éditeur.
+              {
+                path: "/livre/:id/export",
+                loader: chargerExport,
+                Component: Export,
               },
             ],
           },

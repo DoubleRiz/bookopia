@@ -1,7 +1,8 @@
-import { themeSchema } from "@bookopia/shared";
+import { type DoublePageAControler, themeSchema } from "@bookopia/shared";
 import type { LivreLu } from "../export/charger";
 import { supabase } from "../supabase";
 import { ErreurBase, verifier } from "./client";
+import type { DoublePageDuLivre } from "./doublesPages";
 import { cheminOriginal } from "./photos";
 
 // Chemin du bucket exports : le premier dossier est le Créateur, c'est ce que vérifie la règle Storage.
@@ -49,6 +50,50 @@ export async function lireLivreARendre(projetId: string): Promise<LivreLu> {
       emplacements: doublePage.emplacement,
     })),
   };
+}
+
+// Le livre pour l'écran d'export : de quoi nommer le livre, signer son PDF et dire s'il est à jour.
+// Un identifiant inconnu ou celui d'un autre : null, la RLS ne laisse rien voir.
+export async function lireProjetPourExport(projetId: string) {
+  return verifier(
+    await supabase
+      .from("projet")
+      .select("id, titre, utilisateur_id, modifie_le")
+      .eq("id", projetId)
+      .maybeSingle(),
+  );
+}
+
+// Les doubles pages dans l'ordre du livre, avec les dimensions des photos posées :
+// de quoi contrôler les cadres avant le rendu (controlerExport).
+export async function lireDoublesPagesAControler(projetId: string): Promise<
+  (DoublePageAControler & {
+    role: DoublePageDuLivre["role"];
+    position: number | null;
+  })[]
+> {
+  const doublesPages = verifier(
+    await supabase
+      .from("double_page")
+      .select(
+        `id, role, position,
+        emplacement (
+          id, nature, x, y, largeur, hauteur,
+          cadrage_x, cadrage_y, cadrage_zoom,
+          photo (largeur_px, hauteur_px)
+        )`,
+      )
+      .eq("projet_id", projetId)
+      .order("role")
+      .order("position")
+      .order("indice", { referencedTable: "emplacement" }),
+  );
+  return (doublesPages ?? []).map((doublePage) => ({
+    id: doublePage.id,
+    role: doublePage.role,
+    position: doublePage.position,
+    emplacements: doublePage.emplacement,
+  }));
 }
 
 export async function telechargerOriginal(

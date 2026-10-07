@@ -19,7 +19,6 @@ import {
   listerDoublesPages,
   listerGabaritsDuLivre,
 } from "../api/doublesPages";
-import { cheminPdf, lireExport, urlDuPdf } from "../api/exports";
 import {
   listerPhotos,
   lireProjet,
@@ -43,7 +42,6 @@ import {
   sousSession,
   texteDuChamp,
 } from "../session";
-import { ExportDuLivre } from "./ExportDuLivre";
 import styles from "./LivreEnCours.module.css";
 
 const identifiantSchema = z.uuid();
@@ -102,7 +100,6 @@ export async function chargerLivreEnCours({
       photos,
     );
     const doublesPages = await listerDoublesPages(projet.id);
-    const pdf = await lireExport(projet.id);
     const theme = lireTheme(projet.theme);
     return {
       projet,
@@ -112,12 +109,6 @@ export async function chargerLivreEnCours({
       doublesPages,
       gabarits: await lireGabarits(projet.id),
       photos: photos.map((photo) => ({ ...photo, url: urls.get(photo.id) })),
-      urlDuPdf: pdf
-        ? await urlDuPdf(
-            cheminPdf(projet.utilisateur_id, projet.id, pdf.cle_stockage),
-            projet.titre,
-          )
-        : null,
     };
   });
 }
@@ -324,18 +315,10 @@ function ComposerLeLivre({
   );
 }
 
-// E7 : l'éditeur, l'import (E5) qui s'ouvre par-dessus à sa propre adresse, et l'export.
+// E7 : l'éditeur, l'import (E5) qui s'ouvre par-dessus à sa propre adresse, et le lien vers l'export (E9).
 export function LivreEnCours() {
-  const {
-    projet,
-    theme,
-    polices,
-    themes,
-    doublesPages,
-    gabarits,
-    photos,
-    urlDuPdf,
-  } = useLoaderData<typeof chargerLivreEnCours>();
+  const { projet, theme, polices, themes, doublesPages, gabarits, photos } =
+    useLoaderData<typeof chargerLivreEnCours>();
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
   const [aSupprimer, setASupprimer] = useState<Photo | null>(null);
@@ -380,7 +363,9 @@ export function LivreEnCours() {
         }
       />
       {photos.length > 0 && (
-        <ExportDuLivre projet={projet} urlDuPdf={urlDuPdf} />
+        <Link to="export" className={styles.lienExport}>
+          Exporter le livre
+        </Link>
       )}
       {aSupprimer && (
         <ModaleSupprimerPhoto photo={aSupprimer} onFermer={fermer} />
