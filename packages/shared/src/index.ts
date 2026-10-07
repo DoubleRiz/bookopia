@@ -2,6 +2,7 @@
 export * from "./cadrage";
 export * from "./choix-gabarits";
 export * from "./composition";
+export * from "./controle-export";
 export * from "./entrees";
 export * from "./gabarit";
 export * from "./mise-en-lignes";
