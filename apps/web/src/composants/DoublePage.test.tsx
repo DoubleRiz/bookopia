@@ -18,6 +18,7 @@ function emplacement(autres: Partial<Emplacement>): Emplacement {
     cadrage_x: null,
     cadrage_y: null,
     cadrage_zoom: null,
+    contenu_texte: null,
     ...autres,
   };
 }

@@ -16,7 +16,7 @@ export async function listerDoublesPages(projetId: string) {
         `id, role, position,
         emplacement (
           id, indice, nature, x, y, largeur, hauteur,
-          photo_id, cadrage_x, cadrage_y, cadrage_zoom
+          photo_id, cadrage_x, cadrage_y, cadrage_zoom, contenu_texte
         )`,
       )
       .eq("projet_id", projetId)
@@ -30,6 +30,8 @@ export async function listerDoublesPages(projetId: string) {
 export type DoublePageDuLivre = Awaited<
   ReturnType<typeof listerDoublesPages>
 >[number];
+
+export type EmplacementDuLivre = DoublePageDuLivre["emplacement"][number];
 
 // Les gabarits que le moteur peut choisir : intérieurs actifs de la famille du modèle d'origine.
 // Un gabarit mal formé échoue ici, au parse, avant toute écriture.
