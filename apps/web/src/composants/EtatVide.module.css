@@ -1,0 +1,15 @@
+.etatVide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espace-3);
+  padding: var(--espace-12) var(--espace-6);
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-lavande-pale);
+  text-align: center;
+}
+
+.texte {
+  max-width: 420px;
+  color: var(--couleur-texte-corps);
+}

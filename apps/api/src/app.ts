@@ -6,6 +6,7 @@ import type { StockageDisque } from "@bookopia/stockage";
 import { installerGestionErreurs } from "./erreurs";
 import { routesAuthentification } from "./routes/authentification";
 import { routesFichiers } from "./routes/fichiers";
+import { routesProjets } from "./routes/projets";
 import { routesSante } from "./routes/sante";
 
 // Messages de validation en français : le front valide déjà avec les mêmes schémas,
@@ -26,6 +27,7 @@ export async function construireApp(
   await app.register(routesSante, { prisma });
   await app.register(routesAuthentification, { prisma });
   await app.register(routesFichiers, { stockage });
+  await app.register(routesProjets, { prisma });
 
   return app;
 }

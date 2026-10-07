@@ -1,0 +1,24 @@
+/* Lueur lente de gauche à droite, 1,4 s. */
+.squelette {
+  display: block;
+  border-radius: var(--rayon-page);
+  background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(255 255 255 / 60%) 50%,
+      transparent 100%
+    )
+    var(--couleur-lavande-pale);
+  background-size: 200% 100%;
+  animation: lueur 1.4s ease-in-out infinite;
+}
+
+@keyframes lueur {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}

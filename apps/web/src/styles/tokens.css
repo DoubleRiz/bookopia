@@ -1,0 +1,94 @@
+/* Tokens du design system (docs/design-system.md). Aucune valeur brute ailleurs :
+   un composant qui a besoin d'une couleur, d'une taille ou d'une ombre la lit ici. */
+
+:root {
+  /* Neutres */
+  --couleur-fond: #ffffff;
+  --couleur-encre: #1e1b2e;
+  --couleur-texte-corps: #3e3856;
+  --couleur-texte-secondaire: #5e5873;
+  --couleur-bordure: #cdbceb;
+
+  /* Lavande */
+  --couleur-lavande-pale: #f4effc;
+  --couleur-lavande: #e2d5f8;
+  --couleur-cta: #7b52b8;
+  --couleur-cta-survol: #6a43a5;
+
+  /* Pastels : pâle, moyen, encre */
+  --couleur-rose-pale: #fdeef3;
+  --couleur-rose: #fbd9e4;
+  --couleur-rose-encre: #8a2847;
+  --couleur-menthe-pale: #eaf8f1;
+  --couleur-menthe: #cdefe0;
+  --couleur-menthe-encre: #1f5e45;
+  --couleur-ciel-pale: #eaf1ff;
+  --couleur-ciel: #c8dcff;
+  --couleur-ciel-encre: #2f4a80;
+  --couleur-beurre-pale: #fff5e6;
+  --couleur-beurre: #ffe7c2;
+  --couleur-beurre-encre: #7a4a0e;
+
+  /* Corail : une touche par écran, jamais sur un bouton ni en texte courant */
+  --couleur-corail: #f2637e;
+  --couleur-corail-encre: #d43f5e;
+
+  /* Fonctionnelles */
+  --couleur-destructif: #c4334f;
+  --couleur-destructif-survol: #a82b44;
+  --couleur-erreur-champ: #b0304f;
+  --couleur-voile: rgb(30 27 46 / 42%);
+
+  /* Pastilles des badges */
+  --couleur-pastille-neutre: #a9a3bc;
+  --couleur-pastille-en-cours: #4f78d6;
+  --couleur-pastille-attention: #e39b2d;
+  --couleur-pastille-succes: #2e9e6e;
+  --couleur-pastille-erreur: #d43f5e;
+
+  /* Typographie : une seule famille */
+  --police: "Nunito", system-ui, sans-serif;
+  --approche-titre: -0.015em;
+  --taille-display: 48px;
+  --interligne-display: 1.05;
+  --taille-h1: 36px;
+  --interligne-h1: 1.1;
+  --taille-h2: 26px;
+  --interligne-h2: 1.2;
+  --taille-h3: 19px;
+  --interligne-h3: 1.25;
+  --taille-corps: 15px;
+  --interligne-corps: 1.6;
+  --taille-petit: 13px;
+  --interligne-petit: 1.5;
+  --taille-label: 11px;
+
+  /* Espacements, base 4 */
+  --espace-1: 4px;
+  --espace-2: 8px;
+  --espace-3: 12px;
+  --espace-4: 16px;
+  --espace-6: 24px;
+  --espace-8: 32px;
+  --espace-12: 48px;
+
+  /* Rayons */
+  --rayon-page: 4px;
+  --rayon-champ: 10px;
+  --rayon-carte: 20px;
+  --rayon-pill: 999px;
+
+  /* Élévation, teintée encre, jamais noire */
+  --ombre-contact: 0 1px 3px rgb(30 27 46 / 12%);
+  --ombre-page: 0 8px 24px rgb(30 27 46 / 12%);
+  --ombre-flottant: 0 10px 40px rgb(30 27 46 / 18%);
+  --ombre-modale: 0 24px 64px rgb(30 27 46 / 28%);
+
+  /* Focus clavier : même anneau partout */
+  --anneau-focus: 0 0 0 2px var(--couleur-fond), 0 0 0 4px var(--couleur-cta);
+  --halo-champ: 0 0 0 3px var(--couleur-lavande);
+  --halo-champ-erreur: 0 0 0 3px var(--couleur-rose-pale);
+
+  /* Cibles tactiles */
+  --cible-min: 44px;
+}

@@ -1,0 +1,88 @@
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espace-2);
+  border: 1px solid transparent;
+  border-radius: var(--rayon-pill);
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.bouton:disabled {
+  background: var(--couleur-lavande);
+  border-color: var(--couleur-lavande);
+  color: var(--couleur-texte-secondaire);
+  cursor: not-allowed;
+}
+
+.grand {
+  min-height: 52px;
+  padding: 15px 28px;
+  font-size: 16px;
+}
+
+.moyen {
+  min-height: var(--cible-min);
+  padding: 12px 22px;
+  font-size: 14px;
+}
+
+.petit {
+  min-height: 32px;
+  padding: 8px 14px;
+  font-size: 12px;
+}
+
+.principal {
+  background: var(--couleur-cta);
+  color: var(--couleur-fond);
+}
+
+.principal:hover:not(:disabled) {
+  background: var(--couleur-cta-survol);
+}
+
+.secondaire {
+  background: var(--couleur-fond);
+  border-color: var(--couleur-bordure);
+  color: var(--couleur-encre);
+  font-weight: 600;
+}
+
+.secondaire:hover:not(:disabled) {
+  background: var(--couleur-ciel);
+  border-color: var(--couleur-ciel);
+}
+
+.tertiaire {
+  background: transparent;
+  color: var(--couleur-cta);
+  font-weight: 600;
+}
+
+.tertiaire:hover:not(:disabled) {
+  background: var(--couleur-lavande-pale);
+}
+
+/* Le libellé reste : seul un tour de 0,8 s s'ajoute dans le bouton qui a lancé l'action. */
+.tour {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentcolor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: tourner 0.8s linear infinite;
+}
+
+@keyframes tourner {
+  to {
+    transform: rotate(360deg);
+  }
+}
