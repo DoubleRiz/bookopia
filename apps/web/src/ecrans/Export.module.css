@@ -1,0 +1,66 @@
+.entete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  min-width: 0;
+}
+
+.entete h1 {
+  overflow-wrap: anywhere;
+}
+
+.retour {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.retour:hover {
+  color: var(--couleur-encre);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+  margin-top: var(--espace-6);
+}
+
+.note {
+  margin: 0;
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
+
+.liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  margin: 0;
+  padding-left: var(--espace-4);
+}
+
+.liste a {
+  color: var(--couleur-encre);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-3);
+}
+
+.telechargement {
+  color: var(--couleur-encre);
+  font-weight: 700;
+}
+
+.etat {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
