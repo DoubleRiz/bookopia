@@ -5,20 +5,21 @@ import {
   useActionData,
   useNavigation,
 } from "react-router";
+import { inscriptionSchema } from "@bookopia/shared";
 import { inscrire } from "../api/authentification";
-import { ErreurApi } from "../api/client";
 import { Bouton } from "../composants/Bouton";
 import { Champ } from "../composants/Champ";
 import {
   adresseDeRetour,
   erreurDeFormulaire,
+  erreursDeValidation,
   type ResultatFormulaire,
   texteDuChamp,
 } from "../session";
 import { EcranVisiteur } from "./EcranVisiteur";
 import styles from "./Formulaire.module.css";
 
-// Mêmes bornes que inscriptionSchema : le front prévient, l'API tranche.
+// Mêmes bornes que inscriptionSchema et que minimum_password_length de supabase/config.toml.
 const LONGUEUR_MIN_MOT_DE_PASSE = 8;
 const LONGUEUR_MAX_MOT_DE_PASSE = 128;
 const LONGUEUR_MAX_NOM = 80;
@@ -27,17 +28,17 @@ export async function actionInscription({
   request,
 }: ActionFunctionArgs): Promise<ResultatFormulaire | Response> {
   const donnees = await request.formData();
+  const entree = inscriptionSchema.safeParse({
+    nomAffichage: texteDuChamp(donnees, "nomAffichage"),
+    email: texteDuChamp(donnees, "email"),
+    motDePasse: texteDuChamp(donnees, "motDePasse"),
+  });
+  if (!entree.success) {
+    return erreursDeValidation(entree.error);
+  }
   try {
-    await inscrire({
-      nomAffichage: texteDuChamp(donnees, "nomAffichage"),
-      email: texteDuChamp(donnees, "email"),
-      motDePasse: texteDuChamp(donnees, "motDePasse"),
-    });
+    await inscrire(entree.data);
   } catch (erreur) {
-    // Le conflit concerne l'email : le message va sous le champ plutôt qu'en tête de formulaire.
-    if (erreur instanceof ErreurApi && erreur.corps.code === "conflit") {
-      return { champs: { email: [erreur.corps.message ?? ""] } };
-    }
     return erreurDeFormulaire(erreur);
   }
   return redirect(adresseDeRetour(request));

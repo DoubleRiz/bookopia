@@ -7,8 +7,11 @@ import {
   redirect,
   useLoaderData,
 } from "react-router";
-import type { Utilisateur } from "@bookopia/shared";
-import { deconnecter, lireUtilisateurConnecte } from "../api/authentification";
+import {
+  deconnecter,
+  lireUtilisateurConnecte,
+  type Utilisateur,
+} from "../api/authentification";
 import { Bouton } from "../composants/Bouton";
 import { Logo } from "../composants/Logo";
 import { Squelette } from "../composants/Squelette";
@@ -42,10 +45,10 @@ function Entete({
           <span
             className={styles.avatar}
             role="img"
-            title={utilisateur.nomAffichage}
-            aria-label={`Connecté en tant que ${utilisateur.nomAffichage}`}
+            title={utilisateur.nom_affichage}
+            aria-label={`Connecté en tant que ${utilisateur.nom_affichage}`}
           >
-            {utilisateur.nomAffichage.charAt(0).toUpperCase()}
+            {utilisateur.nom_affichage.charAt(0).toUpperCase()}
           </span>
           <Form method="post" action="/deconnexion">
             <Bouton type="submit" variante="tertiaire">
@@ -76,7 +79,7 @@ export function EcranCreateur() {
 }
 
 // La même enveloppe sans le Créateur : au premier affichage, pendant que les loaders tournent,
-// ou quand /auth/moi a échoué pour une autre raison que la session.
+// ou quand la lecture du Créateur a échoué pour une autre raison que la session.
 export function EcranCreateurProvisoire({
   enChargement = false,
   children,

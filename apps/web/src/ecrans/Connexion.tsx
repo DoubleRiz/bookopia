@@ -5,12 +5,14 @@ import {
   useActionData,
   useNavigation,
 } from "react-router";
+import { connexionSchema } from "@bookopia/shared";
 import { connecter } from "../api/authentification";
 import { Bouton } from "../composants/Bouton";
 import { Champ } from "../composants/Champ";
 import {
   adresseDeRetour,
   erreurDeFormulaire,
+  erreursDeValidation,
   type ResultatFormulaire,
   texteDuChamp,
 } from "../session";
@@ -21,18 +23,22 @@ export async function actionConnexion({
   request,
 }: ActionFunctionArgs): Promise<ResultatFormulaire | Response> {
   const donnees = await request.formData();
+  const entree = connexionSchema.safeParse({
+    email: texteDuChamp(donnees, "email"),
+    motDePasse: texteDuChamp(donnees, "motDePasse"),
+  });
+  if (!entree.success) {
+    return erreursDeValidation(entree.error);
+  }
   try {
-    await connecter({
-      email: texteDuChamp(donnees, "email"),
-      motDePasse: texteDuChamp(donnees, "motDePasse"),
-    });
+    await connecter(entree.data);
   } catch (erreur) {
     return erreurDeFormulaire(erreur);
   }
   return redirect(adresseDeRetour(request));
 }
 
-// E1. Pas de règle de longueur ici, comme dans l'API : la refuser trahirait la règle d'inscription.
+// E1. Pas de règle de longueur ici : la refuser trahirait la règle d'inscription.
 export function Connexion() {
   const resultat = useActionData<typeof actionConnexion>();
   const enCours = useNavigation().state === "submitting";
