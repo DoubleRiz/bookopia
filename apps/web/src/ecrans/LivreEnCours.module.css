@@ -1,0 +1,77 @@
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espace-4);
+}
+
+.titre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  min-width: 0;
+}
+
+.titre h1 {
+  overflow-wrap: anywhere;
+}
+
+.retour {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.retour:hover {
+  color: var(--couleur-encre);
+}
+
+.reserve {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+}
+
+.enteteReserve {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espace-3);
+}
+
+.compte {
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--espace-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Carré, image recadrée au centre : la réserve montre les photos, pas leur format. */
+.vignette {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--rayon-page);
+  background: var(--couleur-lavande-pale);
+}
+
+.vignette img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (width < 600px) {
+  .grille {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espace-2);
+  }
+}

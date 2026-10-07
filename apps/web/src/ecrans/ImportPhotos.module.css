@@ -1,0 +1,120 @@
+.corps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+}
+
+.erreurGlobale {
+  padding: var(--espace-3) var(--espace-4);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-rose-pale);
+  color: var(--couleur-rose-encre);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: var(--espace-12) var(--espace-6);
+  border: 2px dashed var(--couleur-lavande);
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-lavande-pale);
+  text-align: center;
+  cursor: pointer;
+}
+
+.zone:focus-within {
+  box-shadow: var(--anneau-focus);
+}
+
+.survol {
+  border-color: var(--couleur-encre);
+}
+
+.zoneTitre {
+  color: var(--couleur-encre);
+  font-weight: 700;
+}
+
+.zoneAide {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+}
+
+/* Masqué mais atteignable au clavier : la zone entière est son libellé. */
+.champ {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.liste {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  font-size: var(--taille-petit);
+  line-height: var(--interligne-petit);
+}
+
+.liste ul {
+  max-height: 160px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.liste li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--espace-2);
+  padding: var(--espace-1) 0;
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+}
+
+.libelle {
+  color: var(--couleur-encre);
+  font-weight: 700;
+}
+
+.nom {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.raison {
+  color: var(--couleur-texte-secondaire);
+}
+
+.etape {
+  color: var(--couleur-encre);
+  font-size: var(--taille-h3);
+  font-weight: 800;
+  line-height: var(--interligne-h3);
+}
+
+.progression {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--couleur-cta);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--espace-3);
+}
+
+.note {
+  margin-right: auto;
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+}

@@ -1,4 +1,9 @@
-import { useRevalidator, useRouteError } from "react-router";
+import {
+  isRouteErrorResponse,
+  Link,
+  useRevalidator,
+  useRouteError,
+} from "react-router";
 import { ErreurReseau } from "../api/client";
 import { Banniere } from "../composants/Banniere";
 import { Bouton } from "../composants/Bouton";
@@ -8,6 +13,18 @@ import { Bouton } from "../composants/Bouton";
 export function ErreurChargement() {
   const erreur = useRouteError();
   const { revalidate, state } = useRevalidator();
+
+  // Réessayer n'y changerait rien : le livre n'existe pas, ou n'est pas à lui.
+  if (isRouteErrorResponse(erreur) && erreur.status === 404) {
+    return (
+      <Banniere
+        titre="Livre introuvable"
+        action={<Link to="/livres">Mes livres</Link>}
+      >
+        Ce livre n'existe pas, ou plus.
+      </Banniere>
+    );
+  }
 
   const titre =
     erreur instanceof ErreurReseau

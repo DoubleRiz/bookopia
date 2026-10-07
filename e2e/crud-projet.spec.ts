@@ -20,6 +20,13 @@ test("le Créateur crée, renomme et supprime un livre", async ({ page }) => {
   await creation.getByLabel("Titre du livre").fill("Été à Lisbonne");
   await creation.getByRole("button", { name: "Créer le livre" }).click();
 
+  // Un livre neuf s'ouvre sur sa réserve, vide.
+  await expect(page).toHaveURL(/\/livre\/[0-9a-f-]{36}$/);
+  await expect(
+    page.getByRole("heading", { name: "Été à Lisbonne" }),
+  ).toBeVisible();
+  await page.getByRole("link", { name: "← Mes livres" }).click();
+
   await expect(page).toHaveURL("/livres");
   await expect(page.getByText("Été à Lisbonne")).toBeVisible();
   await expect(page.getByText("1 livre", { exact: true })).toBeVisible();

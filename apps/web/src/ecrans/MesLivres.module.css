@@ -73,11 +73,17 @@
 }
 
 .nomLivre {
+  color: var(--couleur-encre);
+  text-decoration: none;
   font-size: var(--taille-h3);
   font-weight: 800;
   line-height: var(--interligne-h3);
   letter-spacing: var(--approche-titre);
   overflow-wrap: anywhere;
+}
+
+.nomLivre:hover {
+  text-decoration: underline;
 }
 
 .intention {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
+  Link,
   type LoaderFunctionArgs,
   Outlet,
   useFetcher,
@@ -92,7 +93,9 @@ function LigneLivre({
       </div>
       <div className={styles.infos}>
         <div className={styles.ligneTitre}>
-          <span className={styles.nomLivre}>{projet.titre}</span>
+          <Link to={`/livre/${projet.id}`} className={styles.nomLivre}>
+            {projet.titre}
+          </Link>
           {/* L'intention du Créateur, en contour : le badge plein est réservé à l'avancement calculé. */}
           <span className={styles.intention}>
             {projet.brouillon ? "Brouillon" : "Terminé"}
