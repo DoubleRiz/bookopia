@@ -134,7 +134,7 @@ services/               inchangé
 
 Dans `index.ts`, sur `SIGTERM` et `SIGINT` : `app.close()`. Fastify cesse d'accepter des connexions, termine celles en cours, puis le hook `onClose` existant déconnecte Prisma. Un échec de fermeture est journalisé et le processus sort avec le code 1. Un second signal pendant la fermeture n'en relance pas une autre.
 
-Le signal doit encore atteindre Node. Dans `docker-compose.yml`, le service `api` est lancé par `sh -c "… && npm start -w apps/api"` : `sh` est le PID 1 et ne relaie pas `SIGTERM` à ses enfants, Docker attend dix secondes puis tue le conteneur. La commande devient `sh -c "… && exec npm start -w apps/api"` : `npm` remplace `sh` comme PID 1 et relaie le signal à `tsx`, qui le relaie à Node. Le service `worker` a le même défaut ; il sera corrigé avec l'étape du worker.
+Le signal doit encore atteindre Node. Dans `docker-compose.yml`, le service `api` était lancé par `sh -c "… && npm start -w apps/api"` : `sh` est le PID 1 et ne relaie pas `SIGTERM`, le conteneur finissait tué (code 137). `exec npm start` ne suffit pas : `npm` lance son script par un `sh -c` intermédiaire qui absorbe le signal à son tour (code 1). La commande lance donc `tsx` directement : `sh -c "… && cd apps/api && exec ../../node_modules/.bin/tsx src/index.ts"` ; `tsx` est le PID 1 et relaie le signal à Node. Coût : la commande du conteneur duplique le script `start` de `apps/api`. Le service `worker` a le même défaut ; il sera corrigé avec l'étape du worker.
 
 ## Tests
 
@@ -151,4 +151,4 @@ Nouveau fichier `apps/api/src/app.test.ts`, en intégration sur la base de test 
 
 Les tests d'authentification existants passent sans autre changement que leurs chemins d'import.
 
-L'arrêt propre se vérifie à la main : serveur lancé, `kill -TERM`, sortie avec le code 0 et Prisma déconnecté ; puis `docker compose stop api` rend la main en bien moins de dix secondes.
+L'arrêt propre se vérifie à la main : serveur lancé, `kill -TERM`, sortie avec le code 0 et Prisma déconnecté ; puis `docker compose stop api` laisse le conteneur sorti avec le code 0 et la ligne « arrêt demandé » dans ses journaux.
