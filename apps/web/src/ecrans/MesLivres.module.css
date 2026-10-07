@@ -1,3 +1,11 @@
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--espace-4);
+}
+
 .titre {
   display: flex;
   flex-direction: column;
@@ -86,6 +94,35 @@
   color: var(--couleur-texte-secondaire);
   font-size: 13.5px;
   line-height: var(--interligne-petit);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-2);
+  margin-top: var(--espace-1);
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+}
+
+.erreurGlobale {
+  padding: var(--espace-3) var(--espace-4);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-rose-pale);
+  color: var(--couleur-rose-encre);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.boutonsModale {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espace-3);
 }
 
 @media (width < 600px) {

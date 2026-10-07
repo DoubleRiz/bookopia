@@ -2,7 +2,6 @@ import { type ReactNode, useEffect, useId, useRef } from "react";
 import styles from "./Modale.module.css";
 
 // Sur <dialog> natif : showModal() piège le focus, rend le reste de la page inerte et gère Échap.
-// À la fermeture, le navigateur rend le focus à l'élément qui l'avait avant l'ouverture.
 export function Modale({
   titre,
   sousTitre,
@@ -21,8 +20,16 @@ export function Modale({
 
   useEffect(() => {
     const dialogue = reference.current;
+    const declencheur = document.activeElement;
     dialogue?.showModal();
-    return () => dialogue?.close();
+    // React retire le dialogue du DOM avant ce nettoyage : le navigateur ne rend plus le focus
+    // de lui-même, on le rend au bouton qui a ouvert la modale.
+    return () => {
+      dialogue?.close();
+      if (declencheur instanceof HTMLElement && declencheur.isConnected) {
+        declencheur.focus();
+      }
+    };
   }, []);
 
   return (
