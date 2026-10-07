@@ -3,16 +3,25 @@ import { z } from "zod";
 // Entrées validées par le front avant d'appeler Supabase, pour le confort du Créateur.
 // La vérification qui fait foi est celle de la fonction SQL. utilisateurId n'y figure jamais :
 // la base le lit dans le jeton (auth.uid()).
+// z.guid() et non z.uuid() : PostgreSQL accepte tout UUID bien formé, quelle que soit sa variante,
+// et les identifiants du catalogue de départ (…-4000-d000-…) n'ont pas la variante RFC qu'exige z.uuid().
+
+const titreSchema = z.string().trim().min(1);
 
 export const creerProjetSchema = z.object({
-  titre: z.string().trim().min(1),
-  modeleLivreId: z.uuid(),
+  titre: titreSchema,
+  modeleLivreId: z.guid(),
   // Choisis par le moteur de gabarits du front ; creer_projet vérifie et copie, elle ne choisit pas.
-  gabaritsInterieursIds: z.array(z.uuid()),
+  gabaritsInterieursIds: z.array(z.guid()),
+});
+
+// Même règle que la contrainte check de projet.titre : non vide, sans longueur maximale.
+export const renommerProjetSchema = z.object({
+  titre: titreSchema,
 });
 
 export const insererDoublePageSchema = z.object({
-  gabaritId: z.uuid(),
+  gabaritId: z.guid(),
   position: z.int().min(1),
 });
 
@@ -27,11 +36,12 @@ export const cadrageSchema = z.object({
 });
 
 export const poserPhotoSchema = z.object({
-  photoId: z.uuid(),
+  photoId: z.guid(),
   cadrage: cadrageSchema,
 });
 
 export type EntreeCreerProjet = z.infer<typeof creerProjetSchema>;
+export type EntreeRenommerProjet = z.infer<typeof renommerProjetSchema>;
 export type EntreeInsererDoublePage = z.infer<typeof insererDoublePageSchema>;
 export type EntreeDeplacerDoublePage = z.infer<typeof deplacerDoublePageSchema>;
 export type Cadrage = z.infer<typeof cadrageSchema>;
