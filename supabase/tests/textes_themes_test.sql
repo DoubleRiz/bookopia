@@ -69,8 +69,8 @@ select is(
 );
 select is(
   pg_temp.styles((select id from page where role = 'couverture')),
-  array['-', 'titre', 'legende'],
-  'La couverture reçoit les styles de son gabarit'
+  array['-', 'titre_page', 'legende'],
+  'La couverture reçoit les styles de son gabarit : son titre reste visible sous Silence'
 );
 
 select lives_ok(

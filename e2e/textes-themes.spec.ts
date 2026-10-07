@@ -31,10 +31,13 @@ async function creerLivreRaconte(page: Page) {
 }
 
 const bande = (page: Page) =>
-  page.getByRole("navigation", { name: "Doubles pages intérieures" });
+  page.getByRole("navigation", { name: "Doubles pages du livre" });
 
 async function allerA(page: Page, pages: string) {
-  const miniature = bande(page).getByRole("button", { name: pages });
+  const miniature = bande(page).getByRole("button", {
+    name: pages,
+    exact: true,
+  });
   await miniature.click();
   await expect(miniature).toHaveAttribute("aria-current", "page");
 }
@@ -136,4 +139,32 @@ test("le Créateur écrit ses légendes et change le thème du livre", async ({
     .map((police) => police.get(PDFName.of("BaseFont"))?.toString() ?? "");
   expect(polices).toHaveLength(2);
   expect(polices.every((nom) => nom.includes("EBGaramond"))).toBe(true);
+});
+
+test("le Créateur écrit le titre de sa couverture, visible sous Silence", async ({
+  page,
+}) => {
+  await creerLivreRaconte(page);
+  const couverture = page.getByRole("group", { name: "Couverture" });
+
+  // La couverture se choisit dans la bande comme une intérieure, mais ne se déplace ni ne se supprime.
+  await allerA(page, "Couverture");
+  await expect(
+    bande(page).getByRole("button", { name: "Supprimer" }),
+  ).toHaveCount(0);
+  await ecrire(page, "Titre 2", "Bretagne");
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("status")).toHaveText("Enregistré");
+  await page.reload();
+  await expect(couverture.getByText("Bretagne")).toBeVisible();
+
+  // Silence masque les légendes, pas le titre de la couverture.
+  await changerTheme(page, "Carnet", "Silence");
+  await expect(couverture.getByText("Bretagne")).toBeVisible();
+
+  // La 4e s'édite de la même façon.
+  await allerA(page, "Quatrième de couverture");
+  await expect(
+    page.getByRole("group", { name: "Quatrième de couverture" }),
+  ).toBeVisible();
 });

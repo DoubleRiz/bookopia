@@ -147,9 +147,13 @@ export function Editeur({
   const [parametres, setParametres] = useSearchParams();
 
   const interieures = etat.doublesPages.filter((d) => d.role === "interieur");
+  const couverture = etat.doublesPages.find((d) => d.role === "couverture");
+  const quatrieme = etat.doublesPages.find((d) => d.role === "quatrieme");
+  // Par défaut la première intérieure ; sans intérieure, la couverture.
   const courante =
-    interieures.find((d) => d.id === parametres.get("page")) ??
+    etat.doublesPages.find((d) => d.id === parametres.get("page")) ??
     interieures[0] ??
+    couverture ??
     null;
 
   function choisirPage(doublePageId: string | null) {
@@ -320,11 +324,18 @@ export function Editeur({
 
   const gabaritParDefautId = gabaritParDefaut(gabarits)?.id ?? null;
 
+  // Une double page s'insère après la courante ; depuis la couverture, en tête, depuis la 4e, en fin.
   function ajouter() {
     if (!gabaritParDefautId) return;
     const gabaritId = gabaritParDefautId;
+    const position =
+      courante?.role === "interieur"
+        ? (courante.position ?? 0) + 1
+        : courante?.role === "quatrieme"
+          ? interieures.length + 1
+          : 1;
     void modifierStructure(() =>
-      insererDoublePage(projetId, gabaritId, (courante?.position ?? 0) + 1),
+      insererDoublePage(projetId, gabaritId, position),
     );
   }
 
@@ -377,8 +388,8 @@ export function Editeur({
     ? photosAffichees.get(recadree.photo_id)
     : undefined;
 
-  // Les cartes du choix de thème montrent la page courante ; sans intérieure, la couverture.
-  const apercuTheme = courante ?? etat.doublesPages[0];
+  // Les cartes du choix de thème montrent la page courante.
+  const apercuTheme = courante;
 
   const saisie =
     enSaisie && courante
@@ -527,6 +538,8 @@ export function Editeur({
             </p>
           )}
           <BandeDoublesPages
+            couverture={couverture}
+            quatrieme={quatrieme}
             interieures={interieures}
             courante={courante}
             habillage={habillage}

@@ -83,7 +83,7 @@ test("le Créateur pose, recadre et vide des photos, et organise ses doubles pag
 
   // Structure : ajouter, dupliquer, déplacer, supprimer.
   const bande = page.getByRole("navigation", {
-    name: "Doubles pages intérieures",
+    name: "Doubles pages du livre",
   });
   const miniatures = bande.getByRole("button", { name: /^Pages / });
   const depart = await miniatures.count();
@@ -143,7 +143,7 @@ test("le Créateur change le gabarit d'une double page, après avertissement", a
   });
   await expect(cadresRemplis.first()).toBeVisible();
   const bande = page.getByRole("navigation", {
-    name: "Doubles pages intérieures",
+    name: "Doubles pages du livre",
   });
   const choix = page.getByRole("dialog", { name: "Changer le gabarit" });
   const autreGabarit = choix.locator("button:not([disabled])").first();
