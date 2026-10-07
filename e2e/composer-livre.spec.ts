@@ -17,11 +17,14 @@ test("le Créateur compose son livre, puis le recompose après confirmation", as
   await creation.getByLabel("Titre du livre").fill("Vacances");
   await creation.getByRole("button", { name: "Créer le livre" }).click();
 
-  // Réserve vide : rien à composer.
+  // Réserve vide : rien à composer. Le livre a déjà les intérieures de son modèle.
   const composer = page.getByRole("button", { name: "Composer le livre" });
   await expect(composer).toBeDisabled();
+  const bande = page.getByRole("navigation", {
+    name: "Doubles pages intérieures",
+  });
   await expect(
-    page.getByRole("img", { name: "Couverture", exact: true }),
+    bande.getByRole("button", { name: "Pages 2 et 3" }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Importer des photos" }).click();
@@ -48,11 +51,10 @@ test("le Créateur compose son livre, puis le recompose après confirmation", as
 
   // Livre neuf, aucune photo posée : composition sans confirmation.
   await composer.click();
-  const premiere = page.getByRole("img", { name: "Pages 2 et 3" });
+  const premiere = bande.getByRole("button", { name: "Pages 2 et 3" });
   await expect(premiere).toBeVisible();
-  const posees = page
-    .getByRole("region", { name: "Livre", exact: true })
-    .locator("image");
+  // Chaque intérieure a sa miniature : les photos posées s'y comptent une fois chacune.
+  const posees = bande.locator("image");
   await expect(posees).toHaveCount(4);
   await expect(posees.first()).toHaveAttribute("href", /^http/);
 

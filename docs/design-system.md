@@ -533,7 +533,7 @@ Le design system v1.0 a été produit avant plusieurs décisions. Points en conf
 
 1. **Curation retirée.** Le modèle de données v3 ne porte plus de curation. À retirer : les états « Photo — curation » et « Curation à faire » (§ 6), l'écran E6 — Bilan de curation, l'étape « Trier » du parcours (§ 9), la section 10 « Tri des photos » et la mention « photos gardées au tri » de la réserve (§ 11).
 2. **Format unique.** La section 16 du HTML propose « Portrait A4 », « Livre libre · format au choix » et « Le format se change encore après ». Le format est unique (21 × 21) ; la maquette E0 est à jour.
-3. **Pas de canvas libre.** Les raccourcis (déplacer de 1 mm / 10 mm), les poignées et l'outil Pivoter supposent une géométrie modifiable et une rotation. La géométrie est copiée du gabarit et `cadrage` ne porte pas de rotation.
+3. **Pas de canvas libre.** Tranché : pas de poignées, pas de flèches ±1 mm / 10 mm, pas d'outil Pivoter. La géométrie est copiée du gabarit et `cadrage` ne porte pas de rotation. La barre d'outils d'un cadre est Recadrer, Remplacer, Vider.
 4. **Bibliothèque.** La modale de suppression indique « Vos photos restent dans votre bibliothèque ». Les photos appartiennent au projet et sont supprimées avec lui.
 5. **Tutoiement.** « Convertis en JPEG depuis ton téléphone » ; le reste de l'interface vouvoie.
 6. **Photos traitées à l'import.** Une photo n'existe en base qu'une fois traitée : plus d'états `en_attente` / `prete` / `echec`, ni de motifs d'échec stockés. Les états « En traitement » (import, réserve, éditeur) n'ont plus de support ; un fichier illisible est refusé et listé à la réponse de l'import.

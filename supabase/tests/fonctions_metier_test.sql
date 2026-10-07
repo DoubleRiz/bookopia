@@ -1,7 +1,7 @@
 -- Fonctions métier : création d'un projet, ordre des intérieures, automatismes.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(31);
+select plan(32);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values ('aaaaaaaa-0000-4000-8000-000000000001', 'alice@exemple.fr', '{"nom_affichage": "Alice"}');
@@ -113,6 +113,11 @@ select throws_ok(
 select throws_ok(
   $$ select public.inserer_double_page((select projet_id from livre), '00000000-0000-4000-c000-000000000001', 1) $$,
   'P0001', 'invalide', 'Un gabarit de couverture ne s''insère pas comme intérieure'
+);
+
+select throws_ok(
+  $$ select public.inserer_double_page((select projet_id from livre), '00000000-0000-4000-b000-000000000004', 1) $$,
+  'P0001', 'invalide', 'Un gabarit d''une autre famille ne s''insère pas'
 );
 
 -- Les rangs ont été décalés avant l'échec sur le gabarit : la transaction de la fonction les a annulés.

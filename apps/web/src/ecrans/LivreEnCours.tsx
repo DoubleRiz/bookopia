@@ -28,9 +28,9 @@ import {
 } from "../api/photos";
 import { Banniere } from "../composants/Banniere";
 import { Bouton } from "../composants/Bouton";
-import { DoublePage, type PhotoAffichee } from "../composants/DoublePage";
-import { EtatVide } from "../composants/EtatVide";
 import { Modale } from "../composants/Modale";
+import { Editeur } from "../editeur/Editeur";
+import { gabaritParDefaut } from "../editeur/gabaritParDefaut";
 import {
   erreurDeFormulaire,
   type ResultatFormulaire,
@@ -41,6 +41,17 @@ import { ExportDuLivre } from "./ExportDuLivre";
 import styles from "./LivreEnCours.module.css";
 
 const identifiantSchema = z.uuid();
+
+// Le gabarit d'une double page ajoutée dans l'éditeur. Un catalogue illisible ne bloque pas
+// l'écran : l'ajout est seulement désactivé, et « Composer le livre » dira l'erreur.
+async function lireGabaritParDefaut(projetId: string): Promise<string | null> {
+  try {
+    return gabaritParDefaut(await listerGabaritsDuLivre(projetId))?.id ?? null;
+  } catch (erreur) {
+    if (erreur instanceof z.ZodError) return null;
+    throw erreur;
+  }
+}
 
 // Un identifiant mal formé, un livre supprimé ou celui d'un autre : la même réponse, introuvable.
 export async function chargerLivreEnCours({
@@ -67,6 +78,7 @@ export async function chargerLivreEnCours({
       projet,
       fond: fondDuTheme(projet.theme.palette),
       doublesPages,
+      gabaritParDefautId: await lireGabaritParDefaut(projet.id),
       photos: photos.map((photo) => ({ ...photo, url: urls.get(photo.id) })),
       urlDuPdf: pdf
         ? await urlDuPdf(
@@ -243,69 +255,47 @@ function ModaleRecomposer({ onFermer }: { onFermer: () => void }) {
   );
 }
 
-// Les doubles pages, dans l'ordre du livre, et le bouton qui les compose.
-function LeLivre({
+// Le bouton qui compose le livre, avec confirmation si des photos sont déjà posées.
+function ComposerLeLivre({
   doublesPages,
-  fond,
-  photos,
+  nombreDePhotos,
 }: {
   doublesPages: DoublePageDuLivre[];
-  fond: string;
-  photos: Map<string, PhotoAffichee>;
+  nombreDePhotos: number;
 }) {
   const fetcher = useFetcher<typeof actionLivreEnCours>();
   const [confirmer, setConfirmer] = useState(false);
   const fermer = useCallback(() => setConfirmer(false), []);
   const enCours = fetcher.state !== "idle";
-  const interieures = doublesPages.filter((d) => d.role === "interieur");
-  const dejaCommence = interieures.some((d) =>
-    d.emplacement.some((emplacement) => emplacement.photo_id !== null),
+  const dejaCommence = doublesPages.some(
+    (d) =>
+      d.role === "interieur" &&
+      d.emplacement.some((emplacement) => emplacement.photo_id !== null),
   );
   const message = fetcher.state === "idle" ? fetcher.data?.message : null;
 
   return (
-    <section className={styles.livre} aria-labelledby="titre-livre">
-      <div className={styles.enteteLivre}>
-        <h2 id="titre-livre">Livre</h2>
-        <Bouton
-          variante="secondaire"
-          disabled={photos.size === 0}
-          enCours={enCours}
-          onClick={() =>
-            dejaCommence ? setConfirmer(true) : lancerComposition(fetcher)
-          }
-        >
-          {enCours ? "Composition…" : "Composer le livre"}
-        </Bouton>
-      </div>
+    <>
+      <Bouton
+        variante="secondaire"
+        disabled={nombreDePhotos === 0}
+        enCours={enCours}
+        onClick={() =>
+          dejaCommence ? setConfirmer(true) : lancerComposition(fetcher)
+        }
+      >
+        {enCours ? "Composition…" : "Composer le livre"}
+      </Bouton>
       {message && <Banniere titre={message} />}
-      <ol className={styles.planDeTravail}>
-        {doublesPages.map((doublePage) => (
-          <li key={doublePage.id}>
-            <DoublePage doublePage={doublePage} fond={fond} photos={photos} />
-            {doublePage.role === "couverture" && interieures.length === 0 && (
-              <p className={styles.invitation}>
-                Composez le livre : vos photos rempliront les pages intérieures.
-              </p>
-            )}
-          </li>
-        ))}
-      </ol>
       {confirmer && <ModaleRecomposer onFermer={fermer} />}
-    </section>
+    </>
   );
 }
 
-function compteDePhotos(nombre: number): string {
-  return nombre === 1 ? "1 photo" : `${nombre} photos`;
-}
-
-// E7, réduit pour l'instant aux doubles pages, à la réserve et à un export provisoire.
-// L'import (E5) s'ouvre par-dessus, à sa propre adresse.
+// E7 : l'éditeur, l'import (E5) qui s'ouvre par-dessus à sa propre adresse, et l'export.
 export function LivreEnCours() {
-  const { projet, fond, doublesPages, photos, urlDuPdf } =
+  const { projet, fond, doublesPages, gabaritParDefautId, photos, urlDuPdf } =
     useLoaderData<typeof chargerLivreEnCours>();
-  const photosAffichees = new Map(photos.map((photo) => [photo.id, photo]));
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
   const [aSupprimer, setASupprimer] = useState<Photo | null>(null);
@@ -325,53 +315,23 @@ export function LivreEnCours() {
           <Bouton onClick={ouvrirImport}>Importer des photos</Bouton>
         )}
       </div>
-      <LeLivre
-        doublesPages={doublesPages}
+      <Editeur
+        projetId={projet.id}
         fond={fond}
-        photos={photosAffichees}
+        doublesPages={doublesPages}
+        photos={photos}
+        gabaritParDefautId={gabaritParDefautId}
+        actionsLivre={
+          <ComposerLeLivre
+            doublesPages={doublesPages}
+            nombreDePhotos={photos.length}
+          />
+        }
+        surImporter={ouvrirImport}
+        surSupprimerPhoto={(photo) =>
+          setASupprimer(photos.find((p) => p.id === photo.id) ?? null)
+        }
       />
-      <section className={styles.reserve} aria-labelledby="titre-reserve">
-        <div className={styles.enteteReserve}>
-          <h2 id="titre-reserve">Réserve</h2>
-          {photos.length > 0 && (
-            <span className={styles.compte}>
-              {compteDePhotos(photos.length)}
-            </span>
-          )}
-        </div>
-        {photos.length === 0 ? (
-          <EtatVide
-            titre="Aucune photo pour l'instant"
-            action={<Bouton onClick={ouvrirImport}>Importer des photos</Bouton>}
-          >
-            Les photos importées arrivent ici, avant d'être posées dans le
-            livre.
-          </EtatVide>
-        ) : (
-          <ul className={styles.grille}>
-            {photos.map((photo) => (
-              <li key={photo.id} className={styles.vignette}>
-                {photo.url && (
-                  <img
-                    src={photo.url}
-                    alt={photo.nom_fichier_origine}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                )}
-                <button
-                  type="button"
-                  className={styles.supprimer}
-                  aria-label={`Supprimer « ${photo.nom_fichier_origine} »`}
-                  onClick={() => setASupprimer(photo)}
-                >
-                  <span aria-hidden="true">×</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
       {photos.length > 0 && (
         <ExportDuLivre projet={projet} urlDuPdf={urlDuPdf} />
       )}

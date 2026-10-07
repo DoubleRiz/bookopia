@@ -41,3 +41,68 @@
   font-size: 14px;
   text-align: center;
 }
+
+/* Éditeur : surface cliquable posée sur chaque cadre photo. Invisible au repos. */
+.cible {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 0.8;
+  cursor: pointer;
+  outline: none;
+}
+
+.cible:hover {
+  stroke: var(--couleur-bordure);
+}
+
+/* Sélection et survol d'un glisser : contour 2 px (≈ 0,8 mm à la taille d'affichage) et halo. */
+.cible.selectionne,
+.cible.survole {
+  stroke: var(--couleur-cta);
+  filter: drop-shadow(0 0 1.5px var(--couleur-lavande));
+}
+
+.cible:focus-visible {
+  stroke: var(--couleur-cta);
+  stroke-dasharray: 2 1;
+}
+
+/* Avertissements de résolution : surlignage du cadre dans le dessin, pastille HTML par-dessus. */
+.dessin {
+  position: relative;
+}
+
+.surlignage {
+  fill: none;
+  stroke-width: 0.8;
+  pointer-events: none;
+}
+
+.surlignage.moyen {
+  stroke: var(--couleur-pastille-attention);
+}
+
+.surlignage.faible {
+  stroke: var(--couleur-pastille-erreur);
+}
+
+.pastille {
+  position: absolute;
+  transform: translateY(-100%);
+  padding: 2px var(--espace-2);
+  border-radius: var(--rayon-pill);
+  font-size: var(--taille-label);
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.pastille.moyen {
+  background: var(--couleur-beurre);
+  color: var(--couleur-beurre-encre);
+}
+
+.pastille.faible {
+  background: var(--couleur-rose);
+  color: var(--couleur-rose-encre);
+}

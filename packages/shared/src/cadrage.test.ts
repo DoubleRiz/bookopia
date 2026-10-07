@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { placerPhoto, prolongerParFondPerdu, zoneVisible } from "./cadrage";
+import {
+  dpiEffectif,
+  niveauResolution,
+  placerPhoto,
+  prolongerParFondPerdu,
+  zoneVisible,
+} from "./cadrage";
 
 const image = (largeur_px: number, hauteur_px: number) => ({
   largeur_px,
@@ -109,5 +115,65 @@ describe("placerPhoto", () => {
       cadre: { x: 20, y: 30, largeur: 100, hauteur: 50 },
       zone: { x: 0, y: 250, largeur: 1000, hauteur: 500 },
     });
+  });
+});
+
+describe("dpiEffectif", () => {
+  // Cadre 4:3 dans la zone utile : à zoom 1, toute la largeur de l'image est visible.
+  const cadre = { x: 12, y: 34.5, largeur: 188, hauteur: 141 };
+  const pose = (zoom: number) => ({
+    ...cadre,
+    cadrage_x: 0.5,
+    cadrage_y: 0.5,
+    cadrage_zoom: zoom,
+  });
+
+  it("rapporte la largeur visible en pixels à la largeur du cadre", () => {
+    expect(dpiEffectif(pose(1), image(4000, 3000))).toBeCloseTo(
+      (4000 / 188) * 25.4,
+    );
+  });
+
+  it("baisse de moitié quand on zoome deux fois", () => {
+    expect(dpiEffectif(pose(2), image(4000, 3000))).toBeCloseTo(
+      (2000 / 188) * 25.4,
+    );
+  });
+
+  it("est faible pour une petite photo dans un grand cadre", () => {
+    expect(dpiEffectif(pose(1), image(1000, 750))).toBeLessThan(150);
+  });
+
+  it("compte le fond perdu d'un cadre à cheval sur le pli", () => {
+    const pleine = {
+      x: 0,
+      y: 0,
+      largeur: 420,
+      hauteur: 210,
+      cadrage_x: 0.5,
+      cadrage_y: 0.5,
+      cadrage_zoom: 1,
+    };
+    // Cadre imprimé : 426 × 216 mm. L'image 2:1 est plus large : sa hauteur est entière.
+    const largeurVisible = 3000 * (426 / 216);
+    expect(dpiEffectif(pleine, image(6000, 3000))).toBeCloseTo(
+      (largeurVisible / 426) * 25.4,
+    );
+  });
+});
+
+describe("niveauResolution", () => {
+  it("est bon à partir de 300 DPI", () => {
+    expect(niveauResolution(300)).toBe("bon");
+    expect(niveauResolution(540)).toBe("bon");
+  });
+
+  it("est moyen de 150 à 300 DPI", () => {
+    expect(niveauResolution(150)).toBe("moyen");
+    expect(niveauResolution(299.9)).toBe("moyen");
+  });
+
+  it("est faible sous 150 DPI", () => {
+    expect(niveauResolution(149.9)).toBe("faible");
   });
 });
