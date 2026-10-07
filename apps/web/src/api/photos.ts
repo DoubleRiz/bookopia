@@ -25,18 +25,21 @@ export async function lireProjet(projetId: string) {
   return verifier(
     await supabase
       .from("projet")
-      .select("id, titre, utilisateur_id")
+      .select("id, titre, utilisateur_id, theme (palette)")
       .eq("id", projetId)
       .maybeSingle(),
   );
 }
 
-// La réserve, dans l'ordre d'import.
+// La réserve, dans l'ordre d'import. Dimensions et dates servent au moteur de gabarits
+// et à l'affichage des doubles pages.
 export async function listerPhotos(projetId: string) {
   const photos = verifier(
     await supabase
       .from("photo")
-      .select("id, cle_stockage, format_vignette, nom_fichier_origine")
+      .select(
+        "id, cle_stockage, format_vignette, nom_fichier_origine, largeur_px, hauteur_px, prise_le, cree_le",
+      )
       .eq("projet_id", projetId)
       .order("cree_le"),
   );
