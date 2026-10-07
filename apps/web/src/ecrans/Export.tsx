@@ -115,9 +115,10 @@ export function Export() {
       await exporter(dependancesExport(projet), {
         onEtape: (etape) => setPhase({ nom: "export", etape }),
       });
+      // Le loader relit les contrôles et signe l'adresse du nouveau PDF : on reste « en cours »
+      // jusqu'à ce qu'il ait fini, sinon l'écran montre l'ancien état (ou un lien vers un fichier supprimé).
+      await revalidate();
       setPhase({ nom: "repos" });
-      // Le loader relit les contrôles et signe l'adresse du nouveau PDF.
-      void revalidate();
     } catch (probleme) {
       echouer(probleme);
     }

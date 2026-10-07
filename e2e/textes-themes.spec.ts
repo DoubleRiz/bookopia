@@ -120,6 +120,7 @@ test("le Créateur écrit ses légendes et change le thème du livre", async ({
   await expect(pages23.getByText("Le phare au matin")).toBeVisible();
 
   // Le PDF intègre les polices du thème : EB Garamond pour le titre et les légendes.
+  await page.getByRole("link", { name: "Exporter le livre" }).click();
   await page.getByRole("button", { name: "Exporter le PDF" }).click();
   const lien = page.getByRole("link", { name: "Télécharger le PDF" });
   await expect(lien).toBeVisible();
