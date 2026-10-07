@@ -450,6 +450,7 @@ export type Database = {
         Args: { p_gabarit_id: string; p_position: number; p_projet_id: string }
         Returns: string
       }
+      remplir_emplacements: { Args: { p_projet_id: string }; Returns: number }
       supprimer_double_page: {
         Args: { p_double_page_id: string }
         Returns: undefined

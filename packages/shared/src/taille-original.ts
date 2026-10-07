@@ -1,10 +1,10 @@
+import { FOND_PERDU_MM } from "./cadrage";
 import type { Cadre } from "./gabarit";
 
 const DPI_IMPRESSION = 300;
 const MM_PAR_POUCE = 25.4;
 // Un cadre au bord de la double page déborde dans le fond perdu : on le compte partout,
 // plutôt que de savoir quel côté touche le bord.
-const FOND_PERDU_MM = 3;
 
 // Pixels qu'exige un côté de cadre pour être imprimé à 300 DPI, fond perdu compris.
 export function pixelsPour300Dpi(coteMm: number): number {

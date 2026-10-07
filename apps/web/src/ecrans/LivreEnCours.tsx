@@ -7,10 +7,12 @@ import {
   useNavigate,
 } from "react-router";
 import { z } from "zod";
+import { cheminPdf, lireExport, urlDuPdf } from "../api/exports";
 import { listerPhotos, lireProjet, urlsDesVignettes } from "../api/photos";
 import { Bouton } from "../composants/Bouton";
 import { EtatVide } from "../composants/EtatVide";
 import { sousSession } from "../session";
+import { ExportDuLivre } from "./ExportDuLivre";
 import styles from "./LivreEnCours.module.css";
 
 const identifiantSchema = z.uuid();
@@ -34,9 +36,16 @@ export async function chargerLivreEnCours({
       projet.id,
       photos,
     );
+    const pdf = await lireExport(projet.id);
     return {
       projet,
       photos: photos.map((photo) => ({ ...photo, url: urls.get(photo.id) })),
+      urlDuPdf: pdf
+        ? await urlDuPdf(
+            cheminPdf(projet.utilisateur_id, projet.id, pdf.cle_stockage),
+            projet.titre,
+          )
+        : null,
     };
   });
 }
@@ -45,10 +54,11 @@ function compteDePhotos(nombre: number): string {
   return nombre === 1 ? "1 photo" : `${nombre} photos`;
 }
 
-// E7, réduit pour l'instant à la réserve : les photos du livre, pas encore posées.
+// E7, réduit pour l'instant à la réserve et à un export provisoire.
 // L'import (E5) s'ouvre par-dessus, à sa propre adresse.
 export function LivreEnCours() {
-  const { projet, photos } = useLoaderData<typeof chargerLivreEnCours>();
+  const { projet, photos, urlDuPdf } =
+    useLoaderData<typeof chargerLivreEnCours>();
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
 
@@ -99,6 +109,9 @@ export function LivreEnCours() {
           </ul>
         )}
       </section>
+      {photos.length > 0 && (
+        <ExportDuLivre projet={projet} urlDuPdf={urlDuPdf} />
+      )}
       <Outlet />
     </>
   );
