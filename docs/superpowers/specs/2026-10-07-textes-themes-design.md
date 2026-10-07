@@ -80,7 +80,7 @@ La couleur du texte est `palette.texte`, déjà présente. `rayon_angles` et `ma
 | `rendu-pdf.ts` | Polices intégrées, texte dessiné, filet, troncature |
 | `index.ts` | Exporte les nouveautés |
 
-**`apps/web/src/polices/`** : les sept TTF, `OFL.txt`, un `README.md` avec la commande `fonttools` qui les a produits.
+**`packages/shared/polices/`** : les sept TTF, leurs licences `OFL-*.txt`, un `README.md` avec la commande `fonttools` qui les a produits. Dans `packages/shared` plutôt que dans `apps/web` : les tests du rendu PDF lisent les vrais fichiers, et le front les importe par `@bookopia/shared/polices/*`.
 
 **`apps/web/src/`** :
 
@@ -91,10 +91,12 @@ La couleur du texte est `palette.texte`, déjà présente. `rayon_angles` et `ma
 | `api/doublesPages.ts` | `listerDoublesPages` lit `style_texte` ; `ecrireEmplacement` accepte `contenu_texte` |
 | `api/exports.ts` | `lireLivreARendre` lit le thème complet, `style_texte` et `contenu_texte` |
 | `export/charger.ts` | Charge les polices du thème et les passe au rendu |
-| `editeur/polices.ts` | Nouveau. Télécharge un fichier une fois, l'enregistre auprès de `document.fonts` (`FontFace`) et en tire la mesure |
+| `polices.ts` | Nouveau. Télécharge un fichier une fois, l'enregistre auprès de `document.fonts` (`FontFace`) et en tire la mesure ; partagé par l'éditeur et l'export |
 | `composants/DoublePage.tsx` | Dessine les lignes de `disposerTexte` ; cadre masqué, cadre qui déborde ; cible des cadres texte |
 | `editeur/SaisieTexte.tsx` | Nouveau. La zone de texte posée sur le cadre |
 | `editeur/SurcoucheThemes.tsx` | Nouveau. Choix du thème |
+| `editeur/choixTheme.ts` | Nouveau. Ce qu'un thème fera aux textes écrits : masqués, coupés |
+| `editeur/navigationCartes.ts` | Nouveau. Flèches entre les cartes, sortie de `SurcoucheGabarits` pour servir aussi au choix du thème |
 | `editeur/etatEditeur.ts` | Action `ecrireTexte` |
 | `editeur/Editeur.tsx` | Sélection d'un cadre texte, saisie, écriture différée, bouton « Thème » |
 | `ecrans/LivreEnCours.tsx` | Le loader lit les thèmes et charge les polices du thème courant |
@@ -152,11 +154,11 @@ type TexteDispose = {
 
 ## L'éditeur
 
-**Polices.** Le loader de `LivreEnCours` attend les polices du thème courant : un fichier par clé, téléchargé une fois pour la session, enregistré par `FontFace` sous un nom propre (« Livre Caveat »…) pour ne pas se mêler à la Nunito de l'interface. Les polices des autres thèmes se chargent à l'ouverture du choix du thème. Une police illisible : bandeau d'erreur, la saisie est désactivée, le reste de l'éditeur fonctionne.
+**Polices.** Le loader de `LivreEnCours` attend les polices du thème courant : un fichier par clé, téléchargé une fois pour la session, enregistré par `FontFace` sous une famille propre à chaque fichier (`bookopia-caveat-600`…) pour ne pas se mêler à la Nunito de l'interface. Les polices des autres thèmes se chargent à l'ouverture du choix du thème. Une police illisible : bandeau d'erreur, la saisie est désactivée, le reste de l'éditeur fonctionne.
 
 **Affichage d'un cadre texte** (`DoublePage`, éditeur et miniatures) :
 
-- Texte : un `<text>` SVG par ligne, police et taille du thème, `text-anchor` selon l'ancre.
+- Texte : un `<text>` SVG par ligne, police et taille du thème, `text-anchor` selon l'ancre. La mesure ignore le crénage, que pdf-lib n'applique pas ; l'écran le désactive aussi (`font-kerning: none`).
 - Cadre vide : le pointillé actuel ; dans l'éditeur, « Écrire un titre » ou « Écrire une légende » en texte secondaire.
 - Cadre masqué : pointillé, « Masqué par le thème » ; il n'est pas modifiable, le texte reste en base.
 - Cadre qui déborde : lignes de `tronquerPourTenir`, surlignage et pastille fortes comme la résolution, « Texte coupé à l'impression ».
@@ -166,7 +168,7 @@ type TexteDispose = {
 - Un cadre texte est une cible comme un cadre photo : clic ou Entrée le sélectionne ; clic sur un cadre sélectionné, Entrée ou double clic ouvre la saisie.
 - La zone de texte HTML est posée sur le cadre en pourcentages, comme les pastilles. `.dessin` est un conteneur (`container-type: inline-size`) : la taille de police vaut `taille_mm / 420 × 100 cqw`, l'interligne 1,2, l'alignement celui du thème, sans marge ni bord. En ancrage bas, sa hauteur est celle des lignes et elle repose sur le bas du cadre.
 - Pendant la saisie, le SVG ne dessine pas ce cadre ; un contour de sélection reste visible.
-- À chaque frappe, `disposerTexte` sur la nouvelle valeur : si elle déborde et qu'elle est plus longue que l'ancienne, elle est refusée et « Le cadre est plein » s'annonce (`aria-live`). Une valeur plus courte est toujours acceptée, même si elle déborde encore : le Créateur peut réparer un texte coupé par un changement de thème.
+- À chaque frappe, `disposerTexte` sur la nouvelle valeur : si elle déborde et qu'elle est plus longue que l'ancienne, elle est refusée et « Le cadre est plein » s'annonce (`aria-live`, sans rôle `status` : l'éditeur a déjà le sien). Une espace en fin de ligne tient toujours ; l'annonce ne se tait que quand le texte raccourcit. Une valeur plus courte est toujours acceptée, même si elle déborde encore : le Créateur peut réparer un texte coupé par un changement de thème.
 - Collage : seul `prefixeQuiTient` est inséré ; « Le texte collé a été raccourci » s'annonce.
 - `maxLength` 400, comme la base.
 - Entrée insère un retour à la ligne. Échap, Tab ou un clic ailleurs terminent la saisie.
