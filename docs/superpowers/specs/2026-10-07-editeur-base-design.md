@@ -12,9 +12,9 @@ Le Créateur travaille son livre double page par double page : il navigue entre 
 
 | Sujet | Décision | Coût assumé |
 |---|---|---|
-| Glisser-déposer | API native HTML5 (`draggable`, `dragover`, `drop`), sans dépendance | Pas de glisser au doigt ; l'équivalent clavier est écrit à la main |
+| Glisser-déposer | API native HTML5 (`draggable`, `dragover`, `drop`), sans dépendance | Pas de glisser au doigt ; l'équivalent clavier est écrit à la main. Chromium ne lance jamais `dragstart` depuis un `<button>` : vignettes et miniatures sont des éléments `role="button"` (`Glissable`) qui reprennent Entrée, Espace et le focus |
 | État de l'éditeur | Réducteur local (`useReducer`) initialisé par le loader ; écritures directes sur `emplacement`, affichées avant la réponse, retirées si la base refuse | Deux chemins d'écriture : `update` pour les emplacements, rpc pour la structure |
-| Disposition | Une double page à la fois, bande de navigation en bas (design system §11) | On ne voit plus le livre entier d'un coup d'œil ; la bande le résume |
+| Disposition | Une double page à la fois, bande de navigation en bas (design system §11) ; réserve en colonne collante à droite à partir de 1100 px, dessous en deçà | On ne voit plus le livre entier d'un coup d'œil ; la bande le résume. La colonne garde photo et cadre à l'écran pendant un glisser |
 | Page courante | Dans l'adresse : `/livre/:id?page=<double_page_id>` | Un paramètre de plus à garder cohérent après une suppression |
 | Ajout d'une double page | Insérée après la page courante, avec le gabarit par défaut de la famille | Toutes les pages ajoutées ont la même mise en page jusqu'à 6b |
 | Gabarit par défaut | Le gabarit intérieur actif de la famille qui a le moins de cadres photo ; à égalité, le premier du catalogue (ordre des identifiants) | « Pleine double page » (Généreux), « Duo horizontal » (Rythmé, qui n'a pas de gabarit à une photo), « Panoramique et légende » (Raconté) |
@@ -40,7 +40,8 @@ Le Créateur travaille son livre double page par double page : il navigue entre 
 | `fileEcritures.ts` | File d'écriture : une écriture à la fois, dans l'ordre des gestes ; statut d'enregistrement ; rejeu sur « Réessayer » |
 | `gabaritParDefaut.ts` | Choix du gabarit d'une double page ajoutée |
 | `Editeur.tsx` | Écran : en-tête et statut, double page courante, barre d'outils, réserve, bande |
-| `BandeDoublesPages.tsx` | Miniatures des intérieures, réordonnancement, « + », menu Dupliquer / Déplacer / Supprimer |
+| `BandeDoublesPages.tsx` | Miniatures des intérieures, réordonnancement, « + », boutons de la page courante : Déplacer à gauche / à droite, Dupliquer, Supprimer |
+| `Glissable.tsx` | Bouton qu'on peut aussi glisser |
 | `SurcoucheRecadrage.tsx` | Recadrage d'un emplacement |
 | `Reserve.tsx` | Réserve, sortie de `LivreEnCours.tsx` : photos glissables, photos posées à 45 %, suppression existante conservée |
 
@@ -81,7 +82,7 @@ type Action =
 
 La RLS et les contraintes de la table restent les seules gardiennes : photo d'un autre livre (clé étrangère composite), cadre texte, cadrage hors bornes.
 
-**Structure** (ajouter, déplacer, dupliquer, supprimer) : la rpc existante, puis relecture des doubles pages et `remplacerDoublesPages`. La bande est désactivée pendant l'appel. Une écriture d'emplacement en attente est terminée avant.
+**Structure** (ajouter, déplacer, dupliquer, supprimer) : la rpc existante, puis relecture des doubles pages et `remplacerDoublesPages`. Les gestes de la bande sont désactivés pendant l'appel ; changer de page reste permis, il n'écrit rien. Une écriture d'emplacement en attente est terminée avant.
 
 | Geste | Rpc | Page courante après |
 |---|---|---|
@@ -103,7 +104,7 @@ Signature inchangée. Ajout, après `verrouiller_projet` : le gabarit doit être
 | Remplacer | Glisser une autre photo, ou bouton Remplacer qui place le focus dans la réserve | Bouton Remplacer, puis Entrée sur une photo |
 | Recadrer | Bouton Recadrer, ou double-clic sur un cadre rempli | Entrée sur un cadre rempli sélectionné |
 | Vider | Bouton Vider | Suppr |
-| Réordonner les pages | Glisser une miniature dans la bande | Menu de la miniature : Déplacer à gauche, Déplacer à droite |
+| Réordonner les pages | Glisser une miniature dans la bande | Boutons de la page courante : Déplacer à gauche, Déplacer à droite |
 | Désélectionner, fermer | Clic dans le vide | Échap |
 
 - Un cadre texte n'est pas une cible de dépôt.
@@ -129,7 +130,8 @@ niveauResolution(dpi): "bon" | "moyen" | "faible"   // ≥ 300 · 150 à 300 · 
 
 - Le cadre retenu est le cadre imprimé, fond perdu compris : celui que `placerPhoto` renvoie, pour mesurer la densité réelle.
 - Le zoom fait baisser le DPI : zoomer deux fois divise la largeur de zone par deux.
-- Badge sur le cadre : rien pour « bon », surlignage beurre pour « moyen », rose et « Qualité insuffisante pour l'impression » pour « faible ». Jamais bloquant (RG-16).
+- Sur le cadre : rien pour « bon », surlignage et pastille beurre pour « moyen », rose et « Qualité insuffisante pour l'impression » pour « faible ». Jamais bloquant (RG-16).
+- La pastille est en HTML, posée sur le dessin en pourcentages : en millimètres dans le SVG, son texte serait illisible à l'échelle de l'écran.
 
 ## États de l'écran
 

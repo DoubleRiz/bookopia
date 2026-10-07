@@ -1,7 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { DoublePageDuLivre } from "../api/doublesPages";
-import { DoublePage, libelleDoublePage } from "./DoublePage";
+import {
+  DoublePage,
+  type InteractionDoublePage,
+  libelleDoublePage,
+} from "./DoublePage";
 
 type Emplacement = DoublePageDuLivre["emplacement"][number];
 
@@ -29,6 +33,7 @@ function rendre(
     string,
     { url?: string; largeur_px: number; hauteur_px: number }
   >(),
+  interaction?: InteractionDoublePage,
 ) {
   const doublePage: DoublePageDuLivre = {
     id: "d1",
@@ -37,7 +42,12 @@ function rendre(
     emplacement: emplacements,
   };
   return renderToStaticMarkup(
-    <DoublePage doublePage={doublePage} fond="#FAF7F2" photos={photos} />,
+    <DoublePage
+      doublePage={doublePage}
+      fond="#FAF7F2"
+      photos={photos}
+      interaction={interaction}
+    />,
   );
 }
 
@@ -124,5 +134,81 @@ describe("DoublePage", () => {
       new Map([["p1", { largeur_px: 1000, hauteur_px: 1000 }]]),
     );
     expect(html).not.toContain("<image");
+  });
+});
+
+describe("DoublePage dans l'éditeur", () => {
+  const rien = () => {};
+  const interaction = (selection: string | null): InteractionDoublePage => ({
+    selection,
+    surSelection: rien,
+    surDepot: rien,
+    surRecadrer: rien,
+    surVider: rien,
+  });
+  const posee = (id: string) =>
+    emplacement({
+      id,
+      photo_id: "p1",
+      cadrage_x: 0.5,
+      cadrage_y: 0.5,
+      cadrage_zoom: 1,
+    });
+
+  it("rend les cadres photo focalisables et nommés", () => {
+    const html = rendre(
+      [emplacement({ id: "e1" })],
+      undefined,
+      interaction(null),
+    );
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain('aria-label="Cadre 1, vide"');
+    expect(html).toContain('aria-pressed="false"');
+  });
+
+  it("marque le cadre sélectionné", () => {
+    const html = rendre(
+      [emplacement({ id: "e1" })],
+      undefined,
+      interaction("e1"),
+    );
+    expect(html).toContain('aria-pressed="true"');
+  });
+
+  it("ne rend pas un cadre texte focalisable", () => {
+    const html = rendre(
+      [emplacement({ id: "t1", nature: "texte" })],
+      undefined,
+      interaction(null),
+    );
+    expect(html).not.toContain("tabindex");
+  });
+
+  it("avertit d'une qualité insuffisante pour l'impression", () => {
+    // 100 mm de large, 400 px visibles : environ 100 DPI.
+    const html = rendre(
+      [posee("e1")],
+      new Map([["p1", { url: "u", largeur_px: 400, hauteur_px: 200 }]]),
+      interaction(null),
+    );
+    expect(html).toContain("Qualité insuffisante");
+  });
+
+  it("n'avertit de rien à 300 DPI ou plus", () => {
+    const html = rendre(
+      [posee("e1")],
+      new Map([["p1", { url: "u", largeur_px: 4000, hauteur_px: 2000 }]]),
+      interaction(null),
+    );
+    expect(html).not.toContain("Qualité");
+  });
+
+  it("reste un simple dessin sans interaction", () => {
+    const html = rendre(
+      [posee("e1")],
+      new Map([["p1", { url: "u", largeur_px: 400, hauteur_px: 200 }]]),
+    );
+    expect(html).not.toContain("tabindex");
+    expect(html).not.toContain("Qualité");
   });
 });

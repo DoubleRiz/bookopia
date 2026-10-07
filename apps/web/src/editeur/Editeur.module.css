@@ -1,0 +1,414 @@
+.editeur {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+  margin-bottom: var(--espace-6);
+}
+
+.enteteLivre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-4);
+}
+
+.actionsLivre {
+  margin-left: auto;
+}
+
+/* Statut d'enregistrement (design system §12) : pas de bouton Enregistrer, tout part seul. */
+.statut {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+  font-weight: 600;
+}
+
+.pastilleStatut {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.enregistre {
+  background: var(--couleur-pastille-succes);
+}
+
+.enregistrement {
+  background: var(--couleur-pastille-en-cours);
+}
+
+.echec {
+  background: var(--couleur-pastille-erreur);
+}
+
+/* La réserve à côté de la double page sur grand écran : on glisse une photo sans faire défiler. */
+.espaceTravail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espace-6);
+}
+
+@media (width >= 1100px) {
+  .espaceTravail {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+  }
+
+  .espaceTravail > .reserve {
+    position: sticky;
+    top: var(--espace-4);
+    max-height: calc(100vh - 2 * var(--espace-4));
+    overflow-y: auto;
+  }
+
+  .espaceTravail .grille {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Plan de travail lavande ; la double page courante y est posée en élévation. */
+.planDeTravail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+  padding: var(--espace-6) var(--espace-8);
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-lavande-pale);
+}
+
+.barreOutils {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--espace-2);
+  min-height: var(--cible-min);
+}
+
+.aide {
+  margin: 0;
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+  text-align: center;
+}
+
+.pageCourante {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.invitation {
+  margin: var(--espace-6) 0;
+  color: var(--couleur-texte-secondaire);
+  text-align: center;
+}
+
+/* Bande des intérieures : défile horizontalement, la page courante porte un anneau lavande. */
+.bande {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-3);
+}
+
+.miniatures {
+  display: flex;
+  gap: var(--espace-3);
+  margin: 0;
+  padding: var(--espace-2);
+  overflow-x: auto;
+  list-style: none;
+}
+
+.miniature {
+  flex: 0 0 140px;
+  border-radius: var(--rayon-champ);
+}
+
+.miniature figcaption {
+  font-size: 12px;
+}
+
+.choisirPage {
+  display: block;
+  width: 100%;
+  padding: var(--espace-1);
+  border: 2px solid transparent;
+  border-radius: var(--rayon-champ);
+  background: none;
+  cursor: pointer;
+}
+
+.choisirPage:hover {
+  border-color: var(--couleur-bordure);
+}
+
+.choisirPage:focus-visible {
+  outline: none;
+  box-shadow: var(--anneau-focus);
+}
+
+.courante .choisirPage {
+  border-color: var(--couleur-cta);
+  box-shadow: var(--halo-champ);
+}
+
+/* Miniature visée pendant un réordonnancement. */
+.visee {
+  outline: 2px dashed var(--couleur-cta);
+  outline-offset: 2px;
+}
+
+.ajouter {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.boutonAjouter {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border: 2px dashed var(--couleur-bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-fond);
+  color: var(--couleur-cta);
+  font-size: 28px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boutonAjouter:hover:not(:disabled) {
+  border-color: var(--couleur-cta);
+}
+
+.boutonAjouter:focus-visible {
+  outline: none;
+  box-shadow: var(--anneau-focus);
+}
+
+.boutonAjouter:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionsPage {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--espace-2);
+}
+
+/* Réserve */
+.reserve {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+}
+
+.enteteReserve {
+  display: flex;
+  align-items: baseline;
+  gap: var(--espace-3);
+}
+
+.compte {
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--espace-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Carré, image recadrée au centre : la réserve montre les photos, pas leur format. */
+.vignette {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--rayon-page);
+  background: var(--couleur-lavande-pale);
+}
+
+.choisir {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: grab;
+}
+
+.choisir:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--couleur-cta);
+}
+
+.choisir[aria-disabled] {
+  cursor: default;
+}
+
+.choisir img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Déjà posée : toujours disponible (une photo peut occuper deux cadres), mais en retrait. */
+.posee .choisir img {
+  opacity: 0.45;
+}
+
+.badgePosee {
+  position: absolute;
+  bottom: var(--espace-1);
+  left: var(--espace-1);
+  padding: 2px var(--espace-2);
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-fond);
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-label);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Bouton icône posé sur la vignette : il n'apparaît qu'au survol ou au focus,
+   sauf sur écran tactile, où il n'y a pas de survol. */
+.supprimer {
+  position: absolute;
+  top: var(--espace-1);
+  right: var(--espace-1);
+  display: grid;
+  place-items: center;
+  width: var(--cible-min);
+  height: var(--cible-min);
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 50%;
+  background: var(--couleur-fond);
+  color: var(--couleur-encre);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
+}
+
+.vignette:hover .supprimer,
+.supprimer:focus-visible {
+  opacity: 1;
+}
+
+.supprimer:hover {
+  background: var(--couleur-ciel);
+}
+
+@media (hover: none) {
+  .supprimer {
+    opacity: 1;
+  }
+}
+
+/* Surcouche de recadrage */
+.recadrage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+}
+
+.dessinRecadrage {
+  display: block;
+  height: auto;
+  margin: 0 auto;
+  border-radius: var(--rayon-page);
+  background: var(--couleur-lavande-pale);
+  cursor: move;
+  touch-action: none;
+}
+
+.dessinRecadrage:focus-visible {
+  outline: none;
+  box-shadow: var(--anneau-focus);
+}
+
+.voileRecadrage {
+  fill: var(--couleur-voile);
+}
+
+.zoneRecadrage {
+  fill: none;
+  stroke: var(--couleur-fond);
+  stroke-width: 2;
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+  font-weight: 600;
+}
+
+.zoom input {
+  flex: 1;
+  accent-color: var(--couleur-cta);
+}
+
+.resolution {
+  margin: 0;
+  padding: var(--espace-2) var(--espace-3);
+  border-radius: var(--rayon-champ);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.resolution.bon {
+  background: var(--couleur-menthe-pale);
+  color: var(--couleur-menthe-encre);
+}
+
+.resolution.moyen {
+  background: var(--couleur-beurre-pale);
+  color: var(--couleur-beurre-encre);
+}
+
+.resolution.faible {
+  background: var(--couleur-rose-pale);
+  color: var(--couleur-rose-encre);
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+}
+
+.boutonsModale {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--espace-3);
+}
+
+@media (width < 600px) {
+  .planDeTravail {
+    padding: var(--espace-4);
+  }
+
+  .grille {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espace-2);
+  }
+}
