@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { prolongerParFondPerdu, zoneVisible } from "./cadrage";
+import { placerPhoto, prolongerParFondPerdu, zoneVisible } from "./cadrage";
 
 const image = (largeur_px: number, hauteur_px: number) => ({
   largeur_px,
@@ -81,5 +81,33 @@ describe("zoneVisible", () => {
         cadrage(1, 0, 2),
       ),
     ).toEqual({ x: 3000, y: 0, largeur: 1000, hauteur: 1000 });
+  });
+});
+
+describe("placerPhoto", () => {
+  const neutre = { cadrage_x: 0.5, cadrage_y: 0.5, cadrage_zoom: 1 };
+
+  it("remplit le cadre prolongé quand il touche le bord", () => {
+    expect(
+      placerPhoto(
+        { x: 0, y: 0, largeur: 210, hauteur: 210, ...neutre },
+        image(2160, 2160),
+      ),
+    ).toEqual({
+      cadre: { x: -3, y: -3, largeur: 213, hauteur: 216 },
+      zone: { x: 1080 - 1065, y: 0, largeur: 2130, hauteur: 2160 },
+    });
+  });
+
+  it("garde le cadre tel quel à l'intérieur de la double page", () => {
+    expect(
+      placerPhoto(
+        { x: 20, y: 30, largeur: 100, hauteur: 50, ...neutre },
+        image(1000, 1000),
+      ),
+    ).toEqual({
+      cadre: { x: 20, y: 30, largeur: 100, hauteur: 50 },
+      zone: { x: 0, y: 250, largeur: 1000, hauteur: 500 },
+    });
   });
 });
