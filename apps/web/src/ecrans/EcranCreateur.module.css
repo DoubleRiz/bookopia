@@ -1,0 +1,89 @@
+.ecran {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: var(--espace-4) var(--espace-12);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+}
+
+.espaceur {
+  flex: 1;
+}
+
+.lienNavigation {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cible-min);
+  padding: 12px 14px;
+  border-radius: var(--rayon-pill);
+  color: var(--couleur-encre);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lienNavigation:hover,
+.lienNavigation[aria-current="page"] {
+  background: var(--couleur-lavande-pale);
+}
+
+.lienNavigation[aria-current="page"] {
+  font-weight: 700;
+}
+
+.avatar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cible-min);
+  height: var(--cible-min);
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--couleur-rose);
+  color: var(--couleur-rose-encre);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.corps {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--espace-12) 96px;
+}
+
+@media (width < 900px) {
+  .entete {
+    padding: var(--espace-3) var(--espace-4);
+  }
+
+  .corps {
+    padding: var(--espace-6) var(--espace-4);
+  }
+}
+
+/* Le logo mène déjà à Mes livres : le lien en double cède la place au compte. */
+@media (width < 600px) {
+  .lienNavigation {
+    display: none;
+  }
+}
+
+/* Lisible à 320 px de large : l'initiale cède la place au bouton, qui garde sa cible de 44 px. */
+@media (width < 400px) {
+  .avatar {
+    display: none;
+  }
+}

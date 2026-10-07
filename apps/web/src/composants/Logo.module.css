@@ -1,0 +1,12 @@
+.logo {
+  color: var(--couleur-cta);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: var(--approche-titre);
+  text-decoration: none;
+}
+
+.point {
+  color: var(--couleur-corail);
+}

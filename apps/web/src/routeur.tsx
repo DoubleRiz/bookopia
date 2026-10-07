@@ -1,0 +1,68 @@
+import { createBrowserRouter, redirect } from "react-router";
+import { AdresseInconnue } from "./ecrans/AdresseInconnue";
+import { actionConnexion, Connexion } from "./ecrans/Connexion";
+import {
+  actionDeconnexion,
+  chargerEcranCreateur,
+  EcranCreateur,
+  EcranCreateurProvisoire,
+} from "./ecrans/EcranCreateur";
+import { ErreurChargement } from "./ecrans/ErreurChargement";
+import { actionInscription, Inscription } from "./ecrans/Inscription";
+import {
+  chargerMesLivres,
+  MesLivres,
+  MesLivresEnChargement,
+} from "./ecrans/MesLivres";
+
+// Adresses des spécifications fonctionnelles (§1) : un écran a une adresse propre, rechargeable.
+export const routeur = createBrowserRouter([
+  {
+    // Dernier filet : une erreur qu'aucun écran n'attrape (action de formulaire en 500, par exemple).
+    ErrorBoundary: () => (
+      <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
+        <ErreurChargement />
+      </main>
+    ),
+    children: [
+      // E0 (vitrine) n'existe pas encore : la racine mène à l'espace du Créateur,
+      // qui renvoie à la connexion s'il n'y a pas de session.
+      { path: "/", loader: () => redirect("/livres") },
+      { path: "/connexion", Component: Connexion, action: actionConnexion },
+      {
+        path: "/inscription",
+        Component: Inscription,
+        action: actionInscription,
+      },
+      { path: "/deconnexion", action: actionDeconnexion },
+      {
+        loader: chargerEcranCreateur,
+        Component: EcranCreateur,
+        HydrateFallback: () => (
+          <EcranCreateurProvisoire enChargement>
+            <MesLivresEnChargement />
+          </EcranCreateurProvisoire>
+        ),
+        ErrorBoundary: () => (
+          <EcranCreateurProvisoire>
+            <ErreurChargement />
+          </EcranCreateurProvisoire>
+        ),
+        children: [
+          {
+            // Route sans chemin : une erreur d'écran s'affiche sous l'en-tête, qui reste utilisable.
+            ErrorBoundary: ErreurChargement,
+            children: [
+              {
+                path: "/livres",
+                loader: chargerMesLivres,
+                Component: MesLivres,
+              },
+            ],
+          },
+        ],
+      },
+      { path: "*", Component: AdresseInconnue },
+    ],
+  },
+]);

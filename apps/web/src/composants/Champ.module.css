@@ -1,0 +1,43 @@
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.libelle {
+  font-size: var(--taille-petit);
+  font-weight: 600;
+}
+
+.saisie {
+  padding: 12px 14px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-fond);
+  color: var(--couleur-encre);
+  font-size: var(--taille-corps);
+  font-weight: 400;
+}
+
+.saisie::placeholder {
+  color: var(--couleur-texte-secondaire);
+}
+
+/* Les champs gardent leur bordure et leur halo, au lieu de l'anneau de focus commun. */
+.saisie:focus,
+.saisie:focus-visible {
+  outline: none;
+  border-color: var(--couleur-cta);
+  box-shadow: var(--halo-champ);
+}
+
+.saisie[aria-invalid="true"] {
+  border-color: var(--couleur-corail-encre);
+  box-shadow: var(--halo-champ-erreur);
+}
+
+.erreur {
+  color: var(--couleur-erreur-champ);
+  font-size: 12px;
+  line-height: var(--interligne-petit);
+}

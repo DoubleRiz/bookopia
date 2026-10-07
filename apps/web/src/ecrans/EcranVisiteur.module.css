@@ -1,0 +1,99 @@
+.ecran {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: 18px var(--espace-12);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+}
+
+.espaceur {
+  flex: 1;
+}
+
+.invite {
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
+
+.lienEntete {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cible-min);
+  padding: 12px 14px;
+  border-radius: var(--rayon-pill);
+  color: var(--couleur-cta);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lienEntete:hover {
+  background: var(--couleur-lavande-pale);
+}
+
+.corps {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.colonneFormulaire {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espace-12);
+}
+
+.contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Décor seul : une forme pastel moyen sur pastel pâle, jamais sous du texte. */
+.decor {
+  position: relative;
+  overflow: hidden;
+  background: var(--couleur-lavande-pale);
+}
+
+.forme {
+  position: absolute;
+  left: -60px;
+  bottom: -120px;
+  width: 520px;
+  height: 420px;
+  border-radius: 46% 54% 38% 62% / 55% 42% 58% 45%;
+  background: var(--couleur-lavande);
+}
+
+@media (width < 900px) {
+  .entete {
+    padding: var(--espace-3) var(--espace-4);
+  }
+
+  .invite {
+    display: none;
+  }
+
+  .corps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .colonneFormulaire {
+    align-items: flex-start;
+    padding: var(--espace-8) var(--espace-4);
+  }
+
+  .decor {
+    display: none;
+  }
+}

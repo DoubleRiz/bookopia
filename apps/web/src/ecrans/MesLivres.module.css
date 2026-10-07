@@ -1,0 +1,107 @@
+.titre {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compte {
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
+
+.liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--couleur-lavande);
+  border-radius: var(--rayon-carte);
+  overflow: hidden;
+}
+
+.livre {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: var(--espace-6);
+  align-items: center;
+  padding: 18px var(--espace-6);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+}
+
+.livre:last-child {
+  border-bottom: 0;
+}
+
+/* Fond lavande pâle et page blanche : la vraie vignette viendra avec la couverture du livre. */
+.vignette {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  background: var(--couleur-lavande-pale);
+}
+
+.page {
+  width: 58px;
+  height: 58px;
+  border-radius: 3px;
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
+}
+
+.infos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  min-width: 0;
+}
+
+.ligneTitre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.nomLivre {
+  font-size: var(--taille-h3);
+  font-weight: 800;
+  line-height: var(--interligne-h3);
+  letter-spacing: var(--approche-titre);
+  overflow-wrap: anywhere;
+}
+
+.intention {
+  padding: 5px 9px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: var(--rayon-pill);
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-label);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.meta {
+  color: var(--couleur-texte-secondaire);
+  font-size: 13.5px;
+  line-height: var(--interligne-petit);
+}
+
+@media (width < 600px) {
+  .livre {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: var(--espace-4);
+    padding: var(--espace-4);
+  }
+
+  .vignette {
+    width: 64px;
+    height: 64px;
+  }
+
+  .page {
+    width: 38px;
+    height: 38px;
+  }
+}

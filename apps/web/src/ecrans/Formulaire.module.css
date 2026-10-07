@@ -1,0 +1,25 @@
+.titre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+}
+
+.sousTitre {
+  color: var(--couleur-texte-secondaire);
+  line-height: 1.55;
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.erreurGlobale {
+  padding: var(--espace-3) var(--espace-4);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-rose-pale);
+  color: var(--couleur-rose-encre);
+  font-size: 14px;
+  font-weight: 600;
+}
