@@ -2,3 +2,4 @@
 export * from "./entrees";
 export * from "./erreurs";
 export * from "./gabarit";
+export * from "./reponses";

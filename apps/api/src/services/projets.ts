@@ -3,6 +3,18 @@ import type { EntreeCreerProjet } from "@bookopia/shared";
 import { creerDoublePageDepuisGabarit } from "./doubles-pages";
 import { ErreurMetier } from "./erreurs";
 
+// Le filtre sur utilisateurId est l'autorisation : aucun projet d'un autre Créateur ne sort d'ici.
+export async function listerProjets(
+  prisma: PrismaClient,
+  utilisateurId: string,
+) {
+  return prisma.projet.findMany({
+    where: { utilisateurId },
+    select: { id: true, titre: true, brouillon: true, modifieLe: true },
+    orderBy: { modifieLe: "desc" },
+  });
+}
+
 // Le modèle est copié dans le projet : le modifier ensuite n'affecte aucun livre existant.
 // Tout est créé dans une transaction : un projet sans couverture ni 4e ne doit jamais exister.
 export async function creerProjet(

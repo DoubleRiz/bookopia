@@ -53,6 +53,17 @@ export function creerExigerSession(
   };
 }
 
+// Pour les routes protégées par exigerSession : le type ne sait pas que le preHandler
+// a déjà rejeté l'appel anonyme, la vérification le lui dit sans assertion.
+export function utilisateurConnecte(
+  request: FastifyRequest,
+): SessionOuverte["utilisateur"] {
+  if (!request.utilisateur) {
+    throw new ErreurMetier("non_authentifie", "Session absente ou expirée");
+  }
+  return request.utilisateur;
+}
+
 export const routesAuthentification: FastifyPluginAsync<OptionsRoutes> = async (
   app,
   { prisma },
