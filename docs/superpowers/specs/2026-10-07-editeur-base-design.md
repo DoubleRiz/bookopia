@@ -123,11 +123,11 @@ La surcouche affiche la photo entière (vignette) et, par-dessus, la zone visibl
 
 ```ts
 dpiEffectif(emplacement, photo): number
-// largeur de la zone visible en pixels de l'original / largeur du cadre en mm × 25,4
+// largeur de la zone visible en pixels de l'original / largeur du cadre imprimé en mm × 25,4
 niveauResolution(dpi): "bon" | "moyen" | "faible"   // ≥ 300 · 150 à 300 · < 150
 ```
 
-- Le cadre retenu est celui de la géométrie, sans fond perdu.
+- Le cadre retenu est le cadre imprimé, fond perdu compris : celui que `placerPhoto` renvoie, pour mesurer la densité réelle.
 - Le zoom fait baisser le DPI : zoomer deux fois divise la largeur de zone par deux.
 - Badge sur le cadre : rien pour « bon », surlignage beurre pour « moyen », rose et « Qualité insuffisante pour l'impression » pour « faible ». Jamais bloquant (RG-16).
 

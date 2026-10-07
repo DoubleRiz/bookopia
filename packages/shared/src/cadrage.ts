@@ -83,6 +83,23 @@ export function placerPhoto(
   return { cadre, zone };
 }
 
+// Densité de la photo une fois imprimée, en points par pouce : pixels de la zone visible
+// rapportés à la largeur imprimée du cadre, fond perdu compris. Zoomer la fait baisser.
+export function dpiEffectif(
+  emplacement: Parameters<typeof placerPhoto>[0],
+  photo: { largeur_px: number; hauteur_px: number },
+): number {
+  const { cadre, zone } = placerPhoto(emplacement, photo);
+  return (zone.largeur / cadre.largeur) * 25.4;
+}
+
+// Seuils des spécifications fonctionnelles : ils avertissent, ils n'interdisent jamais (RG-16).
+export function niveauResolution(dpi: number): "bon" | "moyen" | "faible" {
+  if (dpi >= 300) return "bon";
+  if (dpi >= 150) return "moyen";
+  return "faible";
+}
+
 function borner(valeur: number, min: number, max: number): number {
   return Math.min(Math.max(valeur, min), max);
 }
