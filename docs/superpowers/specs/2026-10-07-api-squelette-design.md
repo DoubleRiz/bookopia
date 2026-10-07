@@ -25,7 +25,7 @@ Dans le périmètre :
 - un gestionnaire d'erreurs et de route inconnue qui couvre toutes les origines ;
 - les messages de validation Zod en français ;
 - la structure `src/routes/` et le modèle de plugin de routes ;
-- l'arrêt propre du serveur ;
+- l'arrêt propre du serveur, y compris le relais du signal dans la commande Compose du service `api` ;
 - les tests d'intégration correspondants.
 
 Hors périmètre :
@@ -134,6 +134,8 @@ services/               inchangé
 
 Dans `index.ts`, sur `SIGTERM` et `SIGINT` : `app.close()`. Fastify cesse d'accepter des connexions, termine celles en cours, puis le hook `onClose` existant déconnecte Prisma. Un échec de fermeture est journalisé et le processus sort avec le code 1. Un second signal pendant la fermeture n'en relance pas une autre.
 
+Le signal doit encore atteindre Node. Dans `docker-compose.yml`, le service `api` est lancé par `sh -c "… && npm start -w apps/api"` : `sh` est le PID 1 et ne relaie pas `SIGTERM` à ses enfants, Docker attend dix secondes puis tue le conteneur. La commande devient `sh -c "… && exec npm start -w apps/api"` : `npm` remplace `sh` comme PID 1 et relaie le signal à `tsx`, qui le relaie à Node. Le service `worker` a le même défaut ; il sera corrigé avec l'étape du worker.
+
 ## Tests
 
 Nouveau fichier `apps/api/src/app.test.ts`, en intégration sur la base de test réelle :
@@ -149,4 +151,4 @@ Nouveau fichier `apps/api/src/app.test.ts`, en intégration sur la base de test 
 
 Les tests d'authentification existants passent sans autre changement que leurs chemins d'import.
 
-L'arrêt propre se vérifie à la main : serveur lancé, `kill -TERM`, sortie avec le code 0 et Prisma déconnecté.
+L'arrêt propre se vérifie à la main : serveur lancé, `kill -TERM`, sortie avec le code 0 et Prisma déconnecté ; puis `docker compose stop api` rend la main en bien moins de dix secondes.
