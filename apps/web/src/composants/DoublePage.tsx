@@ -2,11 +2,22 @@ import {
   dpiEffectif,
   HAUTEUR_DOUBLE_PAGE_MM,
   LARGEUR_DOUBLE_PAGE_MM,
+  MM_PAR_POINT,
+  type Mesures,
   niveauResolution,
   placerPhoto,
+  type StyleTexte,
+  type Theme,
+  tronquerPourTenir,
 } from "@bookopia/shared";
-import { type DragEvent, type KeyboardEvent, useState } from "react";
+import {
+  type DragEvent,
+  type KeyboardEvent,
+  type ReactNode,
+  useState,
+} from "react";
 import type { DoublePageDuLivre } from "../api/doublesPages";
+import { familleCss } from "../polices";
 import styles from "./DoublePage.module.css";
 
 // Type du glisser-déposer d'une photo de la réserve : la donnée transportée est son identifiant.
@@ -16,10 +27,20 @@ export const TYPE_GLISSER_PHOTO = "application/x-bookopia-photo";
 // (miniatures, tests) : ni focus, ni sélection, ni avertissement.
 export type InteractionDoublePage = {
   selection: string | null;
+  // Le cadre texte dont la saisie est ouverte : c'est la zone de texte qui le montre.
+  enSaisie: string | null;
   surSelection: (emplacementId: string | null) => void;
+  surSaisir: (emplacementId: string) => void;
   surDepot: (emplacementId: string, photoId: string) => void;
   surRecadrer: (emplacementId: string) => void;
   surVider: (emplacementId: string) => void;
+};
+
+// Le thème du livre, et de quoi mesurer ses polices. Sans mesures (polices pas encore prêtes
+// ou illisibles), les cadres texte sont dessinés vides et ne s'ouvrent pas à la saisie.
+export type Habillage = {
+  theme: Theme;
+  mesures: Mesures | null;
 };
 
 export type PhotoAffichee = {
@@ -98,7 +119,8 @@ function estPosee(emplacement: Emplacement): boolean {
 type Avertissement = {
   emplacement: Emplacement;
   niveau: "moyen" | "faible";
-  dpi: number;
+  libelle: string;
+  detail?: string;
 };
 
 // Avertissement de résolution (RG-16) : jamais bloquant. Rien à partir de 300 DPI.
@@ -121,12 +143,21 @@ function avertissementDe(
     photo,
   );
   const niveau = niveauResolution(dpi);
-  return niveau === "bon" ? null : { emplacement, niveau, dpi };
+  if (niveau === "bon") return null;
+  return {
+    emplacement,
+    niveau,
+    libelle:
+      niveau === "faible"
+        ? "Qualité insuffisante pour l'impression"
+        : "Qualité moyenne",
+    detail: `${Math.round(dpi)} DPI`,
+  };
 }
 
 // La pastille est en HTML, posée sur le dessin en pourcentages : son texte garde une taille
 // lisible quelle que soit l'échelle de la double page.
-function PastilleResolution({ emplacement, niveau, dpi }: Avertissement) {
+function Pastille({ emplacement, niveau, libelle, detail }: Avertissement) {
   return (
     <span
       className={[styles.pastille, styles[niveau]].join(" ")}
@@ -134,12 +165,193 @@ function PastilleResolution({ emplacement, niveau, dpi }: Avertissement) {
         left: `${((emplacement.x + 2) / LARGEUR_DOUBLE_PAGE_MM) * 100}%`,
         top: `${((emplacement.y + emplacement.hauteur - 2) / HAUTEUR_DOUBLE_PAGE_MM) * 100}%`,
       }}
-      title={`${Math.round(dpi)} DPI`}
+      title={detail}
     >
-      {niveau === "faible"
-        ? "Qualité insuffisante pour l'impression"
-        : "Qualité moyenne"}
+      {libelle}
     </span>
+  );
+}
+
+const nomDuStyle = (style: StyleTexte) =>
+  style === "legende" ? "Légende" : "Titre";
+
+const ANCRES_SVG = { debut: "start", milieu: "middle", fin: "end" } as const;
+
+// Ce que montre un cadre texte : ses lignes, coupées comme dans le PDF.
+type TexteAffiche =
+  | { etat: "indisponible" | "vide" | "masque" }
+  | { etat: "ecrit"; dispose: ReturnType<typeof tronquerPourTenir> };
+
+function texteAffiche(
+  emplacement: Emplacement,
+  habillage: Habillage,
+): TexteAffiche {
+  const { style_texte } = emplacement;
+  if (!style_texte || !habillage.mesures) return { etat: "indisponible" };
+  const dispose = tronquerPourTenir(
+    { ...emplacement, style_texte },
+    habillage.theme.typographie,
+    habillage.mesures,
+  );
+  if (dispose.masque) return { etat: "masque" };
+  if (!emplacement.contenu_texte?.trim()) return { etat: "vide" };
+  return { etat: "ecrit", dispose };
+}
+
+// Une indication de l'éditeur dans un cadre texte, en police d'interface : elle n'est pas imprimée.
+function Indication({
+  emplacement,
+  children,
+}: {
+  emplacement: Emplacement;
+  children: string;
+}) {
+  return (
+    <text
+      className={styles.indication}
+      x={emplacement.x + emplacement.largeur / 2}
+      y={emplacement.y + emplacement.hauteur / 2}
+    >
+      {children}
+    </text>
+  );
+}
+
+// Un cadre texte : le cadre en pointillé dans l'éditeur, les lignes du thème, le filet.
+// Dans l'éditeur, un cadre vide invite à écrire, un cadre masqué le dit.
+function EmplacementTexte({
+  emplacement,
+  habillage,
+  interaction,
+}: {
+  emplacement: Emplacement;
+  habillage: Habillage;
+  interaction: InteractionDoublePage | undefined;
+}) {
+  const affiche = texteAffiche(emplacement, habillage);
+  const enSaisie = interaction?.enSaisie === emplacement.id;
+  const cadre = (
+    <rect
+      className={styles.cadreTexte}
+      x={emplacement.x}
+      y={emplacement.y}
+      width={emplacement.largeur}
+      height={emplacement.hauteur}
+    />
+  );
+
+  if (affiche.etat !== "ecrit") {
+    return (
+      <>
+        {cadre}
+        {interaction && !enSaisie && affiche.etat === "masque" && (
+          <Indication emplacement={emplacement}>Masqué par le thème</Indication>
+        )}
+        {interaction &&
+          !enSaisie &&
+          affiche.etat === "vide" &&
+          emplacement.style_texte && (
+            <Indication emplacement={emplacement}>
+              {emplacement.style_texte === "legende"
+                ? "Écrire une légende"
+                : "Écrire un titre"}
+            </Indication>
+          )}
+      </>
+    );
+  }
+
+  const { dispose } = affiche;
+  const { palette, bordure_cadre } = habillage.theme;
+  return (
+    <>
+      {interaction && cadre}
+      {bordure_cadre && (
+        <line
+          x1={emplacement.x}
+          y1={emplacement.y}
+          x2={emplacement.x + emplacement.largeur}
+          y2={emplacement.y}
+          stroke={palette.texte}
+          strokeWidth={bordure_cadre.filet_pt * MM_PAR_POINT}
+        />
+      )}
+      {!enSaisie && (
+        <text
+          className={styles.texte}
+          fontFamily={familleCss(dispose.police)}
+          fontSize={dispose.taille_mm}
+          fill={palette.texte}
+          textAnchor={ANCRES_SVG[dispose.ancre]}
+        >
+          {dispose.lignes.map((ligne, rang) => (
+            <tspan key={rang} x={ligne.x} y={ligne.y}>
+              {ligne.texte}
+            </tspan>
+          ))}
+        </text>
+      )}
+    </>
+  );
+}
+
+// Un texte qui ne tient plus, après un changement de thème : le PDF le coupera.
+function avertissementTexte(
+  emplacement: Emplacement,
+  habillage: Habillage,
+): Avertissement | null {
+  const affiche = texteAffiche(emplacement, habillage);
+  return affiche.etat === "ecrit" && affiche.dispose.deborde
+    ? { emplacement, niveau: "faible", libelle: "Texte coupé à l'impression" }
+    : null;
+}
+
+// La surface d'un cadre texte : un clic le sélectionne, un second clic, Entrée ou un double clic
+// ouvre la saisie.
+function CibleTexte({
+  emplacement,
+  interaction,
+}: {
+  emplacement: Emplacement & { style_texte: StyleTexte };
+  interaction: InteractionDoublePage;
+}) {
+  const selectionne = interaction.selection === emplacement.id;
+  const ecrit = Boolean(emplacement.contenu_texte?.trim());
+
+  function activer() {
+    if (selectionne) interaction.surSaisir(emplacement.id);
+    else interaction.surSelection(emplacement.id);
+  }
+
+  function clavier(evenement: KeyboardEvent) {
+    if (evenement.key === "Enter" || evenement.key === " ") {
+      evenement.preventDefault();
+      activer();
+    } else if (evenement.key === "Escape") {
+      interaction.surSelection(null);
+    }
+  }
+
+  return (
+    <rect
+      className={[styles.cible, selectionne && styles.selectionne]
+        .filter(Boolean)
+        .join(" ")}
+      x={emplacement.x}
+      y={emplacement.y}
+      width={emplacement.largeur}
+      height={emplacement.hauteur}
+      tabIndex={0}
+      role="button"
+      aria-pressed={selectionne}
+      aria-label={`${nomDuStyle(emplacement.style_texte)} ${emplacement.indice + 1}, ${ecrit ? "écrit" : "vide"}`}
+      onClick={(evenement) => {
+        evenement.stopPropagation();
+        activer();
+      }}
+      onDoubleClick={() => interaction.surSaisir(emplacement.id)}
+      onKeyDown={clavier}
+    />
   );
 }
 
@@ -227,14 +439,17 @@ function CibleEmplacement({
 // du cadre extérieur et se trouve masqué, comme à la coupe.
 export function DoublePage({
   doublePage,
-  fond,
+  habillage,
   photos,
   interaction,
+  surcouche,
 }: {
   doublePage: DoublePageDuLivre;
-  fond: string;
+  habillage: Habillage;
   photos: Map<string, PhotoAffichee>;
   interaction?: InteractionDoublePage;
+  // Posée sur le dessin, dans son repère en pourcentages : la saisie d'un texte.
+  surcouche?: ReactNode;
 }) {
   const libelle = libelleDoublePage(doublePage.role, doublePage.position);
   const [survole, setSurvole] = useState<string | null>(null);
@@ -243,12 +458,22 @@ export function DoublePage({
   const cadresPhoto = doublePage.emplacement.filter(
     (emplacement) => emplacement.nature === "photo",
   );
+  // Les cadres texte qu'on peut ouvrir : un style que le thème montre, des polices prêtes.
+  const cadresTexte = doublePage.emplacement.flatMap((emplacement) => {
+    const { style_texte } = emplacement;
+    return emplacement.nature === "texte" &&
+      style_texte &&
+      texteAffiche(emplacement, habillage).etat !== "masque" &&
+      habillage.mesures
+      ? [{ ...emplacement, style_texte }]
+      : [];
+  });
   const avertissements = interaction
-    ? cadresPhoto.flatMap((emplacement) => {
-        const avertissement = avertissementDe(
-          emplacement,
-          photoDe(emplacement),
-        );
+    ? doublePage.emplacement.flatMap((emplacement) => {
+        const avertissement =
+          emplacement.nature === "photo"
+            ? avertissementDe(emplacement, photoDe(emplacement))
+            : avertissementTexte(emplacement, habillage);
         return avertissement ? [avertissement] : [];
       })
     : [];
@@ -268,7 +493,7 @@ export function DoublePage({
           <rect
             width={LARGEUR_DOUBLE_PAGE_MM}
             height={HAUTEUR_DOUBLE_PAGE_MM}
-            fill={fond}
+            fill={habillage.theme.palette.fond}
           />
           {doublePage.emplacement.map((emplacement) =>
             emplacement.nature === "photo" ? (
@@ -278,14 +503,11 @@ export function DoublePage({
                 photo={photoDe(emplacement)}
               />
             ) : (
-              // Le texte arrive avec l'éditeur (L6, 6c) : le cadre seul, pour l'instant.
-              <rect
+              <EmplacementTexte
                 key={emplacement.id}
-                className={styles.cadreTexte}
-                x={emplacement.x}
-                y={emplacement.y}
-                width={emplacement.largeur}
-                height={emplacement.hauteur}
+                emplacement={emplacement}
+                habillage={habillage}
+                interaction={interaction}
               />
             ),
           )}
@@ -316,13 +538,24 @@ export function DoublePage({
                 surSurvol={setSurvole}
               />
             ))}
+          {interaction &&
+            cadresTexte
+              .filter((emplacement) => emplacement.id !== interaction.enSaisie)
+              .map((emplacement) => (
+                <CibleTexte
+                  key={`cible-${emplacement.id}`}
+                  emplacement={emplacement}
+                  interaction={interaction}
+                />
+              ))}
         </svg>
         {avertissements.map((avertissement) => (
-          <PastilleResolution
+          <Pastille
             key={`pastille-${avertissement.emplacement.id}`}
             {...avertissement}
           />
         ))}
+        {surcouche}
       </div>
       {/* Le libellé est déjà le nom du dessin : la légende ne le répète pas aux lecteurs d'écran. */}
       <figcaption className={styles.libelle} aria-hidden="true">

@@ -1,7 +1,9 @@
+import fontkit from "@pdf-lib/fontkit";
 import {
   clip,
   endPath,
   PDFDocument,
+  type PDFFont,
   type PDFImage,
   type PDFPage,
   popGraphicsState,
@@ -16,6 +18,10 @@ import {
   placerPhoto,
   type Rectangle,
 } from "./cadrage";
+import type { StyleTexte } from "./gabarit";
+import { tronquerPourTenir } from "./mise-en-lignes";
+import { type ClePolice, creerMesure, type MesureTexte } from "./polices";
+import { type Theme } from "./typographie";
 
 export type PhotoARendre = {
   // L'original JPEG tel que déposé dans Storage : intégré sans réencodage.
@@ -30,12 +36,17 @@ export type EmplacementARendre = Rectangle & {
   cadrage_x: number;
   cadrage_y: number;
   cadrage_zoom: number;
+  // Cadres texte seulement ; null pour une photo.
+  style_texte: StyleTexte | null;
+  contenu_texte: string | null;
 };
 
 // Tout ce que le rendu doit savoir, déjà lu et téléchargé : aucun accès réseau ni base ici.
 export type LivreARendre = {
-  // Couleur de fond du thème, « #RRGGBB ».
-  fond: string;
+  theme: Theme;
+  // Les fichiers des polices du thème. Une police manquante fait échouer le rendu :
+  // jamais de PDF avec une police de substitution.
+  polices: Partial<Record<ClePolice, Uint8Array>>;
   // Dans l'ordre du livre : couverture, intérieures, 4e.
   doubles_pages: { emplacements: EmplacementARendre[] }[];
 };
@@ -142,13 +153,96 @@ function dessinerPhoto(
   page.pushOperators(popGraphicsState());
 }
 
+// Les polices du livre, intégrées à la première ligne qui s'en sert, en sous-ensemble :
+// seuls les glyphes utilisés entrent dans le PDF.
+function preparerPolices(document: PDFDocument, livre: LivreARendre) {
+  const mesures = new Map<ClePolice, MesureTexte>();
+  const integrees = new Map<ClePolice, Promise<PDFFont>>();
+  const octetsDe = (cle: ClePolice) => {
+    const octets = livre.polices[cle];
+    if (!octets) throw new Error(`Police manquante : ${cle}`);
+    return octets;
+  };
+  return {
+    mesure(cle: ClePolice): MesureTexte {
+      let mesure = mesures.get(cle);
+      if (!mesure) {
+        mesure = creerMesure(octetsDe(cle));
+        mesures.set(cle, mesure);
+      }
+      return mesure;
+    },
+    integree(cle: ClePolice): Promise<PDFFont> {
+      let police = integrees.get(cle);
+      if (!police) {
+        police = document.embedFont(octetsDe(cle), { subset: true });
+        integrees.set(cle, police);
+      }
+      return police;
+    },
+  };
+}
+
+type Polices = ReturnType<typeof preparerPolices>;
+
+// Les lignes qui tiennent dans le cadre, la dernière coupée par « … » si le texte est plus long.
+// Un texte masqué par le thème ou vide n'est pas dessiné, ni son filet.
+async function dessinerTexte(
+  page: PDFPage,
+  emplacement: EmplacementARendre,
+  theme: Theme,
+  polices: Polices,
+) {
+  const { style_texte, contenu_texte } = emplacement;
+  if (!style_texte || !contenu_texte?.trim()) return;
+  const dispose = tronquerPourTenir(
+    { ...emplacement, style_texte, contenu_texte },
+    theme.typographie,
+    polices.mesure,
+  );
+  if (dispose.masque || dispose.lignes.length === 0) return;
+
+  const encre = couleur(theme.palette.texte);
+  const filet = theme.bordure_cadre?.filet_pt;
+  if (filet) {
+    const { x, y, width } = versPdf({ ...emplacement, hauteur: 0 });
+    page.drawLine({
+      start: { x, y },
+      end: { x: x + width, y },
+      thickness: filet,
+      color: encre,
+    });
+  }
+
+  const police = await polices.integree(dispose.police);
+  const mesure = polices.mesure(dispose.police);
+  for (const ligne of dispose.lignes) {
+    const largeur = mesure.largeur(ligne.texte, dispose.taille_mm);
+    const debut =
+      dispose.ancre === "debut"
+        ? ligne.x
+        : dispose.ancre === "milieu"
+          ? ligne.x - largeur / 2
+          : ligne.x - largeur;
+    page.drawText(ligne.texte, {
+      x: pt(DECALAGE_COUPE_MM + debut),
+      y: pt(DECALAGE_COUPE_MM + HAUTEUR_DOUBLE_PAGE_MM - ligne.y),
+      size: pt(dispose.taille_mm),
+      font: police,
+      color: encre,
+    });
+  }
+}
+
 // Rend le livre en PDF : une page par double page, fond perdu de 3 mm, traits de coupe.
-// Les emplacements texte sont ignorés pour l'instant ; un emplacement photo vide est grisé.
+// Un emplacement photo vide est grisé ; un emplacement texte vide n'est pas dessiné.
 export async function rendre(livre: LivreARendre): Promise<Uint8Array> {
   const document = await PDFDocument.create();
+  document.registerFontkit(fontkit);
+  const polices = preparerPolices(document, livre);
   // Une photo posée deux fois n'est intégrée qu'une fois : le chargement partage ses octets.
   const images = new Map<Uint8Array, PDFImage>();
-  const fond = couleur(livre.fond);
+  const fond = couleur(livre.theme.palette.fond);
 
   for (const doublePage of livre.doubles_pages) {
     const page = document.addPage([pt(LARGEUR_PAGE_MM), pt(HAUTEUR_PAGE_MM)]);
@@ -164,7 +258,8 @@ export async function rendre(livre: LivreARendre): Promise<Uint8Array> {
     });
 
     for (const emplacement of doublePage.emplacements) {
-      if (emplacement.nature !== "photo") {
+      if (emplacement.nature === "texte") {
+        await dessinerTexte(page, emplacement, livre.theme, polices);
         continue;
       }
       const { photo } = emplacement;

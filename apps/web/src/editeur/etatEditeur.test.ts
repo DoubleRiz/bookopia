@@ -22,6 +22,7 @@ function emplacement(
     cadrage_y: null,
     cadrage_zoom: null,
     contenu_texte: null,
+    style_texte: null,
     ...autres,
   };
 }
@@ -92,6 +93,21 @@ describe("reduireEditeur", () => {
       cadrage_y: 0.5,
       cadrage_zoom: 1.5,
     });
+  });
+
+  it("écrit un texte, et enregistre un texte effacé comme absent", () => {
+    const ecrit = reduireEditeur(depart, {
+      type: "ecrireTexte",
+      emplacementId: "e1",
+      contenu: "Lisbonne",
+    });
+    expect(emplacementDe(ecrit, "e1")?.contenu_texte).toBe("Lisbonne");
+    const efface = reduireEditeur(ecrit, {
+      type: "ecrireTexte",
+      emplacementId: "e1",
+      contenu: "",
+    });
+    expect(emplacementDe(efface, "e1")?.contenu_texte).toBeNull();
   });
 
   it("rétablit un emplacement à l'identique", () => {

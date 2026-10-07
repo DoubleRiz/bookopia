@@ -19,17 +19,24 @@ import {
   listerDoublesPages,
   listerGabaritsDuLivre,
 } from "../api/doublesPages";
-import { cheminPdf, fondDuTheme, lireExport, urlDuPdf } from "../api/exports";
+import { cheminPdf, lireExport, urlDuPdf } from "../api/exports";
 import {
   listerPhotos,
   lireProjet,
   supprimerPhoto,
   urlsDesVignettes,
 } from "../api/photos";
+import { lireTheme, listerThemes, type ThemeDuCatalogue } from "../api/themes";
 import { Banniere } from "../composants/Banniere";
 import { Bouton } from "../composants/Bouton";
 import { Modale } from "../composants/Modale";
 import { Editeur } from "../editeur/Editeur";
+import {
+  ErreurPolice,
+  mesures,
+  policesDuTheme,
+  preparerPolices,
+} from "../polices";
 import {
   erreurDeFormulaire,
   type ResultatFormulaire,
@@ -48,6 +55,29 @@ async function lireGabarits(projetId: string): Promise<GabaritAComposer[]> {
     return await listerGabaritsDuLivre(projetId);
   } catch (erreur) {
     if (erreur instanceof z.ZodError) return [];
+    throw erreur;
+  }
+}
+
+// Le catalogue des thèmes, pour le choix du thème. Illisible, il ne bloque pas l'écran :
+// le choix est seulement désactivé.
+async function lireThemes(): Promise<ThemeDuCatalogue[]> {
+  try {
+    return await listerThemes();
+  } catch (erreur) {
+    if (erreur instanceof z.ZodError) return [];
+    throw erreur;
+  }
+}
+
+// Les polices du thème, avant d'afficher le moindre texte. Illisibles, l'éditeur reste utilisable
+// pour les photos : les textes ne s'affichent pas et ne s'écrivent pas.
+async function policesPretes(theme: ThemeDuCatalogue): Promise<boolean> {
+  try {
+    await preparerPolices(policesDuTheme(theme.typographie));
+    return true;
+  } catch (erreur) {
+    if (erreur instanceof ErreurPolice) return false;
     throw erreur;
   }
 }
@@ -73,9 +103,12 @@ export async function chargerLivreEnCours({
     );
     const doublesPages = await listerDoublesPages(projet.id);
     const pdf = await lireExport(projet.id);
+    const theme = lireTheme(projet.theme);
     return {
       projet,
-      fond: fondDuTheme(projet.theme.palette),
+      theme,
+      polices: await policesPretes(theme),
+      themes: await lireThemes(),
       doublesPages,
       gabarits: await lireGabarits(projet.id),
       photos: photos.map((photo) => ({ ...photo, url: urls.get(photo.id) })),
@@ -293,8 +326,16 @@ function ComposerLeLivre({
 
 // E7 : l'éditeur, l'import (E5) qui s'ouvre par-dessus à sa propre adresse, et l'export.
 export function LivreEnCours() {
-  const { projet, fond, doublesPages, gabarits, photos, urlDuPdf } =
-    useLoaderData<typeof chargerLivreEnCours>();
+  const {
+    projet,
+    theme,
+    polices,
+    themes,
+    doublesPages,
+    gabarits,
+    photos,
+    urlDuPdf,
+  } = useLoaderData<typeof chargerLivreEnCours>();
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
   const [aSupprimer, setASupprimer] = useState<Photo | null>(null);
@@ -314,9 +355,16 @@ export function LivreEnCours() {
           <Bouton onClick={ouvrirImport}>Importer des photos</Bouton>
         )}
       </div>
+      {!polices && (
+        <Banniere titre="Les polices du livre n'ont pas pu être chargées.">
+          Les textes ne s'affichent pas. Rechargez la page pour réessayer.
+        </Banniere>
+      )}
       <Editeur
         projetId={projet.id}
-        fond={fond}
+        habillage={{ theme, mesures: polices ? mesures : null }}
+        themes={themes}
+        themeActuel={theme}
         doublesPages={doublesPages}
         photos={photos}
         gabarits={gabarits}

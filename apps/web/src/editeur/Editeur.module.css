@@ -13,6 +13,10 @@
 }
 
 .actionsLivre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-3);
   margin-left: auto;
 }
 
@@ -478,4 +482,43 @@
 .resumeGabarit {
   color: var(--couleur-texte-secondaire);
   font-size: var(--taille-petit);
+}
+
+/* Saisie d'un texte, posée sur son cadre : sans marge ni bord, pour que les lignes tombent
+   là où le dessin et le PDF les posent. Le contour de sélection est un halo, hors de la zone. */
+.saisieTexte {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: 0 0 0 2px var(--couleur-cta);
+  font-kerning: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  resize: none;
+}
+
+/* « Le cadre est plein » : sous le cadre, lisible à toute échelle. Vide, il ne prend pas de place. */
+.annonceSaisie {
+  position: absolute;
+  z-index: 1;
+  margin-top: var(--espace-1);
+  padding: 2px var(--espace-2);
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-encre);
+  color: #fff;
+  font-size: var(--taille-label);
+  font-weight: 700;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.annonceSaisie:empty {
+  display: none;
 }

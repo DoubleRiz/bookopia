@@ -15,7 +15,7 @@ describe("definitionGabaritSchema", () => {
     expect(
       definitionGabaritSchema.parse([
         cadre,
-        { ...cadre, indice: 1, nature: "texte" },
+        { ...cadre, indice: 1, nature: "texte", style: "legende" },
       ]),
     ).toHaveLength(2);
   });
@@ -33,6 +33,27 @@ describe("definitionGabaritSchema", () => {
   it("refuse un cadre de largeur nulle", () => {
     expect(
       definitionGabaritSchema.safeParse([{ ...cadre, largeur: 0 }]).success,
+    ).toBe(false);
+  });
+
+  it("refuse un cadre texte sans style", () => {
+    expect(
+      definitionGabaritSchema.safeParse([{ ...cadre, nature: "texte" }])
+        .success,
+    ).toBe(false);
+  });
+
+  it("refuse un cadre photo avec un style", () => {
+    expect(
+      definitionGabaritSchema.safeParse([{ ...cadre, style: "titre" }]).success,
+    ).toBe(false);
+  });
+
+  it("refuse un style inconnu", () => {
+    expect(
+      definitionGabaritSchema.safeParse([
+        { ...cadre, nature: "texte", style: "paragraphe" },
+      ]).success,
     ).toBe(false);
   });
 });

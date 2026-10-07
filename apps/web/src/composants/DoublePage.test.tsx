@@ -1,11 +1,34 @@
+import type { MesureTexte, Theme } from "@bookopia/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 import {
   DoublePage,
+  type Habillage,
   type InteractionDoublePage,
   libelleDoublePage,
 } from "./DoublePage";
+
+// Chasse fixe : chaque caractère fait la moitié de la taille.
+const chasseFixe: MesureTexte = {
+  largeur: (texte, taille_mm) => texte.length * taille_mm * 0.5,
+  ascendant: 0.8,
+  descendant: 0.2,
+};
+
+const MODERNE: Theme = {
+  palette: { fond: "#FAF7F2", texte: "#1E1B2E" },
+  bordure_cadre: null,
+  typographie: {
+    titre: { police: "Nunito", graisse: 800, italique: false, taille_pt: 18 },
+    legende: { police: "Nunito", graisse: 400, italique: false, taille_pt: 9 },
+    alignement: "gauche",
+    ancrage: "haut",
+    styles_masques: [],
+  },
+};
+
+const HABILLAGE: Habillage = { theme: MODERNE, mesures: () => chasseFixe };
 
 type Emplacement = DoublePageDuLivre["emplacement"][number];
 
@@ -23,6 +46,7 @@ function emplacement(autres: Partial<Emplacement>): Emplacement {
     cadrage_y: null,
     cadrage_zoom: null,
     contenu_texte: null,
+    style_texte: null,
     ...autres,
   };
 }
@@ -34,6 +58,7 @@ function rendre(
     { url?: string; largeur_px: number; hauteur_px: number }
   >(),
   interaction?: InteractionDoublePage,
+  habillage: Habillage = HABILLAGE,
 ) {
   const doublePage: DoublePageDuLivre = {
     id: "d1",
@@ -45,7 +70,7 @@ function rendre(
   return renderToStaticMarkup(
     <DoublePage
       doublePage={doublePage}
-      fond="#FAF7F2"
+      habillage={habillage}
       photos={photos}
       interaction={interaction}
     />,
@@ -122,6 +147,20 @@ describe("DoublePage", () => {
     expect(html).toMatch(/<rect[^>]*x="20" y="30" width="100" height="50"/);
   });
 
+  it("dessine les lignes d'un texte avec la police et la couleur du thème", () => {
+    const html = rendre([
+      emplacement({
+        nature: "texte",
+        style_texte: "titre",
+        contenu_texte: "Lisbonne",
+      }),
+    ]);
+    expect(html).toContain('font-family="bookopia-nunito-800"');
+    expect(html).toContain('fill="#1E1B2E"');
+    expect(html).toContain(">Lisbonne</tspan>");
+    expect(html).not.toContain("Écrire");
+  });
+
   it("dessine un cadre vide quand la vignette manque", () => {
     const html = rendre(
       [
@@ -142,7 +181,9 @@ describe("DoublePage dans l'éditeur", () => {
   const rien = () => {};
   const interaction = (selection: string | null): InteractionDoublePage => ({
     selection,
+    enSaisie: null,
     surSelection: rien,
+    surSaisir: rien,
     surDepot: rien,
     surRecadrer: rien,
     surVider: rien,
@@ -176,13 +217,60 @@ describe("DoublePage dans l'éditeur", () => {
     expect(html).toContain('aria-pressed="true"');
   });
 
-  it("ne rend pas un cadre texte focalisable", () => {
+  const texte = (contenu_texte: string | null) =>
+    emplacement({
+      id: "t1",
+      nature: "texte",
+      style_texte: "legende",
+      contenu_texte,
+    });
+
+  it("rend un cadre texte focalisable et nommé selon son style", () => {
+    const html = rendre([texte(null)], undefined, interaction(null));
+    expect(html).toContain('aria-label="Légende 1, vide"');
+    expect(html).toContain("Écrire une légende");
+  });
+
+  it("ne rend pas un cadre texte focalisable tant que les polices manquent", () => {
+    const html = rendre([texte("Lisbonne")], undefined, interaction(null), {
+      theme: MODERNE,
+      mesures: null,
+    });
+    expect(html).not.toContain("tabindex");
+    expect(html).not.toContain("Lisbonne");
+  });
+
+  it("dit qu'un cadre est masqué par le thème, sans le rendre modifiable", () => {
+    const silence: Theme = {
+      ...MODERNE,
+      typographie: { ...MODERNE.typographie, styles_masques: ["legende"] },
+    };
+    const html = rendre([texte("Lisbonne")], undefined, interaction(null), {
+      theme: silence,
+      mesures: () => chasseFixe,
+    });
+    expect(html).toContain("Masqué par le thème");
+    expect(html).not.toContain("Lisbonne");
+    expect(html).not.toContain("tabindex");
+  });
+
+  it("avertit d'un texte que le PDF coupera", () => {
+    // Cadre de 100 × 50 mm, 9 pt : 63 caractères par ligne, 13 lignes au plus.
     const html = rendre(
-      [emplacement({ id: "t1", nature: "texte" })],
+      [texte("Une longue légende. ".repeat(60))],
       undefined,
       interaction(null),
     );
-    expect(html).not.toContain("tabindex");
+    expect(html).toContain("Texte coupé à l&#x27;impression");
+  });
+
+  it("ne dessine pas les lignes du cadre en cours de saisie", () => {
+    const html = rendre([texte("Lisbonne")], undefined, {
+      ...interaction("t1"),
+      enSaisie: "t1",
+    });
+    expect(html).not.toContain("Lisbonne");
+    expect(html).not.toContain('aria-label="Légende 1');
   });
 
   it("avertit d'une qualité insuffisante pour l'impression", () => {

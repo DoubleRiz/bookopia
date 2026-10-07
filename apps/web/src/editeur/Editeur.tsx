@@ -6,7 +6,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router";
+import {
+  useLocation,
+  useNavigate,
+  useRevalidator,
+  useSearchParams,
+} from "react-router";
 import { ErreurBase, ErreurNonAuthentifie, ErreurReseau } from "../api/client";
 import type { GabaritAComposer } from "@bookopia/shared";
 import {
@@ -14,15 +19,18 @@ import {
   type DoublePageDuLivre,
   deplacerDoublePage,
   dupliquerDoublePage,
+  type EmplacementDuLivre,
   ecrireEmplacement,
   insererDoublePage,
   listerDoublesPages,
   supprimerDoublePage,
 } from "../api/doublesPages";
+import { changerTheme, type ThemeDuCatalogue } from "../api/themes";
 import { Banniere } from "../composants/Banniere";
 import { Bouton } from "../composants/Bouton";
 import {
   DoublePage,
+  type Habillage,
   type InteractionDoublePage,
   type PhotoAffichee,
 } from "../composants/DoublePage";
@@ -42,8 +50,10 @@ import {
 } from "./fileEcritures";
 import { gabaritParDefaut } from "./gabaritParDefaut";
 import { type PhotoDeReserve, Reserve } from "./Reserve";
+import { SaisieTexte } from "./SaisieTexte";
 import { SurcoucheGabarits } from "./SurcoucheGabarits";
 import { SurcoucheRecadrage } from "./SurcoucheRecadrage";
+import { SurcoucheThemes } from "./SurcoucheThemes";
 
 type Photo = PhotoDeReserve & PhotoAffichee;
 
@@ -65,6 +75,9 @@ function useEnLigne(): boolean {
   );
 }
 
+// Une saisie part en base après une pause de la frappe, et tout de suite à sa fin.
+const DELAI_ECRITURE_TEXTE_MS = 600;
+
 const LIBELLES_STATUT: Record<StatutEnregistrement, string> = {
   enregistre: "Enregistré",
   enregistrement: "Enregistrement…",
@@ -76,7 +89,9 @@ const LIBELLES_STATUT: Record<StatutEnregistrement, string> = {
 // les gestes de structure passent par les fonctions SQL, puis les doubles pages sont relues.
 export function Editeur({
   projetId,
-  fond,
+  habillage,
+  themes,
+  themeActuel,
   doublesPages,
   photos,
   gabarits,
@@ -85,7 +100,10 @@ export function Editeur({
   surSupprimerPhoto,
 }: {
   projetId: string;
-  fond: string;
+  habillage: Habillage;
+  // Les thèmes proposés ; vide si le catalogue est illisible.
+  themes: ThemeDuCatalogue[];
+  themeActuel: { id: string; nom: string };
   doublesPages: DoublePageDuLivre[];
   photos: Photo[];
   // Intérieurs actifs de la famille du livre ; vide si le catalogue est illisible.
@@ -117,6 +135,9 @@ export function Editeur({
   const [aRecadrer, setARecadrer] = useState<string | null>(null);
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
   const [choixGabarit, setChoixGabarit] = useState(false);
+  const [choixTheme, setChoixTheme] = useState(false);
+  const [enSaisie, setEnSaisie] = useState<string | null>(null);
+  const revalidator = useRevalidator();
   const grille = useRef<HTMLUListElement>(null);
   const enLigne = useEnLigne();
   const actif = enLigne && !structureEnCours;
@@ -211,6 +232,55 @@ export function Editeur({
   const vider = (emplacementId: string) =>
     geste(emplacementId, { type: "vider", emplacementId });
 
+  // La saisie d'un texte : chaque frappe s'affiche, l'écriture part après une pause.
+  // Refusée, elle rétablit le dernier texte enregistré, pas celui d'avant la frappe.
+  const texteEnregistre = useRef<EmplacementDuLivre | null>(null);
+  const minuterieTexte = useRef<number | undefined>(undefined);
+
+  function ouvrirSaisie(emplacementId: string) {
+    texteEnregistre.current =
+      emplacementDe(etatCourant.current, emplacementId) ?? null;
+    dispatch({ type: "selectionner", emplacementId });
+    setEnSaisie(emplacementId);
+  }
+
+  function enregistrerTexte() {
+    window.clearTimeout(minuterieTexte.current);
+    const avant = texteEnregistre.current;
+    const apres = avant && emplacementDe(etatCourant.current, avant.id);
+    if (!avant || !apres || apres.contenu_texte === avant.contenu_texte) return;
+    texteEnregistre.current = apres;
+    file().ajouter({
+      appliquer: () => {},
+      ecrire: () => ecrireEmplacement(apres),
+      retablir: () => {
+        texteEnregistre.current = avant;
+        dispatch({ type: "retablir", emplacement: avant });
+      },
+    });
+  }
+
+  function ecrireTexte(emplacementId: string, contenu: string) {
+    const action: ActionEditeur = {
+      type: "ecrireTexte",
+      emplacementId,
+      contenu,
+    };
+    etatCourant.current = reduireEditeur(etatCourant.current, action);
+    dispatch(action);
+    setMessage(null);
+    window.clearTimeout(minuterieTexte.current);
+    minuterieTexte.current = window.setTimeout(
+      enregistrerTexte,
+      DELAI_ECRITURE_TEXTE_MS,
+    );
+  }
+
+  function fermerSaisie() {
+    enregistrerTexte();
+    setEnSaisie(null);
+  }
+
   // Un geste de structure attend la fin des écritures en cours, appelle la fonction SQL,
   // puis relit les doubles pages. L'opération renvoie la page courante une fois le geste fait.
   async function modifierStructure(
@@ -225,6 +295,26 @@ export function Editeur({
       traiterErreur(erreur);
     }
     await relire();
+    setStructureEnCours(false);
+  }
+
+  // Le thème habille tout le livre : rien n'est perdu, la page courante ne change pas.
+  // Le loader repasse ensuite, avec les polices du nouveau thème.
+  async function appliquerTheme(themeId: string) {
+    setChoixTheme(false);
+    setStructureEnCours(true);
+    setMessage(null);
+    await file().terminer();
+    try {
+      await changerTheme(projetId, themeId);
+    } catch (erreur) {
+      if (erreur instanceof ErreurBase && erreur.code === "invalide") {
+        setMessage("Ce thème n'est plus proposé.");
+      } else {
+        traiterErreur(erreur);
+      }
+    }
+    await revalidator.revalidate();
     setStructureEnCours(false);
   }
 
@@ -287,9 +377,23 @@ export function Editeur({
     ? photosAffichees.get(recadree.photo_id)
     : undefined;
 
+  // Les cartes du choix de thème montrent la page courante ; sans intérieure, la couverture.
+  const apercuTheme = courante ?? etat.doublesPages[0];
+
+  const saisie =
+    enSaisie && courante
+      ? courante.emplacement.find((e) => e.id === enSaisie)
+      : undefined;
+  const saisieOuverte =
+    saisie?.style_texte && habillage.mesures
+      ? { ...saisie, style_texte: saisie.style_texte }
+      : undefined;
+
   const interaction: InteractionDoublePage | undefined = actif
     ? {
         selection: etat.selection,
+        enSaisie: saisieOuverte?.id ?? null,
+        surSaisir: ouvrirSaisie,
         surSelection: (emplacementId) =>
           dispatch({ type: "selectionner", emplacementId }),
         surDepot: poser,
@@ -319,7 +423,16 @@ export function Editeur({
             </Bouton>
           )}
         </div>
-        <div className={styles.actionsLivre}>{actionsLivre}</div>
+        <div className={styles.actionsLivre}>
+          <Bouton
+            variante="secondaire"
+            disabled={!actif || themes.length < 2}
+            onClick={() => setChoixTheme(true)}
+          >
+            Thème · {themeActuel.nom}
+          </Bouton>
+          {actionsLivre}
+        </div>
       </div>
       {!enLigne && (
         <Banniere titre="Hors-ligne">
@@ -336,7 +449,16 @@ export function Editeur({
                 className={styles.barreOutils}
                 aria-label="Cadre sélectionné"
               >
-                {selection ? (
+                {selection?.nature === "texte" ? (
+                  <Bouton
+                    variante="secondaire"
+                    taille="petit"
+                    disabled={!actif || !habillage.mesures}
+                    onClick={() => ouvrirSaisie(selection.id)}
+                  >
+                    Écrire
+                  </Bouton>
+                ) : selection ? (
                   <>
                     <Bouton
                       variante="secondaire"
@@ -377,9 +499,24 @@ export function Editeur({
               <div className={styles.pageCourante}>
                 <DoublePage
                   doublePage={courante}
-                  fond={fond}
+                  habillage={habillage}
                   photos={photosAffichees}
                   interaction={interaction}
+                  surcouche={
+                    saisieOuverte &&
+                    habillage.mesures && (
+                      <SaisieTexte
+                        key={saisieOuverte.id}
+                        emplacement={saisieOuverte}
+                        theme={habillage.theme}
+                        mesures={habillage.mesures}
+                        surChangement={(contenu) =>
+                          ecrireTexte(saisieOuverte.id, contenu)
+                        }
+                        surFin={fermerSaisie}
+                      />
+                    )
+                  }
                 />
               </div>
             </>
@@ -392,7 +529,7 @@ export function Editeur({
           <BandeDoublesPages
             interieures={interieures}
             courante={courante}
-            fond={fond}
+            habillage={habillage}
             photos={photosAffichees}
             actif={actif}
             peutAjouter={gabaritParDefautId !== null}
@@ -409,9 +546,11 @@ export function Editeur({
         <Reserve
           photos={photos}
           posees={posees}
-          cadreSelectionne={Boolean(selection)}
+          cadreSelectionne={selection?.nature === "photo"}
           actif={actif}
-          surChoisir={(photoId) => selection && poser(selection.id, photoId)}
+          surChoisir={(photoId) =>
+            selection?.nature === "photo" && poser(selection.id, photoId)
+          }
           surSupprimer={surSupprimerPhoto}
           surImporter={surImporter}
           refGrille={grille}
@@ -437,9 +576,20 @@ export function Editeur({
         <SurcoucheGabarits
           gabarits={gabarits}
           courante={courante}
-          fond={fond}
+          habillage={habillage}
           surChoisir={(gabaritId) => appliquerGabarit(courante.id, gabaritId)}
           surFermer={() => setChoixGabarit(false)}
+        />
+      )}
+      {choixTheme && apercuTheme && (
+        <SurcoucheThemes
+          themes={themes}
+          themeActuelId={themeActuel.id}
+          apercu={apercuTheme}
+          doublesPages={etat.doublesPages}
+          photos={photosAffichees}
+          surChoisir={(themeId) => void appliquerTheme(themeId)}
+          surFermer={() => setChoixTheme(false)}
         />
       )}
       {aSupprimer && (

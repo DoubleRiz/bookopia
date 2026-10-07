@@ -18,6 +18,7 @@ const gabarit = (
     y: 0,
     largeur: 100,
     hauteur: 50,
+    ...(nature === "texte" ? { style: "legende" as const } : {}),
   })) as DefinitionGabarit,
 });
 
@@ -39,7 +40,30 @@ function rendre(gabaritActuel: string | null) {
     <SurcoucheGabarits
       gabarits={gabarits}
       courante={courante}
-      fond="#FAF7F2"
+      habillage={{
+        theme: {
+          palette: { fond: "#FAF7F2", texte: "#3E3856" },
+          bordure_cadre: null,
+          typographie: {
+            titre: {
+              police: "Nunito",
+              graisse: 800,
+              italique: false,
+              taille_pt: 18,
+            },
+            legende: {
+              police: "Nunito",
+              graisse: 400,
+              italique: false,
+              taille_pt: 9,
+            },
+            alignement: "gauche",
+            ancrage: "haut",
+            styles_masques: [],
+          },
+        },
+        mesures: null,
+      }}
       surChoisir={() => {}}
       surFermer={() => {}}
     />,

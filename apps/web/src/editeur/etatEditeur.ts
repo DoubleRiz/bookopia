@@ -15,6 +15,7 @@ export type ActionEditeur =
   | { type: "poser"; emplacementId: string; photoId: string }
   | { type: "vider"; emplacementId: string }
   | { type: "recadrer"; emplacementId: string; cadrage: Cadrage }
+  | { type: "ecrireTexte"; emplacementId: string; contenu: string }
   | { type: "retablir"; emplacement: EmplacementDuLivre }
   | { type: "remplacerDoublesPages"; doublesPages: DoublePageDuLivre[] }
   | { type: "selectionner"; emplacementId: string | null };
@@ -84,6 +85,12 @@ export function reduireEditeur(
         cadrage_x: action.cadrage.x,
         cadrage_y: action.cadrage.y,
         cadrage_zoom: action.cadrage.zoom,
+      }));
+    // Un cadre vidé de son texte est vide en base : null, pas une chaîne vide.
+    case "ecrireTexte":
+      return modifierEmplacement(etat, action.emplacementId, (e) => ({
+        ...e,
+        contenu_texte: action.contenu === "" ? null : action.contenu,
       }));
     case "retablir":
       return modifierEmplacement(

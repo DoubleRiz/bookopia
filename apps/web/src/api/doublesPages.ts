@@ -15,7 +15,7 @@ export async function listerDoublesPages(projetId: string) {
       .select(
         `id, role, position, gabarit_origine_id,
         emplacement (
-          id, indice, nature, x, y, largeur, hauteur,
+          id, indice, nature, style_texte, x, y, largeur, hauteur,
           photo_id, cadrage_x, cadrage_y, cadrage_zoom, contenu_texte
         )`,
       )
@@ -94,6 +94,7 @@ export async function ecrireEmplacement(
         cadrage_x: emplacement.cadrage_x,
         cadrage_y: emplacement.cadrage_y,
         cadrage_zoom: emplacement.cadrage_zoom,
+        contenu_texte: emplacement.contenu_texte,
       })
       .eq("id", emplacement.id)
       .select("id")

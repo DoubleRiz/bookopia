@@ -1,11 +1,12 @@
 import type { GabaritAComposer } from "@bookopia/shared";
-import { type KeyboardEvent, useState } from "react";
+import { useState } from "react";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 import { Bouton } from "../composants/Bouton";
-import { DoublePage } from "../composants/DoublePage";
+import { DoublePage, type Habillage } from "../composants/DoublePage";
 import { Modale } from "../composants/Modale";
 import { aDuContenu, apercuDuGabarit, resumeDuGabarit } from "./choixGabarit";
 import styles from "./Editeur.module.css";
+import { naviguerEntreCartes } from "./navigationCartes";
 
 const AUCUNE_PHOTO = new Map();
 
@@ -14,13 +15,13 @@ const AUCUNE_PHOTO = new Map();
 export function SurcoucheGabarits({
   gabarits,
   courante,
-  fond,
+  habillage,
   surChoisir,
   surFermer,
 }: {
   gabarits: GabaritAComposer[];
   courante: DoublePageDuLivre;
-  fond: string;
+  habillage: Habillage;
   surChoisir: (gabaritId: string) => void;
   surFermer: () => void;
 }) {
@@ -29,26 +30,6 @@ export function SurcoucheGabarits({
   function choisir(gabarit: GabaritAComposer) {
     if (aDuContenu(courante)) setAConfirmer(gabarit);
     else surChoisir(gabarit.id);
-  }
-
-  // Flèches entre les cartes, en plus de Tab ; le gabarit actuel, désactivé, est sauté.
-  function naviguer(evenement: KeyboardEvent<HTMLUListElement>) {
-    const pas =
-      evenement.key === "ArrowRight" || evenement.key === "ArrowDown"
-        ? 1
-        : evenement.key === "ArrowLeft" || evenement.key === "ArrowUp"
-          ? -1
-          : 0;
-    if (pas === 0) return;
-    const boutons = [
-      ...evenement.currentTarget.querySelectorAll<HTMLButtonElement>(
-        "button:not(:disabled)",
-      ),
-    ];
-    const rang = boutons.indexOf(document.activeElement as HTMLButtonElement);
-    if (rang === -1) return;
-    evenement.preventDefault();
-    boutons[(rang + pas + boutons.length) % boutons.length]?.focus();
   }
 
   if (aConfirmer) {
@@ -77,7 +58,7 @@ export function SurcoucheGabarits({
 
   return (
     <Modale titre="Changer le gabarit" onFermer={surFermer} large>
-      <ul className={styles.gabarits} onKeyDown={naviguer}>
+      <ul className={styles.gabarits} onKeyDown={naviguerEntreCartes}>
         {gabarits.map((gabarit) => {
           const actuel = gabarit.id === courante.gabarit_origine_id;
           const resume = resumeDuGabarit(gabarit);
@@ -93,7 +74,7 @@ export function SurcoucheGabarits({
                 <span className={styles.apercuGabarit} aria-hidden="true">
                   <DoublePage
                     doublePage={apercuDuGabarit(gabarit, courante.position)}
-                    fond={fond}
+                    habillage={habillage}
                     photos={AUCUNE_PHOTO}
                   />
                 </span>
