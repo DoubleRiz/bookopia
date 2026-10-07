@@ -19,8 +19,8 @@ Supabase
 
 | Composant | Rôle |
 |---|---|
-| `apps/web` | Interface, moteur de gabarits, préparation des photos, rendu PDF |
-| `packages/shared` | Schémas Zod, types générés depuis la base, fonction de rendu PDF |
+| `apps/web` | Interface, préparation des photos, rendu PDF |
+| `packages/shared` | Schémas Zod, types générés depuis la base, moteur de gabarits, fonction de rendu PDF |
 | `supabase/` | Migrations SQL (tables, contraintes, RLS, fonctions), données de départ, tests |
 | Supabase Auth | Inscription, connexion, sessions |
 | PostgreSQL | Données, contraintes, autorisation (RLS), règles métier (fonctions SQL) |
@@ -85,6 +85,7 @@ Tout ce qui écrit plusieurs lignes à la fois passe par une **fonction SQL appe
 |---|---|
 | `creer_projet` | Vérifie le modèle et les gabarits, crée le projet avec sa couverture, ses intérieures et sa 4e |
 | `creer_double_page` | Crée une double page et copie la géométrie du gabarit dans ses emplacements |
+| `composer_livre` | Vérifie la composition calculée par le moteur de gabarits, puis remplace les intérieures d'un coup |
 | `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page` | Opérations d'ordre sur les intérieures, rangs renumérotés sans trou |
 | `changer_gabarit` | Applique un autre gabarit à une double page |
 
