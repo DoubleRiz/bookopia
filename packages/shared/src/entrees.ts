@@ -1,12 +1,13 @@
 import { z } from "zod";
 
-// Corps des requêtes d'API. projetId et utilisateurId n'y figurent jamais :
-// le premier vient de la route, le second du jeton.
+// Entrées validées par le front avant d'appeler Supabase, pour le confort du Créateur.
+// La vérification qui fait foi est celle de la fonction SQL. utilisateurId n'y figure jamais :
+// la base le lit dans le jeton (auth.uid()).
 
 export const creerProjetSchema = z.object({
   titre: z.string().trim().min(1),
   modeleLivreId: z.uuid(),
-  // Choisis par le moteur de gabarits du front ; l'API vérifie et copie, elle ne choisit pas.
+  // Choisis par le moteur de gabarits du front ; creer_projet vérifie et copie, elle ne choisit pas.
   gabaritsInterieursIds: z.array(z.uuid()),
 });
 
@@ -41,13 +42,13 @@ const emailSchema = z.string().trim().toLowerCase().pipe(z.email());
 
 export const inscriptionSchema = z.object({
   email: emailSchema,
-  // Le plafond protège le serveur : argon2 sur une entrée d'un mégaoctet coûte cher pour rien.
+  // Le minimum est aussi celui de Supabase Auth (minimum_password_length dans supabase/config.toml).
   motDePasse: z.string().min(8).max(128),
   nomAffichage: z.string().trim().min(1).max(80),
 });
 
 // Aucune règle de longueur à la connexion : la refuser trahirait la règle d'inscription
-// sans rien protéger, la vérification du hachage tranche de toute façon.
+// sans rien protéger, Supabase Auth tranche de toute façon.
 export const connexionSchema = z.object({
   email: emailSchema,
   motDePasse: z.string().min(1).max(128),
