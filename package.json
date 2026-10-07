@@ -13,8 +13,9 @@
     "dev": "npm run dev -w apps/web",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "vitest run --passWithNoTests"
+    "typecheck": "npm run typecheck --workspaces --if-present && tsc -p e2e",
+    "test": "vitest run --passWithNoTests",
+    "e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

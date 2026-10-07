@@ -10,10 +10,16 @@ import {
 import { ErreurChargement } from "./ecrans/ErreurChargement";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
 import {
+  actionMesLivres,
   chargerMesLivres,
   MesLivres,
   MesLivresEnChargement,
 } from "./ecrans/MesLivres";
+import {
+  actionNouveauLivre,
+  chargerNouveauLivre,
+  NouveauLivre,
+} from "./ecrans/NouveauLivre";
 
 // Adresses des spécifications fonctionnelles (§1) : un écran a une adresse propre, rechargeable.
 export const routeur = createBrowserRouter([
@@ -56,7 +62,17 @@ export const routeur = createBrowserRouter([
               {
                 path: "/livres",
                 loader: chargerMesLivres,
+                action: actionMesLivres,
                 Component: MesLivres,
+                children: [
+                  // S1, surcouche sur E4 : la liste reste affichée dessous.
+                  {
+                    path: "nouveau",
+                    loader: chargerNouveauLivre,
+                    action: actionNouveauLivre,
+                    Component: NouveauLivre,
+                  },
+                ],
               },
             ],
           },

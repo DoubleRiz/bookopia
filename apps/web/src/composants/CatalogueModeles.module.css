@@ -1,0 +1,89 @@
+.catalogue {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.legende {
+  margin-bottom: var(--espace-3);
+  padding: 0;
+  font-size: var(--taille-petit);
+  font-weight: 600;
+}
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--espace-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tuile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-1);
+  cursor: pointer;
+}
+
+/* Le bouton radio reste accessible au clavier et aux lecteurs d'écran, la tuile le remplace à l'œil. */
+.choix {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.apercu {
+  position: relative;
+  aspect-ratio: 1;
+  margin-bottom: var(--espace-1);
+  border: 2px solid transparent;
+  border-radius: 12px;
+}
+
+.choix:checked + .apercu {
+  border-color: var(--couleur-cta);
+}
+
+.choix:focus-visible + .apercu {
+  box-shadow: var(--anneau-focus);
+}
+
+.coche {
+  position: absolute;
+  top: var(--espace-2);
+  right: var(--espace-2);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--couleur-cta);
+  color: var(--couleur-fond);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.choix:checked + .apercu .coche {
+  display: flex;
+}
+
+.nom {
+  color: var(--couleur-encre);
+  font-weight: 700;
+}
+
+.pages {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+}
+
+@media (width < 600px) {
+  .grille {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--espace-3);
+  }
+}

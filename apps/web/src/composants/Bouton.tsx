@@ -2,7 +2,8 @@ import type { ButtonHTMLAttributes } from "react";
 import styles from "./Bouton.module.css";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variante?: "principal" | "secondaire" | "tertiaire";
+  // destructif : réservé à l'irréversible, dans une modale de confirmation.
+  variante?: "principal" | "secondaire" | "tertiaire" | "destructif";
   taille?: "grand" | "moyen" | "petit";
   enCours?: boolean;
 };

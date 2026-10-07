@@ -5,11 +5,13 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
   libelle: string;
   name: string;
   erreurs?: string[];
+  aide?: string;
 };
 
-export function Champ({ libelle, erreurs, ...props }: Props) {
+export function Champ({ libelle, erreurs, aide, ...props }: Props) {
   const id = useId();
   const idErreur = `${id}-erreur`;
+  const idAide = `${id}-aide`;
   const enErreur = erreurs !== undefined && erreurs.length > 0;
 
   return (
@@ -21,9 +23,17 @@ export function Champ({ libelle, erreurs, ...props }: Props) {
         id={id}
         className={styles.saisie}
         aria-invalid={enErreur || undefined}
-        aria-describedby={enErreur ? idErreur : undefined}
+        aria-describedby={
+          [aide && idAide, enErreur && idErreur].filter(Boolean).join(" ") ||
+          undefined
+        }
         {...props}
       />
+      {aide && (
+        <span id={idAide} className={styles.aide}>
+          {aide}
+        </span>
+      )}
       {enErreur && (
         <span id={idErreur} className={styles.erreur}>
           {erreurs.join(" ")}
