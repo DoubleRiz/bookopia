@@ -12,7 +12,7 @@ Le Créateur ouvre un livre, importe jusqu'à 300 photos, et les retrouve en vig
 |---|---|---|
 | Accroche de E5 | Un E7 réduit sur `/livre/:id` : titre, réserve en vignettes, bouton « Importer ». E5 est une surcouche sur `/livre/:id/import`. | Un écran de plus, que L4 et L6 compléteront |
 | Après la création d'un livre | S1 mène sur `/livre/:id`. Chaque livre de E4 ouvre `/livre/:id`. | Aucun |
-| Date de prise de vue | `exifr`, dépendance validée | Une dépendance sans sous-dépendance |
+| Date de prise de vue | `exifr`, dépendance validée | Une dépendance sans sous-dépendance. `exifr` ne lit pas le WebP : `prise_le` reste vide pour ce format |
 | Où tourne la préparation | Fil principal, trois fichiers à la fois. Un Web Worker pourra la reprendre sans toucher à l'envoi. | `drawImage` peut figer l'écran une cinquantaine de millisecondes par photo |
 | Reprise | Par l'empreinte : on relit celles du livre avant l'envoi, la nouvelle sélection saute les fichiers déjà arrivés. Alerte `beforeunload` pendant l'envoi. Rien n'est gardé dans le navigateur. | L'état « Interrompu » de E5 n'est pas affiché au retour : on resélectionne, les fichiers déjà arrivés sont comptés comme tels |
 | Doublons | Écartés avant préparation par l'ensemble des empreintes. L'unicité `(projet_id, empreinte_fichier)` reste la garantie. | Une requête par import |
@@ -85,7 +85,7 @@ Une erreur porte sur un fichier, jamais sur la file.
 | Vide | Zone de dépôt, « Glisse tes photos ici ou choisis-les », rappel JPEG, PNG, WebP, 10 Mo au plus |
 | Sélection en attente | Nombre de fichiers retenus, bouton **Importer N photos** |
 | Fichiers refusés | Liste des refusés avec la raison, au-dessus de la sélection retenue |
-| Envoi n sur N | Barre de progression, nom du fichier en cours, fermeture désactivée |
+| Envoi n sur N | Barre de progression, fermeture désactivée. Pas de nom de fichier en cours : trois sont traités à la fois |
 | Terminé | « N photos ajoutées à la réserve », doublons comptés à part, bouton **Voir la réserve** |
 | Terminé avec échecs | Même chose, plus la liste des échecs avec leur raison |
 | Doublons rejetés | Ligne « N déjà dans le livre », sans liste |
