@@ -5,9 +5,9 @@ import {
   FichierIntrouvable,
   type StockageDisque,
 } from "@bookopia/stockage";
-import type { FastifyInstance } from "fastify";
+import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
-import { ErreurMetier } from "./services/erreurs";
+import { ErreurMetier } from "../services/erreurs";
 
 const TYPE_PAR_EXTENSION: Record<string, string> = {
   ".jpg": "image/jpeg",
@@ -22,10 +22,10 @@ const requeteFichierSchema = z.object({
 
 // Sur disque, c'est l'API qui sert l'URL signée. Aucune requête en base :
 // l'autorisation a été vérifiée à l'émission de l'URL, la signature en est la preuve.
-export async function routesFichiers(
-  app: FastifyInstance,
-  { stockage }: { stockage: StockageDisque },
-) {
+// Pas d'OptionsRoutes : cette route ne lit pas la base, elle ne reçoit que le stockage.
+export const routesFichiers: FastifyPluginAsync<{
+  stockage: StockageDisque;
+}> = async (app, { stockage }) => {
   app.get("/fichiers/*", async (request, reply) => {
     const chemin = z.object({ "*": z.string() }).parse(request.params)["*"];
     const { expire, signature } = requeteFichierSchema.parse(request.query);
@@ -66,4 +66,4 @@ export async function routesFichiers(
     }
     return reply.send(flux);
   });
-}
+};

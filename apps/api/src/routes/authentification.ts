@@ -1,19 +1,20 @@
 import type {
-  FastifyInstance,
+  FastifyPluginAsync,
   FastifyReply,
   FastifyRequest,
   preHandlerAsyncHookHandler,
 } from "fastify";
 import type { PrismaClient } from "@bookopia/db";
 import { connexionSchema, inscriptionSchema } from "@bookopia/shared";
-import { ErreurMetier } from "./services/erreurs";
+import { ErreurMetier } from "../services/erreurs";
 import {
   connecter,
   deconnecter,
   inscrire,
   type SessionOuverte,
   utilisateurDeSession,
-} from "./services/sessions";
+} from "../services/sessions";
+import type { OptionsRoutes } from "./options";
 
 export const NOM_COOKIE_SESSION = "session";
 
@@ -52,10 +53,10 @@ export function creerExigerSession(
   };
 }
 
-export async function routesAuthentification(
-  app: FastifyInstance,
-  { prisma }: { prisma: PrismaClient },
-) {
+export const routesAuthentification: FastifyPluginAsync<OptionsRoutes> = async (
+  app,
+  { prisma },
+) => {
   const exigerSession = creerExigerSession(prisma);
 
   app.post("/auth/inscription", async (request, reply) => {
@@ -89,4 +90,4 @@ export async function routesAuthentification(
   app.get("/auth/moi", { preHandler: exigerSession }, async (request) => {
     return { utilisateur: request.utilisateur };
   });
-}
+};

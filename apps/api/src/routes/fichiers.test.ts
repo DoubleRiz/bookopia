@@ -8,10 +8,11 @@ import {
   type StockageDisque,
 } from "@bookopia/stockage";
 import type { FastifyInstance } from "fastify";
+import { reponseErreurSchema } from "@bookopia/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { prisma } from "../test/jeu-de-donnees";
-import { creerStockageDeTest } from "../test/stockage-de-test";
-import { construireApp } from "./app";
+import { prisma } from "../../test/jeu-de-donnees";
+import { creerStockageDeTest } from "../../test/stockage-de-test";
+import { construireApp } from "../app";
 
 const PROJET = "01926b3e-7c1a-7000-8000-000000000001";
 const CLE = "01926b3e-7c1a-7000-8000-0000000000aa";
@@ -74,7 +75,10 @@ describe("GET /fichiers/*", () => {
     );
 
     expect(reponse.statusCode).toBe(403);
-    expect(reponse.json().code).toBe("interdit");
+    expect(reponseErreurSchema.parse(reponse.json())).toEqual({
+      code: "interdit",
+      message: "URL de fichier invalide ou expirée",
+    });
   });
 
   it("répond 403 à une signature altérée ou portée sur un autre chemin", async () => {
