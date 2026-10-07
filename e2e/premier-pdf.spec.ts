@@ -41,7 +41,7 @@ test("le Créateur compose son livre et en exporte le PDF", async ({ page }) => 
   // Le livre a des intérieures dès sa création : attendre une photo posée, pas la double page.
   await expect(
     page
-      .getByRole("navigation", { name: "Doubles pages intérieures" })
+      .getByRole("navigation", { name: "Doubles pages du livre" })
       .locator("image"),
   ).toHaveCount(3);
 

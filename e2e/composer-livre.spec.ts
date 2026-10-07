@@ -21,7 +21,7 @@ test("le Créateur compose son livre, puis le recompose après confirmation", as
   const composer = page.getByRole("button", { name: "Composer le livre" });
   await expect(composer).toBeDisabled();
   const bande = page.getByRole("navigation", {
-    name: "Doubles pages intérieures",
+    name: "Doubles pages du livre",
   });
   await expect(
     bande.getByRole("button", { name: "Pages 2 et 3" }),

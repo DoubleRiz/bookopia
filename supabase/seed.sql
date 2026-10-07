@@ -116,7 +116,7 @@ from (values
 ) as couverture (id, nom, role, famille)
 cross join (values ('[
   {"indice": 0, "nature": "photo", "x": 210, "y": 0, "largeur": 210, "hauteur": 150},
-  {"indice": 1, "nature": "texte", "style": "titre", "x": 225, "y": 160, "largeur": 180, "hauteur": 24},
+  {"indice": 1, "nature": "texte", "style": "titre_page", "x": 225, "y": 160, "largeur": 180, "hauteur": 24},
   {"indice": 2, "nature": "texte", "style": "legende", "x": 225, "y": 186, "largeur": 180, "hauteur": 12}
 ]')) as geometrie (definition);
 

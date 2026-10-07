@@ -13,9 +13,12 @@ import { Glissable } from "./Glissable";
 // Type du glisser-déposer d'une miniature : la donnée transportée est l'identifiant de la double page.
 const TYPE_GLISSER_DOUBLE_PAGE = "application/x-bookopia-double-page";
 
-// Les intérieures en miniatures, dans l'ordre du livre. On choisit la page courante, on la
-// réordonne en glissant sa miniature, ou par les boutons de la page courante (clavier).
+// Le livre en miniatures, dans son ordre : couverture, intérieures, 4e. On choisit la page
+// courante ; on réordonne une intérieure en glissant sa miniature, ou par les boutons de la
+// page courante (clavier). La couverture et la 4e ne se déplacent ni ne se suppriment.
 export function BandeDoublesPages({
+  couverture,
+  quatrieme,
   interieures,
   courante,
   habillage,
@@ -30,6 +33,8 @@ export function BandeDoublesPages({
   surDupliquer,
   surSupprimer,
 }: {
+  couverture: DoublePageDuLivre | undefined;
+  quatrieme: DoublePageDuLivre | undefined;
   interieures: DoublePageDuLivre[];
   courante: DoublePageDuLivre | null;
   habillage: Habillage;
@@ -46,6 +51,57 @@ export function BandeDoublesPages({
 }) {
   const [survolee, setSurvolee] = useState<string | null>(null);
   const rang = courante?.position ?? 0;
+  const interieureCourante = courante?.role === "interieur";
+
+  // Une miniature qui se choisit ; seules les intérieures se glissent et reçoivent un dépôt.
+  function miniature(doublePage: DoublePageDuLivre) {
+    const estCourante = doublePage.id === courante?.id;
+    const deplacable = doublePage.role === "interieur";
+    return (
+      <li
+        key={doublePage.id}
+        className={[
+          styles.miniature,
+          estCourante && styles.courante,
+          survolee === doublePage.id && styles.visee,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        onDragOver={
+          deplacable
+            ? (evenement) => survol(evenement, doublePage.id)
+            : undefined
+        }
+        onDragLeave={deplacable ? () => setSurvolee(null) : undefined}
+        onDrop={
+          deplacable ? (evenement) => depot(evenement, doublePage) : undefined
+        }
+      >
+        <Glissable
+          className={styles.choisirPage}
+          // Changer de page n'écrit rien : toujours permis, même hors-ligne.
+          actif
+          glissable={actif && deplacable}
+          aria-current={estCourante ? "page" : undefined}
+          aria-label={libelleDoublePage(doublePage.role, doublePage.position)}
+          surDebutGlisser={(evenement) => {
+            evenement.dataTransfer.setData(
+              TYPE_GLISSER_DOUBLE_PAGE,
+              doublePage.id,
+            );
+            evenement.dataTransfer.effectAllowed = "move";
+          }}
+          surActiver={() => surChoisir(doublePage.id)}
+        >
+          <DoublePage
+            doublePage={doublePage}
+            habillage={habillage}
+            photos={photos}
+          />
+        </Glissable>
+      </li>
+    );
+  }
 
   function survol(evenement: DragEvent, doublePageId: string) {
     if (!actif) return;
@@ -66,52 +122,10 @@ export function BandeDoublesPages({
   }
 
   return (
-    <nav className={styles.bande} aria-label="Doubles pages intérieures">
+    <nav className={styles.bande} aria-label="Doubles pages du livre">
       <ol className={styles.miniatures}>
-        {interieures.map((doublePage) => {
-          const estCourante = doublePage.id === courante?.id;
-          return (
-            <li
-              key={doublePage.id}
-              className={[
-                styles.miniature,
-                estCourante && styles.courante,
-                survolee === doublePage.id && styles.visee,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              onDragOver={(evenement) => survol(evenement, doublePage.id)}
-              onDragLeave={() => setSurvolee(null)}
-              onDrop={(evenement) => depot(evenement, doublePage)}
-            >
-              <Glissable
-                className={styles.choisirPage}
-                // Changer de page n'écrit rien : toujours permis, même hors-ligne.
-                actif
-                glissable={actif}
-                aria-current={estCourante ? "page" : undefined}
-                aria-label={libelleDoublePage(
-                  doublePage.role,
-                  doublePage.position,
-                )}
-                surDebutGlisser={(evenement) => {
-                  evenement.dataTransfer.setData(
-                    TYPE_GLISSER_DOUBLE_PAGE,
-                    doublePage.id,
-                  );
-                  evenement.dataTransfer.effectAllowed = "move";
-                }}
-                surActiver={() => surChoisir(doublePage.id)}
-              >
-                <DoublePage
-                  doublePage={doublePage}
-                  habillage={habillage}
-                  photos={photos}
-                />
-              </Glissable>
-            </li>
-          );
-        })}
+        {couverture && miniature(couverture)}
+        {interieures.map(miniature)}
         <li className={styles.ajouter}>
           <button
             type="button"
@@ -123,8 +137,9 @@ export function BandeDoublesPages({
             <span aria-hidden="true">+</span>
           </button>
         </li>
+        {quatrieme && miniature(quatrieme)}
       </ol>
-      {courante && (
+      {courante && interieureCourante && (
         <div className={styles.actionsPage}>
           <Bouton
             variante="tertiaire"
