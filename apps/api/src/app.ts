@@ -1,16 +1,14 @@
 import cookie from "@fastify/cookie";
 import Fastify, { type FastifyServerOptions } from "fastify";
-import { ZodError, z } from "zod";
+import { z } from "zod";
 import type { PrismaClient } from "@bookopia/db";
-import { routesAuthentification } from "./authentification";
-import { type CodeErreurMetier, ErreurMetier } from "./services/erreurs";
+import { installerGestionErreurs } from "./erreurs";
+import { routesAuthentification } from "./routes/authentification";
+import { routesSante } from "./routes/sante";
 
-const STATUT_PAR_CODE: Record<CodeErreurMetier, number> = {
-  invalide: 400,
-  non_authentifie: 401,
-  introuvable: 404,
-  conflit: 409,
-};
+// Messages de validation en français : le front valide déjà avec les mêmes schémas,
+// ceux de l'API ne s'affichent qu'en dernier recours.
+z.config(z.locales.fr());
 
 // Séparé du démarrage : les tests construisent l'application et l'interrogent sans ouvrir de port.
 export async function construireApp(
@@ -20,34 +18,10 @@ export async function construireApp(
   const app = Fastify(options);
 
   app.decorateRequest("utilisateur", null);
+  installerGestionErreurs(app);
   await app.register(cookie);
 
-  app.setErrorHandler((erreur, request, reply) => {
-    if (erreur instanceof ErreurMetier) {
-      return reply
-        .code(STATUT_PAR_CODE[erreur.code])
-        .send({ code: erreur.code, message: erreur.message });
-    }
-    if (erreur instanceof ZodError) {
-      return reply
-        .code(400)
-        .send({ code: "invalide", champs: z.flattenError(erreur).fieldErrors });
-    }
-    request.log.error(erreur);
-    return reply.code(500).send({ code: "erreur_interne" });
-  });
-
-  // La santé inclut la base : une API qui répond sans pouvoir lire ses données n'est pas en état de servir.
-  app.get("/sante", async (_request, reply) => {
-    try {
-      await prisma.$queryRaw`SELECT 1`;
-      return { statut: "ok" };
-    } catch (erreur) {
-      app.log.error(erreur);
-      return reply.code(503).send({ statut: "base_injoignable" });
-    }
-  });
-
+  await app.register(routesSante, { prisma });
   await app.register(routesAuthentification, { prisma });
 
   return app;

@@ -29,7 +29,9 @@ services:
     build:
       context: .
       dockerfile: infra/node.Dockerfile
-    command: sh -c "npm run db:deploy -w packages/db && npm start -w apps/api"
+    # tsx lancé directement en PID 1 (exec) : il relaie SIGTERM à Node. Ni sh ni npm start
+    # ne le feraient, npm passant lui-même par un sh intermédiaire pour lancer son script.
+    command: sh -c "npm run db:deploy -w packages/db && cd apps/api && exec ../../node_modules/.bin/tsx src/index.ts"
     environment: *env-app
     volumes:
       - fichiers:/donnees/fichiers

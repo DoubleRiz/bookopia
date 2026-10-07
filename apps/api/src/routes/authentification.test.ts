@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { prisma, viderBase } from "../test/jeu-de-donnees";
-import { construireApp } from "./app";
+import { prisma, viderBase } from "../../test/jeu-de-donnees";
+import { construireApp } from "../app";
 import { NOM_COOKIE_SESSION } from "./authentification";
 
 let app: FastifyInstance;
