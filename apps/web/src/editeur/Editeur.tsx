@@ -49,6 +49,13 @@ import {
   type StatutEnregistrement,
 } from "./fileEcritures";
 import { gabaritParDefaut } from "./gabaritParDefaut";
+import {
+  annuler,
+  enregistrer,
+  type Historique,
+  HISTORIQUE_VIDE,
+  refaire,
+} from "./historique";
 import { type PhotoDeReserve, Reserve } from "./Reserve";
 import { SaisieTexte } from "./SaisieTexte";
 import { SurcoucheGabarits } from "./SurcoucheGabarits";
@@ -117,9 +124,21 @@ export function Editeur({
     doublesPages,
     etatInitial,
   );
+  // L'historique d'annulation, lu par les gestes et par le clavier comme l'état.
+  const [historique, setHistorique] = useReducer(
+    (_: Historique, suivant: Historique) => suivant,
+    HISTORIQUE_VIDE,
+  );
+  const historiqueCourant = useRef(historique);
+  function changerHistorique(suivant: Historique) {
+    historiqueCourant.current = suivant;
+    setHistorique(suivant);
+  }
+
   // Le loader repasse après une composition, un import ou une suppression de photo.
   useEffect(() => {
     dispatch({ type: "remplacerDoublesPages", doublesPages });
+    changerHistorique(HISTORIQUE_VIDE);
   }, [doublesPages]);
 
   // L'état vu par les gestes, qui le lisent hors du rendu : deux gestes rapides se suivent
@@ -170,6 +189,7 @@ export function Editeur({
   }
 
   async function relire() {
+    changerHistorique(HISTORIQUE_VIDE);
     try {
       dispatch({
         type: "remplacerDoublesPages",
@@ -224,11 +244,55 @@ export function Editeur({
     if (!avant || !apres) return;
     etatCourant.current = suivant;
     setMessage(null);
+    changerHistorique(enregistrer(historiqueCourant.current, { avant, apres }));
     file().ajouter({
       appliquer: () => dispatch(action),
       ecrire: () => ecrireEmplacement(apres),
-      retablir: () => dispatch({ type: "retablir", emplacement: avant }),
+      retablir: () => {
+        // Un geste refusé laisse l'historique incertain : on repart de zéro.
+        changerHistorique(HISTORIQUE_VIDE);
+        dispatch({ type: "retablir", emplacement: avant });
+      },
     });
+  }
+
+  // Annuler et refaire écrivent l'état visé comme n'importe quel geste : affiché tout de suite,
+  // écrit par la file, rétabli si la base refuse.
+  function rejouer(
+    resultat: ReturnType<typeof annuler>,
+    emplacementAvant: (id: string) => EmplacementDuLivre | undefined,
+  ) {
+    if (!resultat) return;
+    const cible = resultat.cible;
+    const avant = emplacementAvant(cible.id);
+    if (!avant) {
+      changerHistorique(HISTORIQUE_VIDE);
+      return;
+    }
+    const action: ActionEditeur = { type: "retablir", emplacement: cible };
+    etatCourant.current = reduireEditeur(etatCourant.current, action);
+    setMessage(null);
+    changerHistorique(resultat.historique);
+    file().ajouter({
+      appliquer: () => dispatch(action),
+      ecrire: () => ecrireEmplacement(cible),
+      retablir: () => {
+        changerHistorique(HISTORIQUE_VIDE);
+        dispatch({ type: "retablir", emplacement: avant });
+      },
+    });
+  }
+
+  function annulerGeste() {
+    rejouer(annuler(historiqueCourant.current), (id) =>
+      emplacementDe(etatCourant.current, id),
+    );
+  }
+
+  function refaireGeste() {
+    rejouer(refaire(historiqueCourant.current), (id) =>
+      emplacementDe(etatCourant.current, id),
+    );
   }
 
   const poser = (emplacementId: string, photoId: string) =>
@@ -254,10 +318,12 @@ export function Editeur({
     const apres = avant && emplacementDe(etatCourant.current, avant.id);
     if (!avant || !apres || apres.contenu_texte === avant.contenu_texte) return;
     texteEnregistre.current = apres;
+    changerHistorique(enregistrer(historiqueCourant.current, { avant, apres }));
     file().ajouter({
       appliquer: () => {},
       ecrire: () => ecrireEmplacement(apres),
       retablir: () => {
+        changerHistorique(HISTORIQUE_VIDE);
         texteEnregistre.current = avant;
         dispatch({ type: "retablir", emplacement: avant });
       },
@@ -292,6 +358,7 @@ export function Editeur({
   ): Promise<void> {
     setStructureEnCours(true);
     setMessage(null);
+    changerHistorique(HISTORIQUE_VIDE);
     await file().terminer();
     try {
       choisirPage(await operation());
@@ -308,6 +375,7 @@ export function Editeur({
     setChoixTheme(false);
     setStructureEnCours(true);
     setMessage(null);
+    changerHistorique(HISTORIQUE_VIDE);
     await file().terminer();
     try {
       await changerTheme(projetId, themeId);
@@ -400,6 +468,33 @@ export function Editeur({
       ? { ...saisie, style_texte: saisie.style_texte }
       : undefined;
 
+  // Ctrl Z annule, Ctrl Maj Z (ou Ctrl Y) refait. Dans un champ, Ctrl Z reste celui du champ.
+  const raccourciCourant = useRef<(evenement: KeyboardEvent) => void>(() => {});
+  useEffect(() => {
+    raccourciCourant.current = (evenement) => {
+      if (!actif || !(evenement.ctrlKey || evenement.metaKey)) return;
+      const cible = evenement.target;
+      if (
+        cible instanceof HTMLElement &&
+        (cible.isContentEditable ||
+          /^(INPUT|TEXTAREA|SELECT)$/.test(cible.tagName))
+      )
+        return;
+      const touche = evenement.key.toLowerCase();
+      if (touche === "z" && !evenement.shiftKey) annulerGeste();
+      else if ((touche === "z" && evenement.shiftKey) || touche === "y")
+        refaireGeste();
+      else return;
+      evenement.preventDefault();
+    };
+  });
+  useEffect(() => {
+    const ecouter = (evenement: KeyboardEvent) =>
+      raccourciCourant.current(evenement);
+    window.addEventListener("keydown", ecouter);
+    return () => window.removeEventListener("keydown", ecouter);
+  }, []);
+
   const interaction: InteractionDoublePage | undefined = actif
     ? {
         selection: etat.selection,
@@ -435,6 +530,20 @@ export function Editeur({
           )}
         </div>
         <div className={styles.actionsLivre}>
+          <Bouton
+            variante="tertiaire"
+            disabled={!actif || historique.passe.length === 0}
+            onClick={annulerGeste}
+          >
+            Annuler
+          </Bouton>
+          <Bouton
+            variante="tertiaire"
+            disabled={!actif || historique.futur.length === 0}
+            onClick={refaireGeste}
+          >
+            Refaire
+          </Bouton>
           <Bouton
             variante="secondaire"
             disabled={!actif || themes.length < 2}
