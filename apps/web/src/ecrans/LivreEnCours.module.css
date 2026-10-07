@@ -163,3 +163,49 @@
   color: var(--couleur-texte-secondaire);
   font-size: 14px;
 }
+
+.livre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+  margin-bottom: var(--espace-6);
+}
+
+.enteteLivre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-3);
+}
+
+/* Plan de travail lavande pâle ; les doubles pages s'y empilent dans l'ordre du livre. */
+.planDeTravail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-8);
+  margin: 0;
+  padding: var(--espace-8);
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-lavande-pale);
+  list-style: none;
+}
+
+.planDeTravail > li {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.invitation {
+  margin: var(--espace-4) 0 0;
+  color: var(--couleur-texte-secondaire);
+  text-align: center;
+}
+
+@media (width < 600px) {
+  .planDeTravail {
+    gap: var(--espace-6);
+    padding: var(--espace-4);
+  }
+}

@@ -131,7 +131,10 @@ export function DoublePage({
           y2={HAUTEUR_DOUBLE_PAGE_MM}
         />
       </svg>
-      <figcaption className={styles.libelle}>{libelle}</figcaption>
+      {/* Le libellé est déjà le nom du dessin : la légende ne le répète pas aux lecteurs d'écran. */}
+      <figcaption className={styles.libelle} aria-hidden="true">
+        {libelle}
+      </figcaption>
     </figure>
   );
 }

@@ -19,6 +19,11 @@ const paletteSchema = z.object({
   fond: z.string().regex(/^#[0-9a-fA-F]{6}$/),
 });
 
+// Couleur de fond du thème, « #RRGGBB » : le PDF et l'écran peignent la même.
+export function fondDuTheme(palette: unknown): string {
+  return paletteSchema.parse(palette).fond;
+}
+
 // Le livre à rendre, dans l'ordre du livre. L'énuméré role est déclaré dans cet ordre :
 // trier par role puis position donne couverture, intérieures, 4e.
 export async function lireLivreARendre(projetId: string): Promise<LivreLu> {
@@ -47,7 +52,7 @@ export async function lireLivreARendre(projetId: string): Promise<LivreLu> {
     throw new ErreurBase("introuvable", "Livre introuvable");
   }
   return {
-    fond: paletteSchema.parse(projet.theme.palette).fond,
+    fond: fondDuTheme(projet.theme.palette),
     doubles_pages: (doublesPages ?? []).map((doublePage) => ({
       emplacements: doublePage.emplacement,
     })),

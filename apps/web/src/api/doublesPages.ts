@@ -33,7 +33,8 @@ export type DoublePageDuLivre = Awaited<
 
 // Les gabarits que le moteur peut choisir : intérieurs actifs de la famille du modèle d'origine.
 // Un gabarit mal formé échoue ici, au parse, avant toute écriture.
-// Liste vide si le livre n'a plus de modèle : composer_livre refusera, c'est la base qui tranche.
+// Liste vide si le livre n'existe plus ou n'a plus de modèle : composer_livre refusera,
+// c'est la base qui tranche.
 export async function listerGabaritsDuLivre(
   projetId: string,
 ): Promise<GabaritAComposer[]> {
@@ -42,7 +43,7 @@ export async function listerGabaritsDuLivre(
       .from("projet")
       .select("modele_livre (famille)")
       .eq("id", projetId)
-      .single(),
+      .maybeSingle(),
   );
   const famille = projet?.modele_livre?.famille;
   if (!famille) {
