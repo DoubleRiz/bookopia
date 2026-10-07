@@ -8,6 +8,7 @@ import {
   supprimerPdf,
   telechargerOriginal,
 } from "../api/exports";
+import { octetsDePolice } from "../polices";
 import { charger } from "./charger";
 import type { DependancesExport } from "./exporter";
 
@@ -24,12 +25,15 @@ export function dependancesExport(projet: {
     charger: async (onAvancement) =>
       charger(
         await lireLivreARendre(projet.id),
-        (photo) =>
-          telechargerOriginal(
-            projet.utilisateur_id,
-            projet.id,
-            photo.cle_stockage,
-          ),
+        {
+          photo: (photo) =>
+            telechargerOriginal(
+              projet.utilisateur_id,
+              projet.id,
+              photo.cle_stockage,
+            ),
+          police: octetsDePolice,
+        },
         { onAvancement },
       ),
     rendre,

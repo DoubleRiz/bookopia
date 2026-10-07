@@ -2,7 +2,11 @@ import type { LivreARendre } from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import { type DependancesExport, type Etape, exporter } from "./exporter";
 
-const livre: LivreARendre = { fond: "#FFFFFF", doubles_pages: [] };
+const livre = {
+  theme: {},
+  polices: {},
+  doubles_pages: [],
+} as unknown as LivreARendre;
 
 // Chaque appel est consigné, pour vérifier l'ordre des opérations.
 function dependances(
