@@ -44,6 +44,7 @@ export async function actionNouveauLivre({
     // Facultatif pour le Créateur, obligatoire pour la base : le titre par défaut est posé ici.
     const titre = texteDuChamp(donnees, "titre").trim() || TITRE_PAR_DEFAUT;
 
+    let projetId: string;
     try {
       const [modeles, gabarits] = await Promise.all([
         listerModeles(),
@@ -65,7 +66,7 @@ export async function actionNouveauLivre({
           message: "Ce modèle ne peut pas être utilisé pour l'instant.",
         };
       }
-      await creerProjet(entree.data);
+      projetId = await creerProjet(entree.data);
     } catch (erreur) {
       // La base a refusé ce que le front croyait valide : catalogue incomplet, modèle retiré.
       if (
@@ -78,8 +79,8 @@ export async function actionNouveauLivre({
       }
       return erreurDeFormulaire(erreur);
     }
-    // L'import (E5) n'existe pas encore : retour à la liste, où le livre arrive en tête.
-    return redirect("/livres");
+    // Un livre neuf est vide : on y entre, l'import est la suite naturelle.
+    return redirect(`/livre/${projetId}`);
   });
 }
 

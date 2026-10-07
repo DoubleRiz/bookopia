@@ -8,7 +8,9 @@ import {
   EcranCreateurProvisoire,
 } from "./ecrans/EcranCreateur";
 import { ErreurChargement } from "./ecrans/ErreurChargement";
+import { chargerImport, ImportPhotos } from "./ecrans/ImportPhotos";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
+import { chargerLivreEnCours, LivreEnCours } from "./ecrans/LivreEnCours";
 import {
   actionMesLivres,
   chargerMesLivres,
@@ -71,6 +73,21 @@ export const routeur = createBrowserRouter([
                     loader: chargerNouveauLivre,
                     action: actionNouveauLivre,
                     Component: NouveauLivre,
+                  },
+                ],
+              },
+              {
+                // E7, réduit à la réserve. Son id sert à E5, qui lit le livre sans le recharger.
+                id: "livre",
+                path: "/livre/:id",
+                loader: chargerLivreEnCours,
+                Component: LivreEnCours,
+                children: [
+                  // E5, surcouche sur E7 : la réserve reste affichée dessous.
+                  {
+                    path: "import",
+                    loader: chargerImport,
+                    Component: ImportPhotos,
                   },
                 ],
               },
