@@ -21,6 +21,25 @@
   stroke-dasharray: 2 1.5;
 }
 
+/* Les lignes sont celles de la mise en lignes partagée : pas de crénage, que le PDF n'applique
+   pas, et les espaces du Créateur gardés tels quels. */
+.texte {
+  font-kerning: none;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* Indication de l'éditeur dans un cadre texte : police d'interface, jamais imprimée. */
+.indication {
+  fill: var(--couleur-texte-secondaire);
+  font-family: var(--police);
+  font-size: 3.6px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
 .cadreTexte {
   fill: none;
   stroke: var(--couleur-pastille-neutre);
@@ -67,9 +86,11 @@
   stroke-dasharray: 2 1;
 }
 
-/* Avertissements de résolution : surlignage du cadre dans le dessin, pastille HTML par-dessus. */
+/* Avertissements : surlignage du cadre dans le dessin, pastille HTML par-dessus.
+   Conteneur : la saisie d'un texte se met à l'échelle du dessin en unités cqw. */
 .dessin {
   position: relative;
+  container-type: inline-size;
 }
 
 .surlignage {

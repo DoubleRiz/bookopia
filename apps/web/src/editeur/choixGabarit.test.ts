@@ -12,6 +12,7 @@ const cadre = (indice: number, nature: "photo" | "texte") => ({
   y: 5,
   largeur: 100,
   hauteur: 50,
+  ...(nature === "texte" ? { style: "legende" as const } : {}),
 });
 
 const gabarit = (
@@ -39,6 +40,7 @@ function emplacement(autres: Partial<Emplacement>): Emplacement {
     cadrage_y: null,
     cadrage_zoom: null,
     contenu_texte: null,
+    style_texte: null,
     ...autres,
   };
 }
@@ -95,22 +97,31 @@ describe("apercuDuGabarit", () => {
     expect(apercu.role).toBe("interieur");
     expect(
       apercu.emplacement.map(
-        ({ indice, nature, x, photo_id, contenu_texte }) => ({
+        ({ indice, nature, x, photo_id, contenu_texte, style_texte }) => ({
           indice,
           nature,
           x,
           photo_id,
           contenu_texte,
+          style_texte,
         }),
       ),
     ).toEqual([
-      { indice: 0, nature: "photo", x: 0, photo_id: null, contenu_texte: null },
+      {
+        indice: 0,
+        nature: "photo",
+        x: 0,
+        photo_id: null,
+        contenu_texte: null,
+        style_texte: null,
+      },
       {
         indice: 1,
         nature: "texte",
         x: 10,
         photo_id: null,
         contenu_texte: null,
+        style_texte: "legende",
       },
     ]);
   });

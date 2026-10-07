@@ -21,8 +21,9 @@ export function apercuDuGabarit(
     role: "interieur",
     position,
     gabarit_origine_id: gabarit.id,
-    emplacement: gabarit.definition.map((cadre) => ({
+    emplacement: gabarit.definition.map(({ style, ...cadre }) => ({
       ...cadre,
+      style_texte: style ?? null,
       id: `apercu-${gabarit.id}-${cadre.indice}`,
       photo_id: null,
       cadrage_x: null,

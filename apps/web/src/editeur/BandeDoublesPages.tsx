@@ -3,6 +3,7 @@ import type { DoublePageDuLivre } from "../api/doublesPages";
 import { Bouton } from "../composants/Bouton";
 import {
   DoublePage,
+  type Habillage,
   libelleDoublePage,
   type PhotoAffichee,
 } from "../composants/DoublePage";
@@ -17,7 +18,7 @@ const TYPE_GLISSER_DOUBLE_PAGE = "application/x-bookopia-double-page";
 export function BandeDoublesPages({
   interieures,
   courante,
-  fond,
+  habillage,
   photos,
   actif,
   peutAjouter,
@@ -31,7 +32,7 @@ export function BandeDoublesPages({
 }: {
   interieures: DoublePageDuLivre[];
   courante: DoublePageDuLivre | null;
-  fond: string;
+  habillage: Habillage;
   photos: Map<string, PhotoAffichee>;
   actif: boolean;
   peutAjouter: boolean;
@@ -104,7 +105,7 @@ export function BandeDoublesPages({
               >
                 <DoublePage
                   doublePage={doublePage}
-                  fond={fond}
+                  habillage={habillage}
                   photos={photos}
                 />
               </Glissable>

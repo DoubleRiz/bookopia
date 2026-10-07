@@ -25,7 +25,9 @@ export async function lireProjet(projetId: string) {
   return verifier(
     await supabase
       .from("projet")
-      .select("id, titre, utilisateur_id, theme (palette)")
+      .select(
+        "id, titre, utilisateur_id, theme (id, nom, palette, bordure_cadre, typographie)",
+      )
       .eq("id", projetId)
       .maybeSingle(),
   );
