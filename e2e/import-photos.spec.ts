@@ -58,6 +58,10 @@ test("le Créateur importe des photos dans la réserve de son livre", async ({
 
   await fenetre.getByRole("button", { name: "Voir la réserve" }).click();
   await expect(page.getByText("2 photos")).toBeVisible();
-  await expect(page.getByRole("img", { name: "bleu.png" })).toBeVisible();
-  await expect(page.getByRole("img", { name: "rouge.png" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "bleu.png", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "rouge.png", exact: true }),
+  ).toBeVisible();
 });

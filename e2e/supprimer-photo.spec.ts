@@ -31,7 +31,9 @@ test("le Créateur supprime une photo de la réserve, puis la réimporte", async
       fenetre.getByText("1 photo ajoutée à la réserve"),
     ).toBeVisible();
     await fenetre.getByRole("button", { name: "Voir la réserve" }).click();
-    await expect(page.getByRole("img", { name: "vert.png" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "vert.png", exact: true }),
+    ).toBeVisible();
   };
 
   await importer();
@@ -43,7 +45,9 @@ test("le Créateur supprime une photo de la réserve, puis la réimporte", async
   });
   await confirmation.getByRole("button", { name: "Annuler" }).click();
   await expect(confirmation).toBeHidden();
-  await expect(page.getByRole("img", { name: "vert.png" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "vert.png", exact: true }),
+  ).toBeVisible();
 
   await page.getByRole("button", { name: "Supprimer « vert.png »" }).click();
   await confirmation.getByRole("button", { name: "Supprimer" }).click();
