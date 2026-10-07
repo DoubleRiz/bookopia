@@ -8,7 +8,9 @@ import {
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { ErreurBase, ErreurNonAuthentifie, ErreurReseau } from "../api/client";
+import type { GabaritAComposer } from "@bookopia/shared";
 import {
+  changerGabarit,
   type DoublePageDuLivre,
   deplacerDoublePage,
   dupliquerDoublePage,
@@ -38,7 +40,9 @@ import {
   type FileEcritures,
   type StatutEnregistrement,
 } from "./fileEcritures";
+import { gabaritParDefaut } from "./gabaritParDefaut";
 import { type PhotoDeReserve, Reserve } from "./Reserve";
+import { SurcoucheGabarits } from "./SurcoucheGabarits";
 import { SurcoucheRecadrage } from "./SurcoucheRecadrage";
 
 type Photo = PhotoDeReserve & PhotoAffichee;
@@ -75,7 +79,7 @@ export function Editeur({
   fond,
   doublesPages,
   photos,
-  gabaritParDefautId,
+  gabarits,
   actionsLivre,
   surImporter,
   surSupprimerPhoto,
@@ -84,7 +88,8 @@ export function Editeur({
   fond: string;
   doublesPages: DoublePageDuLivre[];
   photos: Photo[];
-  gabaritParDefautId: string | null;
+  // Intérieurs actifs de la famille du livre ; vide si le catalogue est illisible.
+  gabarits: GabaritAComposer[];
   actionsLivre: ReactNode;
   surImporter: () => void;
   surSupprimerPhoto: (photo: PhotoDeReserve) => void;
@@ -111,6 +116,7 @@ export function Editeur({
   const [structureEnCours, setStructureEnCours] = useState(false);
   const [aRecadrer, setARecadrer] = useState<string | null>(null);
   const [aSupprimer, setASupprimer] = useState<string | null>(null);
+  const [choixGabarit, setChoixGabarit] = useState(false);
   const grille = useRef<HTMLUListElement>(null);
   const enLigne = useEnLigne();
   const actif = enLigne && !structureEnCours;
@@ -222,6 +228,8 @@ export function Editeur({
     setStructureEnCours(false);
   }
 
+  const gabaritParDefautId = gabaritParDefaut(gabarits)?.id ?? null;
+
   function ajouter() {
     if (!gabaritParDefautId) return;
     const gabaritId = gabaritParDefautId;
@@ -239,6 +247,15 @@ export function Editeur({
 
   function dupliquer(doublePageId: string) {
     void modifierStructure(() => dupliquerDoublePage(doublePageId));
+  }
+
+  // Les cadres sont recréés vides ; la page courante reste la même, la sélection disparaît.
+  function appliquerGabarit(doublePageId: string, gabaritId: string) {
+    setChoixGabarit(false);
+    void modifierStructure(async () => {
+      await changerGabarit(doublePageId, gabaritId);
+      return doublePageId;
+    });
   }
 
   // Après une suppression, la page courante devient la suivante, sinon la précédente.
@@ -379,9 +396,11 @@ export function Editeur({
             photos={photosAffichees}
             actif={actif}
             peutAjouter={gabaritParDefautId !== null}
+            peutChangerGabarit={gabarits.length > 1}
             surChoisir={choisirPage}
             surAjouter={ajouter}
             surDeplacer={deplacer}
+            surChangerGabarit={() => setChoixGabarit(true)}
             surDupliquer={dupliquer}
             surSupprimer={setASupprimer}
           />
@@ -412,6 +431,15 @@ export function Editeur({
               cadrage,
             });
           }}
+        />
+      )}
+      {choixGabarit && courante && (
+        <SurcoucheGabarits
+          gabarits={gabarits}
+          courante={courante}
+          fond={fond}
+          surChoisir={(gabaritId) => appliquerGabarit(courante.id, gabaritId)}
+          surFermer={() => setChoixGabarit(false)}
         />
       )}
       {aSupprimer && (

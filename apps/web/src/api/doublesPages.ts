@@ -13,7 +13,7 @@ export async function listerDoublesPages(projetId: string) {
     await supabase
       .from("double_page")
       .select(
-        `id, role, position,
+        `id, role, position, gabarit_origine_id,
         emplacement (
           id, indice, nature, x, y, largeur, hauteur,
           photo_id, cadrage_x, cadrage_y, cadrage_zoom, contenu_texte
@@ -157,6 +157,19 @@ export async function supprimerDoublePage(doublePageId: string): Promise<void> {
   verifier(
     await supabase.rpc("supprimer_double_page", {
       p_double_page_id: doublePageId,
+    }),
+  );
+}
+
+// Les cadres sont recréés vides : l'éditeur a prévenu avant d'appeler.
+export async function changerGabarit(
+  doublePageId: string,
+  gabaritId: string,
+): Promise<void> {
+  verifier(
+    await supabase.rpc("changer_gabarit", {
+      p_double_page_id: doublePageId,
+      p_gabarit_id: gabaritId,
     }),
   );
 }

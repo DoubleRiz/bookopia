@@ -33,6 +33,7 @@ const page = (
   id,
   role: "interieur",
   position: 1,
+  gabarit_origine_id: null,
   emplacement: emplacements,
 });
 

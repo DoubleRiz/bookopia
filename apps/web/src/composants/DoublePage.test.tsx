@@ -39,6 +39,7 @@ function rendre(
     id: "d1",
     role: "interieur",
     position: 3,
+    gabarit_origine_id: null,
     emplacement: emplacements,
   };
   return renderToStaticMarkup(

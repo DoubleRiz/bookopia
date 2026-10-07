@@ -37,6 +37,7 @@ Le Créateur change la mise en page de la double page courante : il choisit un a
 | Fichier | Rôle |
 |---|---|
 | `SurcoucheGabarits.tsx` | Nouveau. Choix d'un gabarit, avertissement |
+| `choixGabarit.ts` | Nouveau. Aperçu vide d'un gabarit, contenu à perdre, résumé d'une carte |
 | `BandeDoublesPages.tsx` | Gagne le bouton « Changer le gabarit » parmi ceux de la page courante |
 | `Editeur.tsx` | Ouvre la surcouche, envoie l'écriture par le chemin des gestes de structure |
 
@@ -82,8 +83,9 @@ Le chemin des gestes de structure de 6a :
 
 - **pgTAP, `changer_gabarit`** : double page d'un autre `introuvable` ; couverture `invalide` ; gabarit d'une autre famille `invalide` ; gabarit inactif refusé ; emplacements recréés selon le nouveau gabarit, tous vides ; même gabarit sans effet, contenu intact ; `gabarit_origine_id` et `position` après changement ; les photos retirées existent toujours.
 - **pgTAP, `creer_double_page`** : les tests existants passent toujours après l'extraction de `copier_geometrie`.
-- **Vitest, `SurcoucheGabarits.tsx`** : une carte par gabarit ; « Actuel » non sélectionnable ; page vide : choix appliqué directement ; page remplie : confirmation, puis choix appliqué ; « Garder l'actuel » n'écrit rien.
-- **Playwright, `e2e/editeur.spec.ts`** : sur une double page avec une photo, changer de gabarit, confirmer, recharger : nouveau gabarit, cadres vides, photo toujours dans la réserve.
+- **Vitest, `choixGabarit.ts`** : contenu présent ou non (photo, texte, espaces) ; aperçu vide d'un gabarit ; résumé « n photos · m textes ».
+- **Vitest, `SurcoucheGabarits.tsx`**, rendu statique comme `DoublePage` (pas de bibliothèque de test DOM) : une carte par gabarit, dans l'ordre ; « Actuel » non sélectionnable ; gabarit d'origine inconnu.
+- **Playwright, `e2e/editeur.spec.ts`** : sur une double page avec une photo, changer de gabarit ; « Garder l'actuel » revient aux cartes ; confirmer ; recharger : nouveau gabarit actuel, cadres vides, photos toujours dans la réserve ; page vide : changement sans avertissement.
 
 ## Hors de 6b
 
