@@ -1,0 +1,53 @@
+.modale {
+  width: min(420px, calc(100% - 2 * var(--espace-4)));
+  max-height: calc(100% - 2 * var(--espace-4));
+  padding: 0;
+  border: 0;
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-fond);
+  color: var(--couleur-texte-corps);
+  box-shadow: var(--ombre-modale);
+}
+
+/* Création d'un livre : le catalogue a besoin de place. */
+.large {
+  width: min(720px, calc(100% - 2 * var(--espace-4)));
+}
+
+.modale::backdrop {
+  background: var(--couleur-voile);
+}
+
+.contenu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+  padding: var(--espace-8);
+}
+
+.entete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+}
+
+.titre {
+  color: var(--couleur-encre);
+  font-size: var(--taille-h3);
+  font-weight: 800;
+  line-height: var(--interligne-h3);
+  letter-spacing: var(--approche-titre);
+  overflow-wrap: anywhere;
+}
+
+.sousTitre {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+  line-height: var(--interligne-petit);
+}
+
+@media (width < 600px) {
+  .contenu {
+    padding: var(--espace-6);
+  }
+}

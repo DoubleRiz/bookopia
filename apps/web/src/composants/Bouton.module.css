@@ -71,6 +71,15 @@
   background: var(--couleur-lavande-pale);
 }
 
+.destructif {
+  background: var(--couleur-destructif);
+  color: var(--couleur-fond);
+}
+
+.destructif:hover:not(:disabled) {
+  background: var(--couleur-destructif-survol);
+}
+
 /* Le libellé reste : seul un tour de 0,8 s s'ajoute dans le bouton qui a lancé l'action. */
 .tour {
   width: 1em;
