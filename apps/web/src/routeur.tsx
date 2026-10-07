@@ -26,6 +26,7 @@ import {
   chargerNouveauLivre,
   NouveauLivre,
 } from "./ecrans/NouveauLivre";
+import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 
 // Adresses des spécifications fonctionnelles (§1) : un écran a une adresse propre, rechargeable.
 export const routeur = createBrowserRouter([
@@ -49,6 +50,7 @@ export const routeur = createBrowserRouter([
       { path: "/deconnexion", action: actionDeconnexion },
       {
         loader: chargerEcranCreateur,
+        shouldRevalidate: revaliderSaufPageCourante,
         Component: EcranCreateur,
         HydrateFallback: () => (
           <EcranCreateurProvisoire enChargement>
@@ -85,6 +87,7 @@ export const routeur = createBrowserRouter([
                 id: "livre",
                 path: "/livre/:id",
                 loader: chargerLivreEnCours,
+                shouldRevalidate: revaliderSaufPageCourante,
                 action: actionLivreEnCours,
                 Component: LivreEnCours,
                 children: [
