@@ -27,7 +27,8 @@ import {
 } from "../api/doublesPages";
 import { changerTheme, type ThemeDuCatalogue } from "../api/themes";
 import { Banniere } from "../composants/Banniere";
-import { Bouton } from "../composants/Bouton";
+import { BarreLivre } from "../composants/BarreLivre";
+import { Bouton, LienBouton } from "../composants/Bouton";
 import {
   DoublePage,
   type Habillage,
@@ -96,6 +97,7 @@ const LIBELLES_STATUT: Record<StatutEnregistrement, string> = {
 // les gestes de structure passent par les fonctions SQL, puis les doubles pages sont relues.
 export function Editeur({
   projetId,
+  titre,
   habillage,
   themes,
   themeActuel,
@@ -107,6 +109,7 @@ export function Editeur({
   surSupprimerPhoto,
 }: {
   projetId: string;
+  titre: string;
   habillage: Habillage;
   // Les thèmes proposés ; vide si le catalogue est illisible.
   themes: ThemeDuCatalogue[];
@@ -509,50 +512,65 @@ export function Editeur({
     : undefined;
 
   return (
-    <section className={styles.editeur} aria-labelledby="titre-livre">
-      <div className={styles.enteteLivre}>
-        <h2 id="titre-livre">Livre</h2>
-        <div className={styles.statut} role="status">
-          <span
-            className={[styles.pastilleStatut, styles[statut]].join(" ")}
-            aria-hidden="true"
-          />
-          {LIBELLES_STATUT[statut]}
-          {statut === "echec" && (
-            <Bouton
-              variante="tertiaire"
-              taille="petit"
-              disabled={!enLigne}
-              onClick={() => file().reessayer()}
-            >
-              Réessayer
-            </Bouton>
-          )}
-        </div>
-        <div className={styles.actionsLivre}>
-          <Bouton
-            variante="tertiaire"
-            disabled={!actif || historique.passe.length === 0}
-            onClick={annulerGeste}
-          >
-            Annuler
-          </Bouton>
-          <Bouton
-            variante="tertiaire"
-            disabled={!actif || historique.futur.length === 0}
-            onClick={refaireGeste}
-          >
-            Refaire
-          </Bouton>
-          <Bouton
-            variante="secondaire"
-            disabled={!actif || themes.length < 2}
-            onClick={() => setChoixTheme(true)}
-          >
-            Thème · {themeActuel.nom}
-          </Bouton>
-          {actionsLivre}
-        </div>
+    <section className={styles.editeur} aria-label="Éditeur du livre">
+      <BarreLivre
+        retour={{ vers: "/livres", libelle: "Mes livres" }}
+        titre={titre}
+        statut={
+          <div className={styles.statut} role="status">
+            <span
+              className={[styles.pastilleStatut, styles[statut]].join(" ")}
+              aria-hidden="true"
+            />
+            {LIBELLES_STATUT[statut]}
+            {statut === "echec" && (
+              <Bouton
+                variante="tertiaire"
+                taille="petit"
+                disabled={!enLigne}
+                onClick={() => file().reessayer()}
+              >
+                Réessayer
+              </Bouton>
+            )}
+          </div>
+        }
+        etape="composer"
+        importFait={photos.length > 0}
+        actions={
+          photos.length > 0 && (
+            <>
+              <Bouton variante="secondaire" onClick={surImporter}>
+                Importer des photos
+              </Bouton>
+              <LienBouton vers="export">Vérifier et exporter</LienBouton>
+            </>
+          )
+        }
+      />
+      <div className={styles.outilsLivre}>
+        <Bouton
+          variante="tertiaire"
+          disabled={!actif || historique.passe.length === 0}
+          onClick={annulerGeste}
+        >
+          Annuler
+        </Bouton>
+        <Bouton
+          variante="tertiaire"
+          disabled={!actif || historique.futur.length === 0}
+          onClick={refaireGeste}
+        >
+          Refaire
+        </Bouton>
+        <Bouton
+          variante="secondaire"
+          disabled={!actif || themes.length < 2}
+          onClick={() => setChoixTheme(true)}
+        >
+          Thème · {themeActuel.nom}
+        </Bouton>
+        {actionsLivre}
       </div>
       {!enLigne && (
         <Banniere titre="Hors-ligne">
@@ -562,6 +580,23 @@ export function Editeur({
       {message && <Banniere titre={message} />}
 
       <div className={styles.espaceTravail}>
+        <BandeDoublesPages
+          couverture={couverture}
+          quatrieme={quatrieme}
+          interieures={interieures}
+          courante={courante}
+          habillage={habillage}
+          photos={photosAffichees}
+          actif={actif}
+          peutAjouter={gabaritParDefautId !== null}
+          peutChangerGabarit={gabarits.length > 1}
+          surChoisir={choisirPage}
+          surAjouter={ajouter}
+          surDeplacer={deplacer}
+          surChangerGabarit={() => setChoixGabarit(true)}
+          surDupliquer={dupliquer}
+          surSupprimer={setASupprimer}
+        />
         <div className={styles.planDeTravail}>
           {courante ? (
             <>
@@ -646,23 +681,6 @@ export function Editeur({
               livre avec vos photos, ou ajoutez une double page.
             </p>
           )}
-          <BandeDoublesPages
-            couverture={couverture}
-            quatrieme={quatrieme}
-            interieures={interieures}
-            courante={courante}
-            habillage={habillage}
-            photos={photosAffichees}
-            actif={actif}
-            peutAjouter={gabaritParDefautId !== null}
-            peutChangerGabarit={gabarits.length > 1}
-            surChoisir={choisirPage}
-            surAjouter={ajouter}
-            surDeplacer={deplacer}
-            surChangerGabarit={() => setChoixGabarit(true)}
-            surDupliquer={dupliquer}
-            surSupprimer={setASupprimer}
-          />
         </div>
 
         <Reserve

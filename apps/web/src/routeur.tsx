@@ -85,6 +85,7 @@ export const routeur = createBrowserRouter([
                 // E7, réduit à la réserve. Son id sert à E5, qui lit le livre sans le recharger.
                 id: "livre",
                 path: "/livre/:id",
+                handle: { pleinCadre: true },
                 loader: chargerLivreEnCours,
                 action: actionLivreEnCours,
                 Component: LivreEnCours,
@@ -100,6 +101,7 @@ export const routeur = createBrowserRouter([
               // E9 : écran à part entière, pas une surcouche de l'éditeur.
               {
                 path: "/livre/:id/export",
+                handle: { pleinCadre: true },
                 loader: chargerExport,
                 Component: Export,
               },

@@ -45,7 +45,7 @@ test("le Créateur compose son livre et en exporte le PDF", async ({ page }) => 
       .locator("image"),
   ).toHaveCount(3);
 
-  await page.getByRole("link", { name: "Exporter le livre" }).click();
+  await page.getByRole("link", { name: "Vérifier et exporter" }).click();
   await expect(page).toHaveURL(/\/livre\/[^/]+\/export$/);
 
   // Les cadres photo de la couverture et de la 4e sont vides : ils sont listés, sans bloquer.

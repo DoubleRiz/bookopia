@@ -1,33 +1,3 @@
-.entete {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--espace-4);
-}
-
-.titre {
-  display: flex;
-  flex-direction: column;
-  gap: var(--espace-2);
-  min-width: 0;
-}
-
-.titre h1 {
-  overflow-wrap: anywhere;
-}
-
-.retour {
-  color: var(--couleur-texte-secondaire);
-  font-size: var(--taille-petit);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.retour:hover {
-  color: var(--couleur-encre);
-}
-
 .formulaire {
   display: flex;
   flex-direction: column;
@@ -48,11 +18,4 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: var(--espace-3);
-}
-
-.lienExport {
-  display: inline-block;
-  margin-top: var(--espace-6);
-  color: var(--couleur-encre);
-  font-weight: 700;
 }

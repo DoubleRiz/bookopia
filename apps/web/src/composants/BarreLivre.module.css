@@ -1,0 +1,165 @@
+/* Barre du haut de l'éditeur et de l'export : fixe, sur une seule ligne tant qu'il y a la place. */
+.barre {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--espace-6);
+  min-height: 72px;
+  padding: var(--espace-3) var(--espace-6);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+  background: var(--couleur-fond);
+}
+
+.retour {
+  color: var(--couleur-encre);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.retour:hover {
+  text-decoration: underline;
+}
+
+.titre {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.titre h1 {
+  overflow: hidden;
+  font-size: var(--taille-h3);
+  line-height: var(--interligne-h3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.etapes {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Le fil entre deux étapes, posé dans l'écart de la liste : il reste hors de la pastille courante. */
+.etape + .etape::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: var(--espace-8);
+  height: 2px;
+  margin-right: 0;
+  border-radius: 1px;
+  background: var(--couleur-menthe);
+  transform: translateY(-50%);
+}
+
+.etape {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: var(--espace-1) var(--espace-3) var(--espace-1) var(--espace-1);
+  border-radius: var(--rayon-pill);
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.etapeCourante {
+  background: var(--couleur-lavande-pale);
+  color: var(--couleur-encre);
+  font-weight: 700;
+}
+
+.rond {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 50%;
+  background: var(--couleur-fond);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.etapeCourante .rond {
+  border-color: var(--couleur-cta);
+  background: var(--couleur-cta);
+  color: var(--couleur-fond);
+}
+
+.rondFait {
+  border-color: var(--couleur-menthe);
+  background: var(--couleur-menthe);
+  color: var(--couleur-menthe-encre);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+}
+
+.actions:empty {
+  display: none;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@media (width < 1100px) {
+  .barre {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--espace-3) var(--espace-4);
+  }
+
+  .etapes {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .actions {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+@media (width < 700px) {
+  .barre {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--espace-3) var(--espace-4);
+  }
+
+  .actions,
+  .etapes {
+    grid-column: 1;
+    grid-row: auto;
+    flex-wrap: wrap;
+  }
+
+  /* Seule l'étape courante garde son libellé : les ronds disent le reste. */
+  .etape:not(.etapeCourante) .libelleEtape {
+    display: none;
+  }
+
+  .etape + .etape::before {
+    width: var(--espace-3);
+  }
+}

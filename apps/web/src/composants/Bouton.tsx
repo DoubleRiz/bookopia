@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { Link } from "react-router";
 import styles from "./Bouton.module.css";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -29,5 +30,27 @@ export function Bouton({
       {enCours && <span className={styles.tour} aria-hidden="true" />}
       {children}
     </button>
+  );
+}
+
+// Une navigation qui a l'apparence d'un bouton : même style, mais c'est un lien.
+export function LienBouton({
+  vers,
+  variante = "principal",
+  taille = "moyen",
+  children,
+}: {
+  vers: string;
+  variante?: "principal" | "secondaire" | "tertiaire";
+  taille?: "grand" | "moyen" | "petit";
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to={vers}
+      className={[styles.bouton, styles[variante], styles[taille]].join(" ")}
+    >
+      {children}
+    </Link>
   );
 }

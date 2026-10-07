@@ -64,6 +64,13 @@
   padding: var(--espace-12) 96px;
 }
 
+.pleinCadre {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 @media (width < 900px) {
   .entete {
     padding: var(--espace-3) var(--espace-4);

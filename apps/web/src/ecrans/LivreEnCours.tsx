@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
   data,
-  Link,
   type LoaderFunctionArgs,
   Outlet,
   type FetcherWithComponents,
@@ -315,7 +314,7 @@ function ComposerLeLivre({
   );
 }
 
-// E7 : l'éditeur, l'import (E5) qui s'ouvre par-dessus à sa propre adresse, et le lien vers l'export (E9).
+// E7 : l'éditeur, et l'import (E5) qui s'ouvre par-dessus à sa propre adresse.
 export function LivreEnCours() {
   const { projet, theme, polices, themes, doublesPages, gabarits, photos } =
     useLoaderData<typeof chargerLivreEnCours>();
@@ -327,17 +326,6 @@ export function LivreEnCours() {
 
   return (
     <>
-      <div className={styles.entete}>
-        <div className={styles.titre}>
-          <Link to="/livres" className={styles.retour}>
-            ← Mes livres
-          </Link>
-          <h1>{projet.titre}</h1>
-        </div>
-        {photos.length > 0 && (
-          <Bouton onClick={ouvrirImport}>Importer des photos</Bouton>
-        )}
-      </div>
       {!polices && (
         <Banniere titre="Les polices du livre n'ont pas pu être chargées.">
           Les textes ne s'affichent pas. Rechargez la page pour réessayer.
@@ -345,6 +333,7 @@ export function LivreEnCours() {
       )}
       <Editeur
         projetId={projet.id}
+        titre={projet.titre}
         habillage={{ theme, mesures: polices ? mesures : null }}
         themes={themes}
         themeActuel={theme}
@@ -362,11 +351,6 @@ export function LivreEnCours() {
           setASupprimer(photos.find((p) => p.id === photo.id) ?? null)
         }
       />
-      {photos.length > 0 && (
-        <Link to="export" className={styles.lienExport}>
-          Exporter le livre
-        </Link>
-      )}
       {aSupprimer && (
         <ModaleSupprimerPhoto photo={aSupprimer} onFermer={fermer} />
       )}

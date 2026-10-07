@@ -123,7 +123,13 @@ export function BandeDoublesPages({
 
   return (
     <nav className={styles.bande} aria-label="Doubles pages du livre">
-      <ol className={styles.miniatures}>
+      <div className={styles.enteteBande}>
+        <h2 id="titre-bande">Doubles pages</h2>
+        <span className={styles.compte}>
+          {interieures.length + (couverture ? 1 : 0) + (quatrieme ? 1 : 0)}
+        </span>
+      </div>
+      <ol className={styles.miniatures} aria-labelledby="titre-bande">
         {couverture && miniature(couverture)}
         {interieures.map(miniature)}
         <li className={styles.ajouter}>
@@ -134,7 +140,7 @@ export function BandeDoublesPages({
             aria-label="Ajouter une double page après la page courante"
             onClick={surAjouter}
           >
-            <span aria-hidden="true">+</span>
+            <span aria-hidden="true">+ Double page</span>
           </button>
         </li>
         {quatrieme && miniature(quatrieme)}

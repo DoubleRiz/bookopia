@@ -1,23 +1,22 @@
 .editeur {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: var(--espace-4);
-  margin-bottom: var(--espace-6);
 }
 
-.enteteLivre {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--espace-4);
-}
-
-.actionsLivre {
+/* Sous la barre du livre : annuler, refaire, thème, composer. */
+.outilsLivre {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--espace-3);
-  margin-left: auto;
+  padding: var(--espace-2) var(--espace-6);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+  background: var(--couleur-fond);
+}
+
+.editeur > [role="alert"] {
+  margin: var(--espace-3) var(--espace-6) 0;
 }
 
 /* Statut d'enregistrement (design system §12) : pas de bouton Enregistrer, tout part seul. */
@@ -48,23 +47,38 @@
   background: var(--couleur-pastille-erreur);
 }
 
-/* La réserve à côté de la double page sur grand écran : on glisse une photo sans faire défiler. */
+/* Trois colonnes sur grand écran : les doubles pages à gauche, la double page courante au centre,
+   la réserve à droite. Rail et réserve restent sous la barre pendant qu'on fait défiler le plan. */
 .espaceTravail {
   display: grid;
+  flex: 1;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--espace-6);
+  align-items: stretch;
+}
+
+.espaceTravail > .bande {
+  order: 2;
+}
+
+.espaceTravail > .reserve {
+  order: 3;
 }
 
 @media (width >= 1100px) {
   .espaceTravail {
-    grid-template-columns: minmax(0, 1fr) 300px;
-    align-items: start;
+    grid-template-columns: 240px minmax(0, 1fr) 300px;
   }
 
+  .espaceTravail > .bande {
+    order: 0;
+  }
+
+  .espaceTravail > .bande,
   .espaceTravail > .reserve {
     position: sticky;
-    top: var(--espace-4);
-    max-height: calc(100vh - 2 * var(--espace-4));
+    top: 72px;
+    align-self: start;
+    max-height: calc(100vh - 72px);
     overflow-y: auto;
   }
 
@@ -73,23 +87,31 @@
   }
 }
 
-/* Plan de travail lavande ; la double page courante y est posée en élévation. */
+/* Plan de travail lavande, pleine hauteur ; la double page courante y est posée en élévation. */
 .planDeTravail {
   display: flex;
   flex-direction: column;
   gap: var(--espace-6);
   padding: var(--espace-6) var(--espace-8);
-  border-radius: var(--rayon-carte);
   background: var(--couleur-lavande-pale);
 }
 
+/* Recadrer, remplacer, vider : une pastille flottante au-dessus de la double page. */
 .barreOutils {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  align-self: center;
   gap: var(--espace-2);
   min-height: var(--cible-min);
+}
+
+.barreOutils:has(button) {
+  padding: var(--espace-1) var(--espace-2);
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
 }
 
 .aide {
@@ -111,11 +133,35 @@
   text-align: center;
 }
 
-/* Bande des intérieures : défile horizontalement, la page courante porte un anneau lavande. */
+/* Le rail des doubles pages : une colonne de miniatures sur grand écran, une bande qui défile
+   horizontalement sinon. La page courante porte un anneau lavande. */
 .bande {
   display: flex;
   flex-direction: column;
   gap: var(--espace-3);
+  padding: var(--espace-4);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+  background: var(--couleur-fond);
+}
+
+@media (width >= 1100px) {
+  .bande {
+    padding: var(--espace-6) var(--espace-4);
+    border-right: 1px solid var(--couleur-lavande-pale);
+    border-bottom: none;
+  }
+}
+
+.enteteBande {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espace-3);
+}
+
+.enteteBande h2 {
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
 }
 
 .miniatures {
@@ -125,6 +171,17 @@
   padding: var(--espace-2);
   overflow-x: auto;
   list-style: none;
+}
+
+@media (width >= 1100px) {
+  .miniatures {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+
+  .miniature {
+    flex: none;
+  }
 }
 
 .miniature {
@@ -169,25 +226,28 @@
 .ajouter {
   display: grid;
   flex: 0 0 auto;
-  place-items: center;
 }
 
 .boutonAjouter {
   display: grid;
   place-items: center;
-  width: 64px;
-  height: 64px;
+  width: 100%;
+  min-width: 64px;
+  min-height: var(--cible-min);
+  padding: var(--espace-2) var(--espace-4);
   border: 2px dashed var(--couleur-bordure);
   border-radius: var(--rayon-champ);
   background: var(--couleur-fond);
-  color: var(--couleur-cta);
-  font-size: 28px;
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
   font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 }
 
 .boutonAjouter:hover:not(:disabled) {
   border-color: var(--couleur-cta);
+  color: var(--couleur-cta);
 }
 
 .boutonAjouter:focus-visible {
@@ -203,7 +263,7 @@
 .actionsPage {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--espace-2);
 }
 
@@ -212,6 +272,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--espace-4);
+  padding: var(--espace-6) var(--espace-4);
+  background: var(--couleur-fond);
+}
+
+@media (width >= 1100px) {
+  .reserve {
+    border-left: 1px solid var(--couleur-lavande-pale);
+  }
 }
 
 .enteteReserve {

@@ -6,6 +6,7 @@ import {
   Outlet,
   redirect,
   useLoaderData,
+  useMatches,
 } from "react-router";
 import {
   deconnecter,
@@ -66,12 +67,17 @@ function Entete({
 }
 
 // Enveloppe des écrans du Créateur : en-tête commun, contenu de l'écran dessous.
+// Les écrans plein cadre (éditeur, export) portent leur propre barre : pas d'en-tête commun, pas de marges.
 export function EcranCreateur() {
   const utilisateur = useLoaderData<typeof chargerEcranCreateur>();
+  const pleinCadre = useMatches().some(
+    (etape) =>
+      (etape.handle as { pleinCadre?: boolean } | undefined)?.pleinCadre,
+  );
   return (
     <div className={styles.ecran}>
-      <Entete utilisateur={utilisateur} />
-      <main className={styles.corps}>
+      {!pleinCadre && <Entete utilisateur={utilisateur} />}
+      <main className={pleinCadre ? styles.pleinCadre : styles.corps}>
         <Outlet />
       </main>
     </div>
