@@ -45,7 +45,29 @@ test("le Créateur compose son livre et en exporte le PDF", async ({ page }) => 
       .locator("image"),
   ).toHaveCount(3);
 
+  await page.getByRole("link", { name: "Exporter le livre" }).click();
+  await expect(page).toHaveURL(/\/livre\/[^/]+\/export$/);
+
+  // Les cadres photo de la couverture et de la 4e sont vides : ils sont listés, sans bloquer.
+  await expect(
+    page.getByRole("heading", { name: "Cadres photo vides" }),
+  ).toBeVisible();
+  const vide = page.getByRole("link", { name: "Couverture", exact: true });
+  await expect(vide).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Quatrième de couverture" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Exporter le PDF" }),
+  ).toBeEnabled();
+
+  // Le lien ouvre l'éditeur sur la double page concernée, puis on revient.
+  await vide.click();
+  await expect(page).toHaveURL(/\/livre\/[^/]+\?page=/);
+  await page.goBack();
+
   await page.getByRole("button", { name: "Exporter le PDF" }).click();
+  await expect(page.getByText("PDF à jour.")).toBeVisible();
   const lien = page.getByRole("link", { name: "Télécharger le PDF" });
   await expect(lien).toBeVisible();
 
