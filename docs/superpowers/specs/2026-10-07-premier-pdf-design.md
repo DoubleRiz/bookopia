@@ -15,7 +15,7 @@ Le Créateur ouvre un livre, remplit ses emplacements avec la réserve, exporte,
 | Recadrage | Image entière dessinée sous un chemin de découpe rectangulaire (`re W n`), JPEG intégré sans réencodage | Toute l'image est embarquée, même la partie masquée. Repli si le `clip` échoue : réencodage de la zone visible |
 | Repère du cadrage | Calculé sur le cadre prolongé du fond perdu | L'écran (L5, L6) doit faire le même calcul et masquer les 3 mm, sinon un écart d'environ 1,5 % |
 | Emplacements texte | Ignorés | `contenu_texte` est vide sans éditeur ; polices et `fontkit` en L6 et L7 |
-| Droits de `remplir_emplacements` | `security invoker` | Écart avec la convention « appelable = definer » : la fonction n'écrit que ce que le navigateur peut déjà écrire, la RLS s'applique en plus |
+| Droits de `remplir_emplacements` | `security definer`, comme les autres fonctions appelables | Elle contourne la RLS : la propriété du projet est vérifiée par `verrouiller_projet`, en premier |
 | Dépendance | `pdf-lib` dans `packages/shared` | Déjà actée par la règle 4 de `CLAUDE.md` |
 | Vérification visuelle | `pdftoppm`, présent sur la machine | Outil de contrôle, pas une dépendance du projet |
 
@@ -90,7 +90,7 @@ Pour l'étape 18, le `clip` est validé quand :
 
 `remplir_emplacements(p_projet_id uuid) → integer`
 
-1. Lève une erreur si `est_mon_projet(p_projet_id)` est faux. Verrouille le projet par `verrouiller_projet`.
+1. Verrouille le projet par `verrouiller_projet`, qui lève `introuvable` s'il n'est pas au Créateur.
 2. Emplacements cibles : nature `photo`, `photo_id` vide, dans l'ordre couverture, intérieures par `position`, 4e, puis par `indice`.
 3. Photos : celles du livre posées nulle part, par `cree_le` puis `id`.
 4. Associe les deux listes rang par rang, jusqu'à épuisement de l'une. Cadrage `0,5 / 0,5 / 1`.
