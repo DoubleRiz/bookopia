@@ -2,8 +2,10 @@ import cookie from "@fastify/cookie";
 import Fastify, { type FastifyServerOptions } from "fastify";
 import { z } from "zod";
 import type { PrismaClient } from "@bookopia/db";
+import type { StockageDisque } from "@bookopia/stockage";
 import { installerGestionErreurs } from "./erreurs";
 import { routesAuthentification } from "./routes/authentification";
+import { routesFichiers } from "./routes/fichiers";
 import { routesSante } from "./routes/sante";
 
 // Messages de validation en français : le front valide déjà avec les mêmes schémas,
@@ -12,7 +14,7 @@ z.config(z.locales.fr());
 
 // Séparé du démarrage : les tests construisent l'application et l'interrogent sans ouvrir de port.
 export async function construireApp(
-  prisma: PrismaClient,
+  { prisma, stockage }: { prisma: PrismaClient; stockage: StockageDisque },
   options: FastifyServerOptions = {},
 ) {
   const app = Fastify(options);
@@ -23,6 +25,7 @@ export async function construireApp(
 
   await app.register(routesSante, { prisma });
   await app.register(routesAuthentification, { prisma });
+  await app.register(routesFichiers, { stockage });
 
   return app;
 }

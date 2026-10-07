@@ -1,17 +1,23 @@
+import { rm } from "node:fs/promises";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { prisma, viderBase } from "../../test/jeu-de-donnees";
+import { creerStockageDeTest } from "../../test/stockage-de-test";
 import { construireApp } from "../app";
 import { NOM_COOKIE_SESSION } from "./authentification";
 
 let app: FastifyInstance;
+let racine: string;
 
 beforeAll(async () => {
-  app = await construireApp(prisma);
+  const { stockage, racine: racineDeTest } = await creerStockageDeTest();
+  racine = racineDeTest;
+  app = await construireApp({ prisma, stockage });
 });
 
 afterAll(async () => {
   await app.close();
+  await rm(racine, { recursive: true, force: true });
 });
 
 beforeEach(async () => {

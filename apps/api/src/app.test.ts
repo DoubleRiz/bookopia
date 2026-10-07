@@ -1,13 +1,18 @@
+import { rm } from "node:fs/promises";
 import type { FastifyInstance, LightMyRequestResponse } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type ReponseErreur, reponseErreurSchema } from "@bookopia/shared";
 import { prisma } from "../test/jeu-de-donnees";
+import { creerStockageDeTest } from "../test/stockage-de-test";
 import { construireApp } from "./app";
 
 let app: FastifyInstance;
+let racine: string;
 
 beforeAll(async () => {
-  app = await construireApp(prisma);
+  const { stockage, racine: racineDeTest } = await creerStockageDeTest();
+  racine = racineDeTest;
+  app = await construireApp({ prisma, stockage });
   // Routes de test, ajoutées avant le premier inject : après, l'instance est figée.
   app.get("/test/panne", async () => {
     throw new Error("détail interne à ne pas divulguer");
@@ -19,6 +24,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app.close();
+  await rm(racine, { recursive: true, force: true });
 });
 
 // Chaque corps d'erreur doit respecter le contrat partagé avec le front.

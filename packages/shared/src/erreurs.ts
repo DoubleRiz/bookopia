@@ -5,6 +5,7 @@ import { z } from "zod";
 export const codeErreurSchema = z.enum([
   "invalide",
   "non_authentifie",
+  "interdit",
   "introuvable",
   "conflit",
   "trop_volumineux",

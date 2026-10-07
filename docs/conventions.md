@@ -32,6 +32,7 @@ apps/
 packages/
   db/           schema.prisma, migrations, client
   shared/       types, schémas Zod, constantes métier
+  stockage/     fichiers sur disque, URL signées (API et worker, jamais le front)
 docs/
 ```
 

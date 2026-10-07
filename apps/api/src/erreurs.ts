@@ -6,6 +6,7 @@ import { type CodeErreurMetier, ErreurMetier } from "./services/erreurs";
 const STATUT_PAR_CODE: Record<CodeErreurMetier, number> = {
   invalide: 400,
   non_authentifie: 401,
+  interdit: 403,
   introuvable: 404,
   conflit: 409,
 };
