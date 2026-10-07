@@ -1,7 +1,7 @@
 -- Fonctions métier : création d'un projet, ordre des intérieures, automatismes.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(43);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values ('aaaaaaaa-0000-4000-8000-000000000001', 'alice@exemple.fr', '{"nom_affichage": "Alice"}');
@@ -179,6 +179,72 @@ select results_eq(
 -- Suppression : le trou se referme, la photo reste dans la réserve.
 select lives_ok($$ select public.supprimer_double_page((select id from nouvelle)) $$, 'Supprimer la double page source');
 select is(pg_temp.rangs((select projet_id from livre)), pg_temp.suite(11), 'Après suppression : 1 à 11');
+
+-- ---------------------------------------------------------------------------
+-- Changement de gabarit
+-- ---------------------------------------------------------------------------
+
+-- La copie est au rang 2, gabarit 02 (un cadre), photo posée.
+select throws_ok(
+  $$ select public.changer_gabarit(
+       (select id from public.double_page where role = 'couverture'), '00000000-0000-4000-c000-000000000001') $$,
+  'P0001', 'invalide', 'La couverture ne change pas de gabarit ici'
+);
+
+select throws_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000004') $$,
+  'P0001', 'invalide', 'Un gabarit d''une autre famille est refusé'
+);
+
+select throws_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-c000-000000000001') $$,
+  'P0001', 'invalide', 'Un gabarit de couverture n''habille pas une intérieure'
+);
+
+reset role;
+update public.gabarit set actif = false where id = '00000000-0000-4000-b000-000000000003';
+set local role authenticated;
+
+select throws_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000003') $$,
+  'P0001', 'invalide', 'Un gabarit inactif est refusé'
+);
+
+reset role;
+update public.gabarit set actif = true where id = '00000000-0000-4000-b000-000000000003';
+set local role authenticated;
+
+create temporary table avant as
+select id, photo_id from public.emplacement where double_page_id = (select id from copie);
+
+select lives_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000002') $$,
+  'Reprendre le gabarit actuel est accepté'
+);
+select results_eq(
+  $$ select id, photo_id from public.emplacement where double_page_id = (select id from copie) $$,
+  $$ select id, photo_id from avant $$,
+  'Reprendre le gabarit actuel ne touche à rien'
+);
+
+select lives_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000003') $$,
+  'Passer au gabarit 03'
+);
+select results_eq(
+  $$ select gabarit_origine_id, position from public.double_page where id = (select id from copie) $$,
+  $$ values ('00000000-0000-4000-b000-000000000003'::uuid, 2) $$,
+  'La double page porte le nouveau gabarit et garde son rang'
+);
+select results_eq(
+  $$ select nature::text, x, y, largeur, hauteur, photo_id, contenu_texte from public.emplacement
+     where double_page_id = (select id from copie) order by indice $$,
+  $$ values ('photo', 0::float8, 0::float8, 200::float8, 210::float8, null::uuid, null::text),
+            ('photo', 220::float8, 0::float8, 200::float8, 210::float8, null::uuid, null::text) $$,
+  'Les cadres du nouveau gabarit sont recréés, vides'
+);
+select is((select count(*) from public.photo), 1::bigint, 'La photo retirée reste dans la réserve');
+select is(pg_temp.rangs((select projet_id from livre)), pg_temp.suite(11), 'Changer de gabarit ne touche pas aux rangs');
 
 -- ---------------------------------------------------------------------------
 -- Automatismes
