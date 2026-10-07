@@ -4,7 +4,7 @@ import { png } from "./images";
 
 const MM = 72 / 25.4;
 
-test("le Créateur remplit son livre et en exporte le PDF", async ({ page }) => {
+test("le Créateur compose son livre et en exporte le PDF", async ({ page }) => {
   const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@bookopia.test`;
 
   await page.goto("/inscription");
@@ -37,8 +37,11 @@ test("le Créateur remplit son livre et en exporte le PDF", async ({ page }) => 
   ).toBeVisible();
   await fenetre.getByRole("button", { name: "Voir la réserve" }).click();
 
-  await page.getByRole("button", { name: "Remplir les emplacements" }).click();
-  await expect(page.getByText("3 photos posées")).toBeVisible();
+  await page.getByRole("button", { name: "Composer le livre" }).click();
+  // Le livre a des intérieures dès sa création : attendre une photo posée, pas la double page.
+  await expect(
+    page.getByRole("region", { name: "Livre", exact: true }).locator("image"),
+  ).toHaveCount(3);
 
   await page.getByRole("button", { name: "Exporter le PDF" }).click();
   const lien = page.getByRole("link", { name: "Télécharger le PDF" });

@@ -2,7 +2,7 @@
 -- Rejoué par « supabase db reset ». Identifiants fixes : les tests et le front peuvent s'y référer.
 --
 -- Gabarits intérieurs 01 à 11 et thèmes : docs/design-system.md, sections 14 et 15.
--- Couvertures et 4e : géométrie provisoire, en attendant l'étape « Définir le catalogue de gabarits ».
+-- Couvertures et 4e : une de chaque par famille, jamais touchées par la composition.
 -- Millimètres, origine en haut à gauche de la double page (420 × 210), fonds perdus exclus.
 
 -- ---------------------------------------------------------------------------
@@ -86,7 +86,7 @@ values
   ]');
 
 -- ---------------------------------------------------------------------------
--- Couvertures et 4e (provisoires) : photo de la page droite et titre ; page gauche pour le résumé
+-- Couvertures et 4e : photo de la page droite et titre ; page gauche pour le résumé
 -- ---------------------------------------------------------------------------
 
 insert into public.gabarit (id, nom, role, famille, definition)
@@ -115,7 +115,7 @@ cross join (values ('[
 ]')) as geometrie (definition);
 
 -- ---------------------------------------------------------------------------
--- Modèles de livre : dix intérieures, soit 20 pages, un nombre pair de doubles pages
+-- Modèles de livre : dix intérieures, soit 20 pages
 -- ---------------------------------------------------------------------------
 
 insert into public.modele_livre (

@@ -9,7 +9,8 @@ type ModeleACopier = Pick<
   "famille" | "nombre_doubles_pages_depart"
 >;
 
-// Règle provisoire du moteur de gabarits : les intérieurs de la famille du modèle, à tour de rôle.
+// Intérieures de départ, à la création du livre, quand il n'a pas encore de photo :
+// les intérieurs de la famille du modèle, à tour de rôle. Le moteur (composerLivre) prend le relais.
 // Tri par nom pour que deux créations depuis le même modèle donnent le même livre.
 // Liste vide si rien ne convient : creer_projet refusera, c'est la base qui tranche.
 export function choisirGabaritsInterieurs(

@@ -13,9 +13,8 @@ import {
   FOND_PERDU_MM,
   HAUTEUR_DOUBLE_PAGE_MM,
   LARGEUR_DOUBLE_PAGE_MM,
-  prolongerParFondPerdu,
+  placerPhoto,
   type Rectangle,
-  zoneVisible,
 } from "./cadrage";
 
 export type PhotoARendre = {
@@ -123,12 +122,7 @@ function dessinerPhoto(
   image: PDFImage,
   emplacement: EmplacementARendre & { photo: PhotoARendre },
 ) {
-  const cadre = prolongerParFondPerdu(emplacement);
-  const zone = zoneVisible(emplacement.photo, cadre, {
-    x: emplacement.cadrage_x,
-    y: emplacement.cadrage_y,
-    zoom: emplacement.cadrage_zoom,
-  });
+  const { cadre, zone } = placerPhoto(emplacement, emplacement.photo);
   const mmParPixel = cadre.largeur / zone.largeur;
   const imageEntiere = versPdf({
     x: cadre.x - zone.x * mmParPixel,

@@ -64,6 +64,25 @@ export function zoneVisible(
   };
 }
 
+// Où dessiner une photo posée : le cadre de l'emplacement prolongé du fond perdu, en millimètres,
+// et la zone de l'image, en pixels de l'original, qui le remplit. Le PDF et l'écran l'appellent tous les deux.
+export function placerPhoto(
+  emplacement: Rectangle & {
+    cadrage_x: number;
+    cadrage_y: number;
+    cadrage_zoom: number;
+  },
+  photo: { largeur_px: number; hauteur_px: number },
+): { cadre: Rectangle; zone: Rectangle } {
+  const cadre = prolongerParFondPerdu(emplacement);
+  const zone = zoneVisible(photo, cadre, {
+    x: emplacement.cadrage_x,
+    y: emplacement.cadrage_y,
+    zoom: emplacement.cadrage_zoom,
+  });
+  return { cadre, zone };
+}
+
 function borner(valeur: number, min: number, max: number): number {
   return Math.min(Math.max(valeur, min), max);
 }
