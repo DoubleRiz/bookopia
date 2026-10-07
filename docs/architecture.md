@@ -87,7 +87,7 @@ Tout ce qui écrit plusieurs lignes à la fois passe par une **fonction SQL appe
 | `creer_double_page` | Crée une double page et copie la géométrie du gabarit dans ses emplacements |
 | `composer_livre` | Vérifie la composition calculée par le moteur de gabarits, puis remplace les intérieures d'un coup |
 | `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page` | Opérations d'ordre sur les intérieures, rangs renumérotés sans trou ; `inserer_double_page` vérifie aussi la famille du gabarit |
-| `changer_gabarit` | Applique un autre gabarit à une double page |
+| `changer_gabarit` | Applique un autre gabarit de la famille à une intérieure : les cadres sont recréés vides, les photos restent dans la réserve |
 
 Ces fonctions sont `security definer` : elles écrivent là où le navigateur n'a pas le droit d'écrire. **Chacune commence donc par vérifier que le projet appartient à `auth.uid()`.** C'est le point à relire en priorité.
 

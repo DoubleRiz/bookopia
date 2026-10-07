@@ -131,3 +131,58 @@ test("le Créateur pose, recadre et vide des photos, et organise ses doubles pag
   await page.getByRole("button", { name: "Recadrer" }).click();
   await expect(recadrage.getByLabel("Zoom")).toHaveValue("2");
 });
+
+test("le Créateur change le gabarit d'une double page, après avertissement", async ({
+  page,
+}) => {
+  await creerLivreAvecPhotos(page);
+
+  const courante = page.getByRole("group", { name: "Pages 2 et 3" });
+  const cadresRemplis = courante.getByRole("button", {
+    name: /^Cadre \d+, photo posée/,
+  });
+  await expect(cadresRemplis.first()).toBeVisible();
+  const bande = page.getByRole("navigation", {
+    name: "Doubles pages intérieures",
+  });
+  const choix = page.getByRole("dialog", { name: "Changer le gabarit" });
+  const autreGabarit = choix.locator("button:not([disabled])").first();
+
+  // La page porte une photo : on prévient, « Garder l'actuel » ne retire rien.
+  await bande.getByRole("button", { name: "Changer le gabarit" }).click();
+  await expect(choix.getByText("Actuel")).toBeVisible();
+  const nom = await autreGabarit.getAttribute("aria-label");
+  await autreGabarit.click();
+  const avertissement = page.getByRole("dialog", {
+    name: "Remplacer le gabarit ?",
+  });
+  await expect(
+    avertissement.getByRole("button", { name: "Garder l'actuel" }),
+  ).toBeFocused();
+  await avertissement.getByRole("button", { name: "Garder l'actuel" }).click();
+  await expect(autreGabarit).toBeVisible();
+
+  await autreGabarit.click();
+  await avertissement.getByRole("button", { name: "Remplacer" }).click();
+  await expect(choix).toBeHidden();
+  await expect(cadresRemplis).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveText("Enregistré");
+
+  // Après rechargement : le nouveau gabarit est l'actuel, ses cadres vides,
+  // et les photos sont toujours dans la réserve.
+  await page.reload();
+  await expect(courante).toBeVisible();
+  await expect(cadresRemplis).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Supprimer « rouge.png »" }),
+  ).toBeVisible();
+  await bande.getByRole("button", { name: "Changer le gabarit" }).click();
+  await expect(
+    choix.getByRole("button", { name: `${nom}, gabarit actuel` }),
+  ).toBeDisabled();
+
+  // Page vide : le changement s'applique sans avertissement.
+  await autreGabarit.click();
+  await expect(choix).toBeHidden();
+  await expect(avertissement).toBeHidden();
+});

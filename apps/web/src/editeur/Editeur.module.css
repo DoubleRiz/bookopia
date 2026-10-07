@@ -412,3 +412,70 @@
     gap: var(--espace-2);
   }
 }
+
+/* Choix de gabarit : une carte par gabarit de la famille, l'actuel marqué et non choisissable. */
+.gabarits {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--espace-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carteGabarit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--espace-3);
+  border: 2px solid var(--couleur-bordure);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-fond);
+  color: var(--couleur-encre);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.carteGabarit:hover:not(:disabled) {
+  border-color: var(--couleur-cta);
+}
+
+.carteGabarit:focus-visible {
+  outline: none;
+  box-shadow: var(--anneau-focus);
+}
+
+.carteGabarit:disabled {
+  border-color: var(--couleur-cta);
+  background: var(--couleur-lavande-pale);
+  cursor: default;
+}
+
+/* L'aperçu est un dessin du gabarit, pas une page du livre : pas de libellé « Pages n et n + 1 ». */
+.apercuGabarit figcaption {
+  display: none;
+}
+
+.nomGabarit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-2);
+  font-weight: 700;
+}
+
+.badgeActuel {
+  padding: 2px var(--espace-2);
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-lavande);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.resumeGabarit {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+}

@@ -2,7 +2,7 @@
 -- Chacun ne voit et ne modifie que ses livres ; le navigateur n'écrit que ce qui lui est accordé.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(32);
+select plan(34);
 
 -- ---------------------------------------------------------------------------
 -- Mise en place, en superutilisateur
@@ -183,6 +183,26 @@ select throws_ok(
                                        '00000000-0000-4000-b000-000000000001', 1) $$,
   'P0001', 'introuvable',
   'Le livre de Bob est introuvable pour les fonctions d''Alice'
+);
+
+-- Alice ne voit pas les doubles pages de Bob : l'identifiant est lu en superutilisateur.
+reset role;
+create temporary table double_page_de_bob as
+select id from public.double_page
+where projet_id = (select projet_id from livre where proprietaire = 'bob') and position = 1;
+grant all on double_page_de_bob to authenticated;
+set local role authenticated;
+
+select throws_ok(
+  $$ select public.changer_gabarit((select id from double_page_de_bob), '00000000-0000-4000-b000-000000000001') $$,
+  'P0001', 'introuvable',
+  'Une double page de Bob est introuvable pour changer_gabarit d''Alice'
+);
+
+select throws_ok(
+  $$ select public.copier_geometrie(gen_random_uuid(), gen_random_uuid(), '[]'::jsonb) $$,
+  '42501', null,
+  'copier_geometrie n''est pas appelable par rpc'
 );
 
 select throws_ok(

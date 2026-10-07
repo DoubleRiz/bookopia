@@ -255,7 +255,8 @@ Ce qu'une contrainte ne sait pas dire (comparer deux tables, écrire plusieurs l
 | Un projet naît avec couverture, intérieures et 4e, ou pas du tout | `creer_projet` |
 | Le modèle est actif ; les gabarits intérieurs sont en bon nombre et de sa famille | `creer_projet` |
 | Le gabarit est actif et a le même rôle que la double page | `creer_double_page`, `changer_gabarit` |
-| La géométrie du gabarit est copiée dans les emplacements | `creer_double_page` |
+| La géométrie du gabarit est copiée dans les emplacements | `creer_double_page`, `changer_gabarit` |
+| Changer de gabarit recrée les cadres vides, d'un gabarit actif de la famille du modèle ; rien n'est conservé | `changer_gabarit` |
 | Les intérieures sont remplacées d'un coup, par des gabarits actifs de la famille du modèle, photos du projet posées dans des cadres photo | `composer_livre` |
 | Les intérieures vont de 1 à N, sans doublon ni trou | `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page` |
 | Une intérieure ajoutée a un gabarit actif de la famille du modèle | `inserer_double_page` |

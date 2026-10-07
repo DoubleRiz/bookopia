@@ -21,9 +21,11 @@ export function BandeDoublesPages({
   photos,
   actif,
   peutAjouter,
+  peutChangerGabarit,
   surChoisir,
   surAjouter,
   surDeplacer,
+  surChangerGabarit,
   surDupliquer,
   surSupprimer,
 }: {
@@ -33,9 +35,11 @@ export function BandeDoublesPages({
   photos: Map<string, PhotoAffichee>;
   actif: boolean;
   peutAjouter: boolean;
+  peutChangerGabarit: boolean;
   surChoisir: (doublePageId: string) => void;
   surAjouter: () => void;
   surDeplacer: (doublePageId: string, position: number) => void;
+  surChangerGabarit: () => void;
   surDupliquer: (doublePageId: string) => void;
   surSupprimer: (doublePageId: string) => void;
 }) {
@@ -136,6 +140,14 @@ export function BandeDoublesPages({
             onClick={() => surDeplacer(courante.id, rang + 1)}
           >
             Déplacer à droite →
+          </Bouton>
+          <Bouton
+            variante="tertiaire"
+            taille="petit"
+            disabled={!actif || !peutChangerGabarit}
+            onClick={surChangerGabarit}
+          >
+            Changer le gabarit
           </Bouton>
           <Bouton
             variante="tertiaire"

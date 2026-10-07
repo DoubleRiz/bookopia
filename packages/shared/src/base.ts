@@ -420,9 +420,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      changer_gabarit: {
+        Args: { p_double_page_id: string; p_gabarit_id: string }
+        Returns: undefined
+      }
       composer_livre: {
         Args: { p_doubles_pages: Json; p_projet_id: string }
         Returns: number
+      }
+      copier_geometrie: {
+        Args: {
+          p_definition: Json
+          p_double_page_id: string
+          p_projet_id: string
+        }
+        Returns: undefined
       }
       creer_double_page: {
         Args: {

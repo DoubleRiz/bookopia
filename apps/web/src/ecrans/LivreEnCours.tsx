@@ -1,4 +1,4 @@
-import { composerLivre } from "@bookopia/shared";
+import { composerLivre, type GabaritAComposer } from "@bookopia/shared";
 import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
@@ -30,7 +30,6 @@ import { Banniere } from "../composants/Banniere";
 import { Bouton } from "../composants/Bouton";
 import { Modale } from "../composants/Modale";
 import { Editeur } from "../editeur/Editeur";
-import { gabaritParDefaut } from "../editeur/gabaritParDefaut";
 import {
   erreurDeFormulaire,
   type ResultatFormulaire,
@@ -42,13 +41,13 @@ import styles from "./LivreEnCours.module.css";
 
 const identifiantSchema = z.uuid();
 
-// Le gabarit d'une double page ajoutée dans l'éditeur. Un catalogue illisible ne bloque pas
-// l'écran : l'ajout est seulement désactivé, et « Composer le livre » dira l'erreur.
-async function lireGabaritParDefaut(projetId: string): Promise<string | null> {
+// Les gabarits de l'éditeur : ajout d'une double page, changement de gabarit. Un catalogue
+// illisible ne bloque pas l'écran : ces gestes sont désactivés, et « Composer le livre » dira l'erreur.
+async function lireGabarits(projetId: string): Promise<GabaritAComposer[]> {
   try {
-    return gabaritParDefaut(await listerGabaritsDuLivre(projetId))?.id ?? null;
+    return await listerGabaritsDuLivre(projetId);
   } catch (erreur) {
-    if (erreur instanceof z.ZodError) return null;
+    if (erreur instanceof z.ZodError) return [];
     throw erreur;
   }
 }
@@ -78,7 +77,7 @@ export async function chargerLivreEnCours({
       projet,
       fond: fondDuTheme(projet.theme.palette),
       doublesPages,
-      gabaritParDefautId: await lireGabaritParDefaut(projet.id),
+      gabarits: await lireGabarits(projet.id),
       photos: photos.map((photo) => ({ ...photo, url: urls.get(photo.id) })),
       urlDuPdf: pdf
         ? await urlDuPdf(
@@ -294,7 +293,7 @@ function ComposerLeLivre({
 
 // E7 : l'éditeur, l'import (E5) qui s'ouvre par-dessus à sa propre adresse, et l'export.
 export function LivreEnCours() {
-  const { projet, fond, doublesPages, gabaritParDefautId, photos, urlDuPdf } =
+  const { projet, fond, doublesPages, gabarits, photos, urlDuPdf } =
     useLoaderData<typeof chargerLivreEnCours>();
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
@@ -320,7 +319,7 @@ export function LivreEnCours() {
         fond={fond}
         doublesPages={doublesPages}
         photos={photos}
-        gabaritParDefautId={gabaritParDefautId}
+        gabarits={gabarits}
         actionsLivre={
           <ComposerLeLivre
             doublesPages={doublesPages}
