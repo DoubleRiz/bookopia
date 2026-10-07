@@ -126,11 +126,3 @@ export async function urlDuPdf(chemin: string, titre: string) {
   }
   return data.signedUrl;
 }
-
-// Provisoire, en attendant l'éditeur : pose la réserve dans les emplacements vides.
-export async function remplirEmplacements(projetId: string): Promise<number> {
-  const posees = verifier(
-    await supabase.rpc("remplir_emplacements", { p_projet_id: projetId }),
-  );
-  return posees ?? 0;
-}

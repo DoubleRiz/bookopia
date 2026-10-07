@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useRevalidator } from "react-router";
 import { ErreurNonAuthentifie, ErreurReseau } from "../api/client";
-import { ErreurPdfTropLourd, remplirEmplacements } from "../api/exports";
+import { ErreurPdfTropLourd } from "../api/exports";
 import { Banniere } from "../composants/Banniere";
 import { Bouton } from "../composants/Bouton";
 import { dependancesExport } from "../export/brancher";
@@ -10,7 +10,6 @@ import styles from "./LivreEnCours.module.css";
 
 type Phase =
   | { nom: "repos"; message: string | null }
-  | { nom: "remplissage" }
   | { nom: "export"; etape: Etape | null }
   | { nom: "echec"; message: string };
 
@@ -33,8 +32,8 @@ function messageEchec(probleme: unknown): string {
   return "L'export a échoué. Réessayez dans un instant.";
 }
 
-// Provisoire, en attendant l'éditeur (L6) et l'écran d'export (L7) : remplir les emplacements
-// avec la réserve, exporter, télécharger. Le PDF se compose dans le navigateur.
+// Provisoire, en attendant l'écran d'export (L7) : exporter, télécharger.
+// Le PDF se compose dans le navigateur.
 export function ExportDuLivre({
   projet,
   urlDuPdf,
@@ -48,7 +47,6 @@ export function ExportDuLivre({
   const [phase, setPhase] = useState<Phase>({ nom: "repos", message: null });
 
   const enExport = phase.nom === "export";
-  const occupe = enExport || phase.nom === "remplissage";
 
   // Fermer l'onglet en plein export perd le rendu ; l'ancien PDF, lui, reste disponible.
   useEffect(() => {
@@ -66,24 +64,6 @@ export function ExportDuLivre({
       return;
     }
     setPhase({ nom: "echec", message: messageEchec(probleme) });
-  };
-
-  const remplir = async () => {
-    setPhase({ nom: "remplissage" });
-    try {
-      const posees = await remplirEmplacements(projet.id);
-      setPhase({
-        nom: "repos",
-        message:
-          posees === 0
-            ? "Aucun emplacement à remplir"
-            : posees === 1
-              ? "1 photo posée"
-              : `${posees} photos posées`,
-      });
-    } catch (probleme) {
-      echouer(probleme);
-    }
   };
 
   const lancerExport = async () => {
@@ -106,17 +86,9 @@ export function ExportDuLivre({
       {phase.nom === "echec" && <Banniere titre={phase.message} />}
       <div className={styles.actionsExport}>
         <Bouton
-          variante="secondaire"
-          onClick={() => void remplir()}
-          enCours={phase.nom === "remplissage"}
-          disabled={occupe}
-        >
-          Remplir les emplacements
-        </Bouton>
-        <Bouton
           onClick={() => void lancerExport()}
           enCours={enExport}
-          disabled={occupe}
+          disabled={enExport}
         >
           Exporter le PDF
         </Bouton>
