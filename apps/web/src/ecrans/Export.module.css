@@ -1,61 +1,179 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--espace-8) var(--espace-6) var(--espace-12);
+}
+
 .entete {
   display: flex;
   flex-direction: column;
-  gap: var(--espace-2);
-  min-width: 0;
+  gap: var(--espace-1);
 }
 
-.entete h1 {
+.entete h2 {
+  font-size: var(--taille-h1);
+  line-height: var(--interligne-h1);
   overflow-wrap: anywhere;
 }
 
-.retour {
+.sousTitre {
+  margin: 0;
   color: var(--couleur-texte-secondaire);
   font-size: var(--taille-petit);
-  font-weight: 600;
-  text-decoration: none;
 }
 
-.retour:hover {
-  color: var(--couleur-encre);
+/* Contrôles à gauche, rendu à droite ; une seule colonne sur petit écran. */
+.colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espace-6);
+  align-items: start;
 }
 
-.section {
+@media (width >= 900px) {
+  .colonnes {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.colonneDroite {
   display: flex;
   flex-direction: column;
   gap: var(--espace-4);
-  margin-top: var(--espace-6);
+}
+
+.carte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-3);
+  overflow: hidden;
+  padding: var(--espace-4);
+  border: 1px solid var(--couleur-lavande);
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-fond);
+}
+
+.carte h3 {
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+}
+
+/* La carte des contrôles : son bandeau crème dit « attention », sans bloquer (RG-16). */
+.enteteCarte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espace-2) var(--espace-4);
+  margin: calc(-1 * var(--espace-4));
+  margin-bottom: 0;
+  padding: var(--espace-4);
+}
+
+.enteteAttention {
+  background: var(--couleur-beurre-pale);
+}
+
+.enteteCarte h3 {
+  font-size: var(--taille-h3);
+  line-height: var(--interligne-h3);
 }
 
 .note {
   margin: 0;
   color: var(--couleur-texte-secondaire);
-  font-size: 14px;
+  font-size: var(--taille-petit);
+}
+
+.groupe {
+  margin: var(--espace-2) 0 0;
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .liste {
   display: flex;
   flex-direction: column;
-  gap: var(--espace-2);
   margin: 0;
-  padding-left: var(--espace-4);
+  padding: 0;
+  list-style: none;
 }
 
-.liste a {
-  color: var(--couleur-encre);
-  font-weight: 600;
-}
-
-.actions {
+.ligne {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--espace-3);
+  padding: var(--espace-3) 0;
+  border-top: 1px solid var(--couleur-lavande-pale);
 }
 
-.telechargement {
+.vignette {
+  display: block;
+  flex: none;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: var(--rayon-page);
+  background: var(--couleur-lavande-pale);
+}
+
+.vignette img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vignetteVide {
+  border: 2px dashed var(--couleur-bordure);
+  background: var(--couleur-fond);
+}
+
+.texteLigne {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lienLigne {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espace-3);
   color: var(--couleur-encre);
+  font-size: 14px;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.lienLigne:hover .corriger {
+  text-decoration: underline;
+}
+
+.corriger {
+  flex: none;
+  color: var(--couleur-cta);
+  font-size: var(--taille-petit);
+}
+
+.detail {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+}
+
+/* Rendu : lavande pendant qu'il tourne, ce qui le distingue de l'état de repos. */
+.actif {
+  border-color: var(--couleur-lavande);
+  background: var(--couleur-lavande-pale);
 }
 
 .etat {
@@ -63,4 +181,148 @@
   margin: 0;
   color: var(--couleur-texte-secondaire);
   font-size: 14px;
+}
+
+.avancement {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espace-3);
+  font-weight: 600;
+}
+
+/* Barre de progression : le natif pour la sémantique, le dessin pour la maquette. */
+.barre {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border: none;
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-fond);
+}
+
+.barre::-webkit-progress-bar {
+  background: var(--couleur-fond);
+}
+
+.barre::-webkit-progress-value {
+  border-radius: var(--rayon-pill);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--couleur-cta) 0 8px,
+    var(--couleur-bordure) 8px 16px
+  );
+  background-size: 22.6px 100%;
+  transition: width 200ms ease;
+  animation: avance 800ms linear infinite;
+}
+
+.barre::-moz-progress-bar {
+  border-radius: var(--rayon-pill);
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--couleur-cta) 0 8px,
+    var(--couleur-bordure) 8px 16px
+  );
+  background-size: 22.6px 100%;
+  animation: avance 800ms linear infinite;
+}
+
+@keyframes avance {
+  to {
+    background-position-x: 22.6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barre::-webkit-progress-value,
+  .barre::-moz-progress-bar {
+    animation: none;
+  }
+}
+
+.titrePdf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espace-3);
+}
+
+/* Badges d'état : pastille et libellé, jamais la couleur seule (design system §6). */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border-radius: var(--rayon-pill);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+
+.succes {
+  background: var(--couleur-menthe-pale);
+  color: var(--couleur-menthe-encre);
+}
+
+.succes::before {
+  background: var(--couleur-pastille-succes);
+}
+
+.attention {
+  background: var(--couleur-beurre-pale);
+  color: var(--couleur-beurre-encre);
+}
+
+.attention::before {
+  background: var(--couleur-pastille-attention);
+}
+
+.fichier {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-3);
+}
+
+.icone {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 52px;
+  border: 1px solid var(--couleur-lavande);
+  border-radius: var(--rayon-page);
+  background: var(--couleur-fond);
+  color: var(--couleur-cta);
+  font-size: var(--taille-label);
+  font-weight: 800;
+}
+
+.nom {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espace-4);
+}
+
+.actions .note {
+  flex: 1;
+  min-width: 200px;
 }

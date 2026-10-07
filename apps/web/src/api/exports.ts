@@ -1,9 +1,13 @@
-import { type DoublePageAControler, themeSchema } from "@bookopia/shared";
+import {
+  type DoublePageAControler,
+  type EmplacementAControler,
+  themeSchema,
+} from "@bookopia/shared";
 import type { LivreLu } from "../export/charger";
 import { supabase } from "../supabase";
 import { ErreurBase, verifier } from "./client";
 import type { DoublePageDuLivre } from "./doublesPages";
-import { cheminOriginal } from "./photos";
+import { cheminOriginal, type PhotoDeLaReserve } from "./photos";
 
 // Chemin du bucket exports : le premier dossier est le Créateur, c'est ce que vérifie la règle Storage.
 export function cheminPdf(
@@ -66,10 +70,17 @@ export async function lireProjetPourExport(projetId: string) {
 
 // Les doubles pages dans l'ordre du livre, avec les dimensions des photos posées :
 // de quoi contrôler les cadres avant le rendu (controlerExport).
+// Chaque photo porte aussi de quoi signer sa vignette, pour l'afficher à côté du cadre signalé.
 export async function lireDoublesPagesAControler(projetId: string): Promise<
-  (DoublePageAControler & {
+  (Omit<DoublePageAControler, "emplacements"> & {
     role: DoublePageDuLivre["role"];
     position: number | null;
+    emplacements: (EmplacementAControler & {
+      photo:
+        | (NonNullable<EmplacementAControler["photo"]> &
+            Pick<PhotoDeLaReserve, "id" | "cle_stockage" | "format_vignette">)
+        | null;
+    })[];
   })[]
 > {
   const doublesPages = verifier(
@@ -80,7 +91,7 @@ export async function lireDoublesPagesAControler(projetId: string): Promise<
         emplacement (
           id, nature, x, y, largeur, hauteur,
           cadrage_x, cadrage_y, cadrage_zoom,
-          photo (largeur_px, hauteur_px)
+          photo (id, cle_stockage, format_vignette, largeur_px, hauteur_px)
         )`,
       )
       .eq("projet_id", projetId)
@@ -156,6 +167,20 @@ export async function enregistrerExport(projetId: string, cle: string) {
         { onConflict: "projet_id" },
       ),
   );
+}
+
+// La taille du PDF en octets, lue dans le bucket ; null si elle n'est pas disponible :
+// l'écran s'en passe plutôt que d'échouer.
+export async function tailleDuPdf(
+  utilisateurId: string,
+  projetId: string,
+  cle: string,
+): Promise<number | null> {
+  const { data, error } = await supabase.storage
+    .from("exports")
+    .list(`${utilisateurId}/${projetId}`, { search: `${cle}.pdf`, limit: 1 });
+  const taille: unknown = data?.[0]?.metadata?.size;
+  return error || typeof taille !== "number" ? null : taille;
 }
 
 // Une heure, comme les vignettes. Le nom proposé au téléchargement est le titre du livre.

@@ -143,6 +143,7 @@
 
 @media (width < 700px) {
   .barre {
+    position: static;
     grid-template-columns: minmax(0, 1fr);
     padding: var(--espace-3) var(--espace-4);
   }

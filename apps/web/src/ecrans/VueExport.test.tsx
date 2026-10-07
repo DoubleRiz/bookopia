@@ -8,11 +8,14 @@ type Props = Parameters<typeof VueExport>[0];
 const BASE: Props = {
   projet: { id: "p1", titre: "Vacances" },
   controle: { faibles: [], vides: [] },
+  vignettes: {},
+  nombrePages: 28,
   libelles: { d1: "Couverture", d2: "Pages 2 et 3" },
   etat: "demande",
   etape: null,
   message: null,
   urlDuPdf: null,
+  pdf: null,
   aJour: false,
   surExporter: () => undefined,
 };
@@ -100,7 +103,7 @@ describe("VueExport", () => {
       aJour: true,
     });
     expect(html).toContain("PDF à jour");
-    expect(html).toContain("Exporter à nouveau");
+    expect(html).toContain("Relancer le rendu");
     expect(html).toContain('href="http://pdf/1"');
   });
 
@@ -123,7 +126,7 @@ describe("VueExport", () => {
     });
     expect(html).toContain("Le serveur ne répond pas.");
     expect(html).toContain('href="http://pdf/ancien"');
-    expect(html).toContain("Exporter à nouveau");
+    expect(html).toContain("Relancer le rendu");
   });
 
   it("échec sans ancien PDF : propose de réessayer", () => {
@@ -131,5 +134,41 @@ describe("VueExport", () => {
     expect(html).toContain("L&#x27;export a échoué.");
     expect(html).toContain("Exporter le PDF");
     expect(html).not.toContain("Télécharger le PDF");
+  });
+
+  it("en cours : une barre de progression qui suit les photos téléchargées", () => {
+    const html = rendre({
+      etat: "en_cours",
+      etape: { nom: "telechargement", faits: 20, total: 40 },
+    });
+    expect(html).toMatch(/<progress[^>]*max="100"[^>]*value="38"/);
+  });
+
+  it("annonce le format et le nombre de pages", () => {
+    expect(rendre({ nombrePages: 28 })).toContain("21 × 21 cm · 28 pages");
+  });
+
+  it("disponible : nom, taille et date du PDF", () => {
+    const html = rendre({
+      etat: "disponible",
+      urlDuPdf: "http://pdf/1",
+      pdf: { creeLe: "2026-10-02T09:14:00Z", taille: 214_000_000 },
+      aJour: true,
+    });
+    expect(html).toContain("Vacances.pdf");
+    expect(html).toContain("214 Mo");
+    expect(html).toContain("Rendu le");
+  });
+
+  it("montre la vignette du cadre faible, et un cadre vide en pointillés", () => {
+    const html = rendre({
+      controle: {
+        faibles: [{ double_page_id: "d2", emplacement_id: "e1", dpi: 120 }],
+        vides: [{ double_page_id: "d1", emplacement_id: "e2" }],
+      },
+      vignettes: { e1: "http://vignette/e1" },
+    });
+    expect(html).toContain('src="http://vignette/e1"');
+    expect(html).toContain("2 points à vérifier");
   });
 });

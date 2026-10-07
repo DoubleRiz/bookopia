@@ -16,8 +16,10 @@ import {
   lireDoublesPagesAControler,
   lireExport,
   lireProjetPourExport,
+  tailleDuPdf,
   urlDuPdf,
 } from "../api/exports";
+import { urlsDesVignettes } from "../api/photos";
 import { libelleDoublePage } from "../composants/DoublePage";
 import { dependancesExport } from "../export/brancher";
 import { type Etape, exporter } from "../export/exporter";
@@ -38,13 +40,36 @@ export async function chargerExport({ request, params }: LoaderFunctionArgs) {
     }
     const doublesPages = await lireDoublesPagesAControler(projet.id);
     const pdf = await lireExport(projet.id);
+    const controle = controlerExport(doublesPages);
+    // Une vignette par cadre faible : la photo posée, pour reconnaître le cadre d'un coup d'œil.
+    const emplacements = doublesPages.flatMap((d) => d.emplacements);
+    const photosFaibles = controle.faibles.flatMap((faible) => {
+      const photo = emplacements.find(
+        (e) => e.id === faible.emplacement_id,
+      )?.photo;
+      return photo ? [{ emplacement_id: faible.emplacement_id, photo }] : [];
+    });
+    const urls = await urlsDesVignettes(
+      projet.utilisateur_id,
+      projet.id,
+      photosFaibles.map(({ photo }) => photo),
+    ).catch(() => new Map<string, string>());
     return {
       projet: {
         id: projet.id,
         titre: projet.titre,
         utilisateur_id: projet.utilisateur_id,
       },
-      controle: controlerExport(doublesPages),
+      controle,
+      vignettes: Object.fromEntries(
+        photosFaibles.flatMap(({ emplacement_id, photo }) => {
+          const url = urls.get(photo.id);
+          return url ? [[emplacement_id, url]] : [];
+        }),
+      ),
+      // Une page par intérieure et par côté, plus la couverture et la 4e.
+      nombrePages:
+        2 * doublesPages.filter((d) => d.role === "interieur").length + 2,
       libelles: Object.fromEntries(
         doublesPages.map((doublePage) => [
           doublePage.id,
@@ -56,6 +81,16 @@ export async function chargerExport({ request, params }: LoaderFunctionArgs) {
             cheminPdf(projet.utilisateur_id, projet.id, pdf.cle_stockage),
             projet.titre,
           )
+        : null,
+      pdf: pdf
+        ? {
+            creeLe: pdf.cree_le,
+            taille: await tailleDuPdf(
+              projet.utilisateur_id,
+              projet.id,
+              pdf.cle_stockage,
+            ),
+          }
         : null,
       // « Exporté et à jour » se calcule : le PDF date d'après la dernière modification du livre.
       aJour: pdf
@@ -82,8 +117,16 @@ function messageEchec(probleme: unknown): string {
 
 // E9 : le PDF se compose dans le navigateur, l'écran suit les étapes d'exporter().
 export function Export() {
-  const { projet, controle, libelles, urlDuPdf, aJour } =
-    useLoaderData<typeof chargerExport>();
+  const {
+    projet,
+    controle,
+    vignettes,
+    nombrePages,
+    libelles,
+    urlDuPdf,
+    pdf,
+    aJour,
+  } = useLoaderData<typeof chargerExport>();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { revalidate } = useRevalidator();
@@ -137,11 +180,14 @@ export function Export() {
     <VueExport
       projet={projet}
       controle={controle}
+      vignettes={vignettes}
+      nombrePages={nombrePages}
       libelles={libelles}
       etat={etat}
       etape={phase.nom === "export" ? phase.etape : null}
       message={phase.nom === "echec" ? phase.message : null}
       urlDuPdf={urlDuPdf}
+      pdf={pdf}
       aJour={aJour}
       surExporter={() => void lancerExport()}
     />

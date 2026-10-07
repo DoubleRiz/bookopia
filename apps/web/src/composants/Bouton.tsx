@@ -34,22 +34,29 @@ export function Bouton({
 }
 
 // Une navigation qui a l'apparence d'un bouton : même style, mais c'est un lien.
+// `externe` : une adresse hors du routeur (un fichier à télécharger), donc un lien ordinaire.
 export function LienBouton({
   vers,
+  externe = false,
   variante = "principal",
   taille = "moyen",
   children,
+  ...props
 }: {
   vers: string;
+  externe?: boolean;
   variante?: "principal" | "secondaire" | "tertiaire";
   taille?: "grand" | "moyen" | "petit";
   children: ReactNode;
+  "aria-label"?: string;
 }) {
-  return (
-    <Link
-      to={vers}
-      className={[styles.bouton, styles[variante], styles[taille]].join(" ")}
-    >
+  const classe = [styles.bouton, styles[variante], styles[taille]].join(" ");
+  return externe ? (
+    <a href={vers} className={classe} {...props}>
+      {children}
+    </a>
+  ) : (
+    <Link to={vers} className={classe} {...props}>
       {children}
     </Link>
   );

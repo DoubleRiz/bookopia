@@ -80,7 +80,7 @@ const DUREE_URL_SIGNEE_S = 3600;
 export async function urlsDesVignettes(
   utilisateurId: string,
   projetId: string,
-  photos: PhotoDeLaReserve[],
+  photos: Pick<PhotoDeLaReserve, "id" | "cle_stockage" | "format_vignette">[],
 ): Promise<Map<string, string>> {
   if (photos.length === 0) {
     return new Map();
