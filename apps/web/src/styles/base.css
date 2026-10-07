@@ -1,0 +1,71 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--couleur-fond);
+  color: var(--couleur-encre);
+  font-family: var(--police);
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: var(--approche-titre);
+}
+
+h1 {
+  font-size: var(--taille-h1);
+  line-height: var(--interligne-h1);
+}
+
+h2 {
+  font-size: var(--taille-h2);
+  line-height: var(--interligne-h2);
+}
+
+h3 {
+  font-size: var(--taille-h3);
+  line-height: var(--interligne-h3);
+}
+
+p {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: var(--couleur-cta);
+}
+
+/* Visible au clavier uniquement ; les champs gardent leur propre halo. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--anneau-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
