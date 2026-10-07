@@ -122,6 +122,36 @@ export async function supprimerFichiers(chemins: string[]) {
   await supabase.storage.from("photos").remove(chemins);
 }
 
+// La ligne d'abord, les fichiers ensuite : une interruption laisse au pire des fichiers inutiles,
+// jamais une ligne qui désigne un fichier absent. Les emplacements qui la portaient se vident
+// par la clé étrangère (on delete set null).
+export async function supprimerPhoto(photoId: string) {
+  const [photo] =
+    verifier(
+      await supabase
+        .from("photo")
+        .delete()
+        .eq("id", photoId)
+        .select(
+          "projet_id, cle_stockage, format_vignette, projet(utilisateur_id)",
+        ),
+    ) ?? [];
+  // La RLS filtre sans erreur : aucune ligne touchée veut dire que la photo n'est pas (ou plus) à lui.
+  if (!photo?.projet) {
+    throw new ErreurBase("introuvable", "Photo introuvable");
+  }
+  const { utilisateur_id } = photo.projet;
+  await supprimerFichiers([
+    cheminOriginal(utilisateur_id, photo.projet_id, photo.cle_stockage),
+    cheminVignette(
+      utilisateur_id,
+      photo.projet_id,
+      photo.cle_stockage,
+      photo.format_vignette,
+    ),
+  ]);
+}
+
 export async function creerPhoto(ligne: {
   projet_id: string;
   cle_stockage: string;

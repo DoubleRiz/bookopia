@@ -1,17 +1,32 @@
+import { useCallback, useEffect, useState } from "react";
 import {
+  type ActionFunctionArgs,
   data,
   Link,
   type LoaderFunctionArgs,
   Outlet,
+  useFetcher,
   useLoaderData,
   useNavigate,
 } from "react-router";
 import { z } from "zod";
 import { cheminPdf, lireExport, urlDuPdf } from "../api/exports";
-import { listerPhotos, lireProjet, urlsDesVignettes } from "../api/photos";
+import { ErreurBase } from "../api/client";
+import {
+  listerPhotos,
+  lireProjet,
+  supprimerPhoto,
+  urlsDesVignettes,
+} from "../api/photos";
 import { Bouton } from "../composants/Bouton";
 import { EtatVide } from "../composants/EtatVide";
-import { sousSession } from "../session";
+import { Modale } from "../composants/Modale";
+import {
+  erreurDeFormulaire,
+  type ResultatFormulaire,
+  sousSession,
+  texteDuChamp,
+} from "../session";
 import { ExportDuLivre } from "./ExportDuLivre";
 import styles from "./LivreEnCours.module.css";
 
@@ -50,6 +65,82 @@ export async function chargerLivreEnCours({
   });
 }
 
+type ResultatAction = ResultatFormulaire & { reussi?: true };
+
+// Seule écriture de l'écran pour l'instant : supprimer une photo de la réserve.
+// Le loader repasse ensuite, la réserve se met à jour d'elle-même.
+export async function actionLivreEnCours({
+  request,
+}: ActionFunctionArgs): Promise<ResultatAction> {
+  return sousSession(request, async () => {
+    const donnees = await request.formData();
+    try {
+      await supprimerPhoto(texteDuChamp(donnees, "photoId"));
+    } catch (erreur) {
+      if (erreur instanceof ErreurBase && erreur.code === "introuvable") {
+        return { message: "Cette photo n'existe plus. Rechargez la page." };
+      }
+      return erreurDeFormulaire(erreur);
+    }
+    return { reussi: true };
+  });
+}
+
+type Photo = Awaited<ReturnType<typeof chargerLivreEnCours>>["photos"][number];
+
+// Surcouche non adressée : la confirmation ne survit pas à un rechargement, c'est voulu.
+function ModaleSupprimerPhoto({
+  photo,
+  onFermer,
+}: {
+  photo: Photo;
+  onFermer: () => void;
+}) {
+  const fetcher = useFetcher<typeof actionLivreEnCours>();
+  const reussi = fetcher.state === "idle" && fetcher.data?.reussi;
+  useEffect(() => {
+    if (reussi) onFermer();
+  }, [reussi, onFermer]);
+
+  return (
+    <Modale
+      titre={`Supprimer « ${photo.nom_fichier_origine} » ?`}
+      onFermer={onFermer}
+    >
+      <fetcher.Form method="post" className={styles.formulaire}>
+        <input type="hidden" name="photoId" value={photo.id} />
+        {fetcher.data?.message && (
+          <p className={styles.erreurGlobale} role="alert">
+            {fetcher.data.message}
+          </p>
+        )}
+        <p>
+          La photo quitte la réserve, et les emplacements où elle est posée
+          redeviennent vides. Cette action est définitive.
+        </p>
+        <div className={styles.boutonsModale}>
+          {/* Le choix sans risque a le focus : Entrée par réflexe ne supprime rien. */}
+          <Bouton
+            type="button"
+            variante="secondaire"
+            onClick={onFermer}
+            autoFocus
+          >
+            Annuler
+          </Bouton>
+          <Bouton
+            type="submit"
+            variante="destructif"
+            enCours={fetcher.state !== "idle"}
+          >
+            Supprimer
+          </Bouton>
+        </div>
+      </fetcher.Form>
+    </Modale>
+  );
+}
+
 function compteDePhotos(nombre: number): string {
   return nombre === 1 ? "1 photo" : `${nombre} photos`;
 }
@@ -61,6 +152,9 @@ export function LivreEnCours() {
     useLoaderData<typeof chargerLivreEnCours>();
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
+  const [aSupprimer, setASupprimer] = useState<Photo | null>(null);
+  // Stable : la modale s'en sert dans un effet.
+  const fermer = useCallback(() => setASupprimer(null), []);
 
   return (
     <>
@@ -104,6 +198,14 @@ export function LivreEnCours() {
                     decoding="async"
                   />
                 )}
+                <button
+                  type="button"
+                  className={styles.supprimer}
+                  aria-label={`Supprimer « ${photo.nom_fichier_origine} »`}
+                  onClick={() => setASupprimer(photo)}
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
               </li>
             ))}
           </ul>
@@ -111,6 +213,9 @@ export function LivreEnCours() {
       </section>
       {photos.length > 0 && (
         <ExportDuLivre projet={projet} urlDuPdf={urlDuPdf} />
+      )}
+      {aSupprimer && (
+        <ModaleSupprimerPhoto photo={aSupprimer} onFermer={fermer} />
       )}
       <Outlet />
     </>

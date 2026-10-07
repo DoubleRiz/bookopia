@@ -10,7 +10,11 @@ import {
 import { ErreurChargement } from "./ecrans/ErreurChargement";
 import { chargerImport, ImportPhotos } from "./ecrans/ImportPhotos";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
-import { chargerLivreEnCours, LivreEnCours } from "./ecrans/LivreEnCours";
+import {
+  actionLivreEnCours,
+  chargerLivreEnCours,
+  LivreEnCours,
+} from "./ecrans/LivreEnCours";
 import {
   actionMesLivres,
   chargerMesLivres,
@@ -81,6 +85,7 @@ export const routeur = createBrowserRouter([
                 id: "livre",
                 path: "/livre/:id",
                 loader: chargerLivreEnCours,
+                action: actionLivreEnCours,
                 Component: LivreEnCours,
                 children: [
                   // E5, surcouche sur E7 : la réserve reste affichée dessous.
