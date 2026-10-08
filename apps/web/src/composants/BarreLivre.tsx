@@ -69,13 +69,15 @@ export function BarreLivre({
 }) {
   return (
     <header className={styles.barre}>
-      <Link to={retour.vers} className={styles.retour}>
-        <span aria-hidden="true">‹ </span>
-        {retour.libelle}
-      </Link>
-      <div className={styles.titre}>
-        <h1>{titre}</h1>
-        {statut}
+      <div className={styles.gauche}>
+        <Link to={retour.vers} className={styles.retour}>
+          <span aria-hidden="true">‹ </span>
+          {retour.libelle}
+        </Link>
+        <div className={styles.titre}>
+          <h1>{titre}</h1>
+          {statut}
+        </div>
       </div>
       <SuiviEtapes courante={etape} importFait={importFait} />
       <div className={styles.actions}>{actions}</div>

@@ -4,15 +4,25 @@
   flex-direction: column;
 }
 
-/* Sous la barre du livre : annuler, refaire, thème, composer. */
+/* Annuler, refaire, thème, composer : une pastille flottante, comme celle du cadre sélectionné. */
 .outilsLivre {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: var(--espace-3);
-  padding: var(--espace-2) var(--espace-6);
-  border-bottom: 1px solid var(--couleur-lavande-pale);
+  align-self: center;
+  gap: var(--espace-1);
+  padding: var(--espace-1) var(--espace-2);
+  border-radius: var(--rayon-pill);
   background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
+}
+
+.separateur {
+  width: 1px;
+  height: 20px;
+  margin: 0 var(--espace-2);
+  background: var(--couleur-lavande);
 }
 
 .editeur > [role="alert"] {

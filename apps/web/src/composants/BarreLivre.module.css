@@ -4,13 +4,20 @@
   top: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: var(--espace-6);
   min-height: 72px;
   padding: var(--espace-3) var(--espace-6);
   border-bottom: 1px solid var(--couleur-lavande-pale);
   background: var(--couleur-fond);
+}
+
+.gauche {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-6);
+  min-width: 0;
 }
 
 .retour {
@@ -109,6 +116,7 @@
 .actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--espace-3);
 }
 
@@ -126,17 +134,18 @@
 
 @media (width < 1100px) {
   .barre {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: var(--espace-3) var(--espace-4);
   }
 
   .etapes {
     grid-column: 1 / -1;
     grid-row: 2;
+    justify-self: center;
   }
 
   .actions {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 1;
   }
 }
@@ -148,11 +157,18 @@
     padding: var(--espace-3) var(--espace-4);
   }
 
+  .gauche {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--espace-2);
+  }
+
   .actions,
   .etapes {
     grid-column: 1;
     grid-row: auto;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   /* Seule l'étape courante garde son libellé : les ronds disent le reste. */

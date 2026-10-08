@@ -300,6 +300,7 @@ function ComposerLeLivre({
     <>
       <Bouton
         variante="secondaire"
+        taille="petit"
         disabled={nombreDePhotos === 0}
         enCours={enCours}
         onClick={() =>
