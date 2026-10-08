@@ -71,7 +71,8 @@ import { SurcoucheThemes } from "./SurcoucheThemes";
 
 type Photo = PhotoDeReserve & PhotoAffichee;
 
-// L'éditeur de texte (Tiptap) ne se charge qu'à la première saisie : l'écran s'ouvre sans lui.
+// L'éditeur de texte (Tiptap) ne se charge qu'à la première sélection d'un cadre texte : l'écran
+// s'ouvre sans lui.
 const SaisieTexte = lazy(() =>
   import("./SaisieTexte").then((module) => ({ default: module.SaisieTexte })),
 );
@@ -191,7 +192,7 @@ export function Editeur({
   const [choixGabarit, setChoixGabarit] = useState(false);
   const [choixTheme, setChoixTheme] = useState(false);
   const [enSaisie, setEnSaisie] = useState<string | null>(null);
-  // Où la saisie range sa barre de mise en forme, à la place de la barre du cadre.
+  // Où le cadre texte sélectionné range sa barre de mise en forme, à la place de la barre du cadre.
   const [conteneurBarre, setConteneurBarre] = useState<HTMLDivElement | null>(
     null,
   );
@@ -347,8 +348,6 @@ export function Editeur({
   const minuterieTexte = useRef<number | undefined>(undefined);
 
   function ouvrirSaisie(emplacementId: string) {
-    texteEnregistre.current =
-      emplacementDe(etatCourant.current, emplacementId) ?? null;
     dispatch({ type: "selectionner", emplacementId });
     setEnSaisie(emplacementId);
   }
@@ -505,14 +504,32 @@ export function Editeur({
   // Les cartes du choix de thème montrent la page courante.
   const apercuTheme = courante;
 
-  const saisie =
-    enSaisie && courante
-      ? courante.emplacement.find((e) => e.id === enSaisie)
+  // Un cadre texte sélectionné porte déjà son éditeur : la barre agit sur tout le texte. La saisie
+  // (le curseur, la sélection de passages) s'ouvre au second clic.
+  const texteSelectionne =
+    selection?.style_texte && habillage.mesures
+      ? { ...selection, style_texte: selection.style_texte }
       : undefined;
   const saisieOuverte =
-    saisie?.style_texte && habillage.mesures
-      ? { ...saisie, style_texte: saisie.style_texte }
+    texteSelectionne && enSaisie === texteSelectionne.id
+      ? texteSelectionne
       : undefined;
+
+  // Quitter un cadre texte écrit son dernier texte et ferme sa saisie.
+  const idTexte = texteSelectionne?.id ?? null;
+  useEffect(() => {
+    texteEnregistre.current = idTexte
+      ? (emplacementDe(etatCourant.current, idTexte) ?? null)
+      : null;
+    return () => enregistrerTexte();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seul le changement de cadre compte
+  }, [idTexte]);
+  // Une saisie ne survit pas à la sélection d'un autre cadre.
+  const [selectionVue, setSelectionVue] = useState(etat.selection);
+  if (selectionVue !== etat.selection) {
+    setSelectionVue(etat.selection);
+    if (enSaisie !== etat.selection) setEnSaisie(null);
+  }
 
   // Ctrl Z annule, Ctrl Maj Z (ou Ctrl Y) refait. Dans un champ, Ctrl Z reste celui du champ.
   const raccourciCourant = useRef<(evenement: KeyboardEvent) => void>(() => {});
@@ -655,7 +672,7 @@ export function Editeur({
         <div className={styles.planDeTravail}>
           {courante ? (
             <>
-              {saisieOuverte ? (
+              {texteSelectionne ? (
                 <div
                   ref={setConteneurBarre}
                   className={styles.barreMiseEnForme}
@@ -665,16 +682,7 @@ export function Editeur({
                   className={styles.barreOutils}
                   aria-label="Cadre sélectionné"
                 >
-                  {selection?.nature === "texte" ? (
-                    <Bouton
-                      variante="secondaire"
-                      taille="petit"
-                      disabled={!actif || !habillage.mesures}
-                      onClick={() => ouvrirSaisie(selection.id)}
-                    >
-                      Écrire
-                    </Bouton>
-                  ) : selection ? (
+                  {selection ? (
                     <>
                       <Bouton
                         variante="secondaire"
@@ -725,17 +733,18 @@ export function Editeur({
                   photos={photosAffichees}
                   interaction={interaction}
                   surcouche={
-                    saisieOuverte &&
+                    texteSelectionne &&
                     habillage.mesures && (
                       <Suspense fallback={null}>
                         <SaisieTexte
-                          key={saisieOuverte.id}
-                          emplacement={saisieOuverte}
+                          key={texteSelectionne.id}
+                          emplacement={texteSelectionne}
+                          enSaisie={saisieOuverte !== undefined}
                           theme={habillage.theme}
                           mesures={habillage.mesures}
                           barre={conteneurBarre}
                           surChangement={(contenu) =>
-                            ecrireTexte(saisieOuverte.id, contenu)
+                            ecrireTexte(texteSelectionne.id, contenu)
                           }
                           surFin={fermerSaisie}
                         />

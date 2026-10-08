@@ -636,6 +636,13 @@
 
 /* Les espaces de fin de ligne se suspendent et les ligatures restent actives, comme dans le
    rendu final : les réglages de ProseMirror par défaut coupent les lignes ailleurs. */
+/* Cadre sélectionné sans saisie : le dessin reste visible, l'éditeur n'est là que pour la barre. */
+.cadreSeul {
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: none;
+}
+
 .saisieTexte :global(.ProseMirror) {
   outline: none;
   overflow-wrap: anywhere;

@@ -104,18 +104,21 @@ function styleCss({ theme, emplacement }: Contexte, segment: SegmentTexte) {
   ].join("; ");
 }
 
-// L'éditeur de texte posé sur un cadre, à la police et à l'échelle du dessin : un clic le place,
-// la frappe se fait là, comme sur le papier. Le cadre ne peut pas déborder : la mise en lignes
+// L'éditeur de texte posé sur un cadre, à la police et à l'échelle du dessin. Cadre sélectionné, il
+// reste invisible (le dessin s'affiche) et la barre agit sur tout le texte ; en saisie, il prend
+// la place du dessin : un clic place le curseur, la frappe se fait là, comme sur le papier. Le cadre ne peut pas déborder : la mise en lignes
 // est celle du PDF. Un texte déjà trop long (après un changement de thème) peut toujours être
 // raccourci. La barre de mise en forme se range dans `barre`, au-dessus de la double page.
 export function SaisieTexte({
   emplacement,
   theme,
   mesures,
+  enSaisie,
   barre,
   surChangement,
   surFin,
 }: Contexte & {
+  enSaisie: boolean;
   barre: HTMLElement | null;
   surChangement: (contenu: DocumentTexte | null) => void;
   surFin: () => void;
@@ -124,6 +127,7 @@ export function SaisieTexte({
   const [contenuDeDepart] = useState(() =>
     versTiptap(emplacement.contenu_texte),
   );
+  const [pret, setPret] = useState(false);
   const zone = useRef<HTMLDivElement>(null);
 
   // Les extensions et les écouteurs sont créés une fois : ils lisent le contexte courant ici.
@@ -197,7 +201,6 @@ export function SaisieTexte({
   const editeur = useEditor({
     extensions,
     content: contenuDeDepart,
-    autofocus: "end",
     editorProps: {
       attributes: {
         role: "textbox",
@@ -225,8 +228,32 @@ export function SaisieTexte({
     },
   });
 
+  // Les commandes de l'éditeur n'existent qu'une fois la vue montée.
+  useEffect(() => {
+    if (!editeur) return;
+    const monte = () => setPret(true);
+    if (editeur.isInitialized) queueMicrotask(monte);
+    else editeur.on("create", monte);
+    return () => {
+      editeur.off("create", monte);
+    };
+  }, [editeur]);
+
+  // La saisie s'ouvre avec le curseur en fin de texte ; fermée, la sélection reprend tout le texte
+  // et l'éditeur rend le focus.
+  useEffect(() => {
+    if (!editeur || !pret) return;
+    if (enSaisie) {
+      editeur.commands.focus("end");
+    } else {
+      editeur.commands.blur();
+      editeur.commands.selectAll();
+    }
+  }, [editeur, pret, enSaisie]);
+
   // Le focus peut passer du texte à la barre sans fermer la saisie : seule la sortie des deux la ferme.
   function sortie(evenement: FocusEvent) {
+    if (!enSaisie) return;
     const suivant = evenement.relatedTarget;
     if (
       suivant instanceof Node &&
@@ -246,7 +273,11 @@ export function SaisieTexte({
     <div className={styles.saisieRacine} onBlur={sortie}>
       <div
         ref={zone}
-        className={styles.saisieTexte}
+        className={[styles.saisieTexte, !enSaisie && styles.cadreSeul]
+          .filter(Boolean)
+          .join(" ")}
+        aria-hidden={!enSaisie}
+        inert={!enSaisie}
         style={{
           left: enPourcentage(emplacement.x, LARGEUR_DOUBLE_PAGE_MM),
           top: enPourcentage(emplacement.y, HAUTEUR_DOUBLE_PAGE_MM),
@@ -285,6 +316,7 @@ export function SaisieTexte({
             editor={editeur}
             theme={theme}
             styleTexte={emplacement.style_texte}
+            toutLeTexte={!enSaisie}
           />,
           barre,
         )}

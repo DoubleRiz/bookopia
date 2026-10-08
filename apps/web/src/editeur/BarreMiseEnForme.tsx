@@ -222,16 +222,19 @@ function Icone({ trace }: { trace: string }) {
   );
 }
 
-// La barre de mise en forme du texte en cours de saisie. Elle lit l'éditeur et lui écrit : le
+// La barre de mise en forme du cadre texte sélectionné ou en cours de saisie. Elle lit l'éditeur et lui écrit : le
 // document du livre n'en dépend pas.
 export function BarreMiseEnForme({
   editor,
   theme,
   styleTexte,
+  toutLeTexte,
 }: {
   editor: Editor;
   theme: Theme;
   styleTexte: StyleTexte;
+  // Cadre sélectionné sans saisie : chaque réglage s'applique à tout le texte.
+  toutLeTexte: boolean;
 }) {
   const base = policeDuStyle(theme.typographie, styleTexte);
   const etat = useEditorState({
@@ -267,7 +270,8 @@ export function BarreMiseEnForme({
     { nom: "Couleur du fond du thème", valeur: theme.palette.fond },
   ];
 
-  const chaine = () => editor.chain().focus();
+  const chaine = () =>
+    toutLeTexte ? editor.chain().selectAll() : editor.chain().focus();
 
   async function choisirPolice(nom: Famille) {
     try {

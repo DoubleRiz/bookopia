@@ -172,11 +172,11 @@ Un cadre texte porte un document JSON (`version`, `blocs`, `segments`), stocké 
 
 **Pas de faux gras ni de faux italique.** Chaque famille déclare ses variantes réelles (`CATALOGUE_POLICES`). Une variante absente grise le bouton de l'éditeur, et le rendu ne la simule jamais. Le catalogue compte 13 familles, en fichiers TTF latin dans `packages/shared/polices/` (licence OFL) : les mêmes octets servent à l'écran, à la mesure et au PDF.
 
-**La saisie est un éditeur Tiptap**, posé sur le cadre à la même échelle (clic sur un cadre sélectionné, comme dans Canva). Un adaptateur (`documentTexte.ts`) convertit Tiptap vers le document et inversement. Le plafond « cadre plein » est évalué par la mise en lignes partagée à chaque transaction, pas par le navigateur ; le collage est du texte brut, raccourci à ce qui tient. À la fermeture, le cadre est redessiné par le SVG exact.
+**La saisie est un éditeur Tiptap**, posé sur le cadre à la même échelle (un clic sélectionne le cadre et met tout le texte en forme, un second clic ouvre la saisie, comme dans Canva). Un adaptateur (`documentTexte.ts`) convertit Tiptap vers le document et inversement. Le plafond « cadre plein » est évalué par la mise en lignes partagée à chaque transaction, pas par le navigateur ; le collage est du texte brut, raccourci à ce qui tient. À la fermeture, le cadre est redessiné par le SVG exact.
 
 | Option | Coût | Décision |
 |---|---|---|
-| **Tiptap** | Environ 400 Ko (127 Ko compressés), chargés à la première saisie seulement | Retenue |
+| **Tiptap** | Environ 400 Ko (127 Ko compressés), chargés à la première sélection d'un cadre texte seulement | Retenue |
 | `contenteditable` maison | Collage, accessibilité et raccourcis à reconstruire | Écartée |
 | Stocker le JSON de Tiptap tel quel | Le PDF dépendrait de l'éditeur | Écartée |
 

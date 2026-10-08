@@ -121,7 +121,7 @@ test("le Créateur déplace et redimensionne un cadre texte", async ({
   ).toHaveAttribute("width", restaure ?? "");
 });
 
-test("la double page ne bouge pas à l'ouverture de la saisie", async ({
+test("la double page ne bouge pas à la sélection ni à l'ouverture de la saisie", async ({
   page,
 }) => {
   await creerLivreRaconte(page);
@@ -129,15 +129,38 @@ test("la double page ne bouge pas à l'ouverture de la saisie", async ({
   await allerA(page, "Pages 2 et 3");
   const cadre = page.getByRole("button", { name: /^Légende 3,/ });
   await cadre.click();
+  // Un clic sélectionne le cadre : la barre de mise en forme est déjà là, sans saisie ouverte.
+  await expect(
+    page.getByRole("toolbar", { name: "Mise en forme du texte" }),
+  ).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Légende 3" })).toBeHidden();
   const avant = await page
     .getByRole("group", { name: "Pages 2 et 3" })
     .boundingBox();
   await cadre.click();
-  await expect(
-    page.getByRole("toolbar", { name: "Mise en forme du texte" }),
-  ).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Légende 3" })).toBeFocused();
   const apres = await page
     .getByRole("group", { name: "Pages 2 et 3" })
     .boundingBox();
   expect(apres?.y).toBe(avant?.y);
+});
+
+test("un clic sur le cadre met tout le texte en forme, sans ouvrir la saisie", async ({
+  page,
+}) => {
+  await creerLivreRaconte(page);
+  await appliquerGabarit(page, "Photo et bloc texte");
+  await ecrire(page, "Légende 3", "Bonjour");
+  await page.keyboard.press("Escape");
+
+  // Le cadre reste sélectionné : la barre agit sur tout le texte.
+  const barre = page.getByRole("toolbar", { name: "Mise en forme du texte" });
+  await expect(barre).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Légende 3" })).toBeHidden();
+  await barre.getByRole("button", { name: /^Police/ }).click();
+  await page.getByRole("option", { name: "Great Vibes" }).click();
+  await expect(
+    page.getByRole("group", { name: "Pages 2 et 3" }).getByText("Bonjour"),
+  ).toHaveAttribute("font-family", "bookopia-great-vibes-400");
+  await expect(page.getByRole("status")).toHaveText("Enregistré");
 });
