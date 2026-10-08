@@ -71,14 +71,6 @@
   background: var(--couleur-lavande-pale);
 }
 
-/* Un bouton texte désactivé s'efface, il ne devient pas une pastille pleine. */
-.tertiaire:disabled {
-  background: transparent;
-  border-color: transparent;
-  color: var(--couleur-texte-secondaire);
-  opacity: 0.5;
-}
-
 .destructif {
   background: var(--couleur-destructif);
   color: var(--couleur-fond);

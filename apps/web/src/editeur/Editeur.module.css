@@ -4,18 +4,15 @@
   flex-direction: column;
 }
 
-/* Annuler, refaire, thème, composer : une pastille flottante, comme celle du cadre sélectionné. */
+/* Sous la barre du livre : annuler, refaire, thème, composer. */
 .outilsLivre {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   align-items: center;
-  align-self: center;
-  gap: var(--espace-1);
-  padding: var(--espace-2);
-  border-radius: var(--rayon-pill);
+  gap: var(--espace-3);
+  padding: var(--espace-2) var(--espace-6);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
   background: var(--couleur-fond);
-  box-shadow: var(--ombre-page);
 }
 
 .separateur {
@@ -25,9 +22,9 @@
   background: var(--couleur-lavande);
 }
 
-/* Les segments de la pastille (maquette E7) : du texte gras, sans contour ni fond au repos.
+/* Les segments de la pastille du cadre (maquette E7) : du texte gras, sans contour ni fond au repos.
    Le segment mis en avant porte une pastille lavande ; les autres la prennent au survol. */
-:is(.outilsLivre, .barreOutils) button {
+.barreOutils button {
   min-height: var(--cible-min);
   padding: 12px 22px;
   border-color: transparent;
@@ -37,16 +34,16 @@
   font-weight: 700;
 }
 
-:is(.outilsLivre, .barreOutils) button:hover:not(:disabled) {
+.barreOutils button:hover:not(:disabled) {
   border-color: transparent;
   background: var(--couleur-lavande-pale);
 }
 
-:is(.outilsLivre, .barreOutils) button.segmentActif:not(:disabled) {
+.barreOutils button.segmentActif:not(:disabled) {
   background: var(--couleur-lavande-pale);
 }
 
-:is(.outilsLivre, .barreOutils) button:disabled {
+.barreOutils button:disabled {
   border-color: transparent;
   background: transparent;
   color: var(--couleur-texte-secondaire);

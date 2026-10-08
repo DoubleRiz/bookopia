@@ -548,6 +548,30 @@ export function Editeur({
           )
         }
       />
+      <div className={styles.outilsLivre}>
+        <Bouton
+          variante="tertiaire"
+          disabled={!actif || historique.passe.length === 0}
+          onClick={annulerGeste}
+        >
+          Annuler
+        </Bouton>
+        <Bouton
+          variante="tertiaire"
+          disabled={!actif || historique.futur.length === 0}
+          onClick={refaireGeste}
+        >
+          Refaire
+        </Bouton>
+        <Bouton
+          variante="secondaire"
+          disabled={!actif || themes.length < 2}
+          onClick={() => setChoixTheme(true)}
+        >
+          Thème · {themeActuel.nom}
+        </Bouton>
+        {actionsLivre}
+      </div>
       {!enLigne && (
         <Banniere titre="Hors-ligne">
           Les modifications reprendront au retour de la connexion.
@@ -574,35 +598,6 @@ export function Editeur({
           surSupprimer={setASupprimer}
         />
         <div className={styles.planDeTravail}>
-          <div className={styles.outilsLivre} aria-label="Livre">
-            <Bouton
-              variante="tertiaire"
-              taille="petit"
-              disabled={!actif || historique.passe.length === 0}
-              onClick={annulerGeste}
-            >
-              Annuler
-            </Bouton>
-            <Bouton
-              variante="tertiaire"
-              taille="petit"
-              disabled={!actif || historique.futur.length === 0}
-              onClick={refaireGeste}
-            >
-              Refaire
-            </Bouton>
-            <Bouton
-              variante="secondaire"
-              taille="petit"
-              disabled={!actif || themes.length < 2}
-              onClick={() => setChoixTheme(true)}
-            >
-              Thème · {themeActuel.nom}
-            </Bouton>
-            <span className={styles.separateur} aria-hidden="true" />
-            {actionsLivre}
-          </div>
-
           {courante ? (
             <>
               <div
