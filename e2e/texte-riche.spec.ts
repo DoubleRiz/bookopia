@@ -120,3 +120,24 @@ test("le Créateur déplace et redimensionne un cadre texte", async ({
     page.getByRole("button", { name: /^Légende 3,/ }),
   ).toHaveAttribute("width", restaure ?? "");
 });
+
+test("la double page ne bouge pas à l'ouverture de la saisie", async ({
+  page,
+}) => {
+  await creerLivreRaconte(page);
+  await appliquerGabarit(page, "Photo et bloc texte");
+  await allerA(page, "Pages 2 et 3");
+  const cadre = page.getByRole("button", { name: /^Légende 3,/ });
+  await cadre.click();
+  const avant = await page
+    .getByRole("group", { name: "Pages 2 et 3" })
+    .boundingBox();
+  await cadre.click();
+  await expect(
+    page.getByRole("toolbar", { name: "Mise en forme du texte" }),
+  ).toBeVisible();
+  const apres = await page
+    .getByRole("group", { name: "Pages 2 et 3" })
+    .boundingBox();
+  expect(apres?.y).toBe(avant?.y);
+});

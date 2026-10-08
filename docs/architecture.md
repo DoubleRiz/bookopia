@@ -65,7 +65,7 @@ Toutes les tables d'un projet portent `projet_id`. Leurs règles appellent la m�
 | `utilisateur` | Sa ligne | `nom_affichage` |
 | `projet` | Ses projets | `titre`, `brouillon`, suppression. Création par `creer_projet`. |
 | `double_page` | Celles de ses projets | Aucune : toujours par une fonction |
-| `emplacement` | Ceux de ses projets | `photo_id`, cadrage, `contenu_texte` |
+| `emplacement` | Ceux de ses projets | `photo_id`, cadrage, `contenu_texte` ; la géométrie d'un cadre texte par `placer_cadre_texte` |
 | `photo` | Celles de ses projets | Création, suppression |
 | `export` | Celui de ses projets | Création, remplacement |
 | `gabarit`, `theme` | Tout utilisateur connecté | Aucune |
@@ -88,6 +88,7 @@ Tout ce qui écrit plusieurs lignes à la fois passe par une **fonction SQL appe
 | `composer_livre` | Vérifie la composition calculée par le moteur de gabarits, puis remplace les intérieures d'un coup |
 | `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page` | Opérations d'ordre sur les intérieures, rangs renumérotés sans trou ; `inserer_double_page` vérifie aussi la famille du gabarit |
 | `changer_gabarit` | Applique un autre gabarit de la famille à une intérieure : les cadres sont recréés vides, les photos restent dans la réserve |
+| `placer_cadre_texte` | Déplace ou redimensionne un cadre texte : marges de sécurité, taille minimale, pas de chevauchement |
 
 Ces fonctions sont `security definer` : elles écrivent là où le navigateur n'a pas le droit d'écrire. **Chacune commence donc par vérifier que le projet appartient à `auth.uid()`.** C'est le point à relire en priorité.
 
@@ -159,7 +160,29 @@ Les deux doivent donner le même résultat. **Le recadrage est le point à valid
 | Fond perdu | 3 mm sur les photos pleine page, traits de coupe |
 | 300 DPI effectifs | `largeur_px / largeur_mm × 25,4 ≥ 300` par emplacement, avertissement sinon |
 | Colorimétrie | RVB, l'imprimeur convertit |
-| Typographie | Mêmes polices à l'écran et dans le PDF, mesure via `fontkit`, limite de caractères |
+| Typographie | Mêmes fichiers de police à l'écran et dans le PDF, mesure via `fontkit`, mise en lignes partagée (voir [Le texte riche](#le-texte-riche)) |
+
+---
+
+## Le texte riche
+
+Un cadre texte porte un document JSON (`version`, `blocs`, `segments`), stocké en `jsonb` et décrit dans [`modele-donnees.md`](modele-donnees.md#le-texte-dun-cadre). Il ne dépend pas de l'éditeur qui le saisit.
+
+**La mise en lignes est partagée.** `packages/shared/src/mise-en-lignes.ts` est une fonction pure : l'appelant fournit les mesures. Elle coupe le texte en mots, mesure chacun avec sa propre police (fontkit, ligatures comprises, sans crénage, comme pdf-lib) et rend des lignes de fragments positionnés. L'écran SVG et le PDF dessinent ces mêmes fragments : un texte qui tient à l'écran tient à l'impression.
+
+**Pas de faux gras ni de faux italique.** Chaque famille déclare ses variantes réelles (`CATALOGUE_POLICES`). Une variante absente grise le bouton de l'éditeur, et le rendu ne la simule jamais. Le catalogue compte 13 familles, en fichiers TTF latin dans `packages/shared/polices/` (licence OFL) : les mêmes octets servent à l'écran, à la mesure et au PDF.
+
+**La saisie est un éditeur Tiptap**, posé sur le cadre à la même échelle (clic sur un cadre sélectionné, comme dans Canva). Un adaptateur (`documentTexte.ts`) convertit Tiptap vers le document et inversement. Le plafond « cadre plein » est évalué par la mise en lignes partagée à chaque transaction, pas par le navigateur ; le collage est du texte brut, raccourci à ce qui tient. À la fermeture, le cadre est redessiné par le SVG exact.
+
+| Option | Coût | Décision |
+|---|---|---|
+| **Tiptap** | Environ 400 Ko (127 Ko compressés), chargés à la première saisie seulement | Retenue |
+| `contenteditable` maison | Collage, accessibilité et raccourcis à reconstruire | Écartée |
+| Stocker le JSON de Tiptap tel quel | Le PDF dépendrait de l'éditeur | Écartée |
+
+**Risque suivi** : pendant la frappe, le navigateur peut couper une ligne autrement que le PDF. Le CSS de la saisie est aligné (espaces de fin de ligne suspendus, ligatures actives, crénage coupé), et un test de bout en bout compare les lignes du navigateur et du module partagé pour chaque famille du catalogue.
+
+**Déplacer et redimensionner** : un cadre texte sélectionné a 8 poignées. Le geste est accroché à une grille de 2 mm et aux bords des autres cadres, borné par les marges, puis part par `placer_cadre_texte`. L'historique garde l'emplacement entier, contenu et géométrie.
 
 ---
 

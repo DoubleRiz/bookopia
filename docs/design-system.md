@@ -70,6 +70,7 @@ Une seule famille : **Nunito**, terminaisons arrondies.
 
 - **Titres** et noms de livres : graisse 800, approche serrée (`letter-spacing: -.015em`). Mots mis en valeur en corail, **jamais en italique**.
 - **Interface** (texte, boutons, badges, champs) : graisses 400 / 600 / 700.
+- **Textes des livres** : le thème fixe la police de départ ; le Créateur peut en choisir une autre par passage, dans un catalogue de 13 familles (Nunito, EB Garamond, Caveat, Montserrat, Lora, Playfair Display, Dancing Script, Courier Prime et cinq scripts pour les titres : Great Vibes, Allura, Parisienne, Sacramento, Alex Brush). Le gras et l'italique n'existent que si la famille a la variante.
 
 | Niveau | Taille / interligne | Exemple d'usage |
 |---|---|---|
@@ -323,7 +324,9 @@ Quatre étapes toujours visibles en haut de l'espace de création : **Importer �
 ## 11 · Éditeur
 
 - **Plan de travail** lavande pâle, double page blanche en élévation 2.
-- **Emplacement sélectionné** : contour 2 px + 4 poignées rondes ; barre d'outils flottante au-dessus (Recadrer, Remplacer, Pivoter, Supprimer).
+- **Emplacement sélectionné** : contour 2 px ; barre d'outils flottante au-dessus (Recadrer, Remplacer, Vider).
+- **Cadre texte sélectionné** : contour 2 px et 8 poignées carrées de 10 px. Il se déplace en glissant ou aux flèches (pas de 2 mm), se redimensionne par les poignées ou Maj + flèches, s'accroche aux bords des autres cadres et reste dans les marges de 12 mm.
+- **Saisie d'un texte** : un clic sur le cadre sélectionné ouvre l'éditeur à sa place, dans la police et à l'échelle du livre. La barre de mise en forme remplace la barre du cadre, à la même hauteur : police, taille (6 à 72 pt), gras, italique, souligné, couleur (couleurs du thème en raccourci), alignement, liste à puces, « Revenir au thème ». Un bouton dont la variante de police n'existe pas est grisé. `Échap` ou un clic ailleurs referme la saisie ; « Le cadre est plein » s'annonce sous le cadre.
 - **Emplacement vide** : pointillé lavande, « Déposer une photo ».
 - **Navigateur de doubles pages** : bande en bas de l'éditeur. Double page active : anneau lavande. Glisser pour réordonner. Bouton `+` en fin de bande.
 - **Réserve** : photos gardées au tri, à glisser dans les emplacements. Une photo posée reste visible à 45 %.
@@ -533,7 +536,7 @@ Le design system v1.0 a été produit avant plusieurs décisions. Points en conf
 
 1. **Curation retirée.** Le modèle de données v3 ne porte plus de curation. À retirer : les états « Photo — curation » et « Curation à faire » (§ 6), l'écran E6 — Bilan de curation, l'étape « Trier » du parcours (§ 9), la section 10 « Tri des photos » et la mention « photos gardées au tri » de la réserve (§ 11).
 2. **Format unique.** La section 16 du HTML propose « Portrait A4 », « Livre libre · format au choix » et « Le format se change encore après ». Le format est unique (21 × 21) ; la maquette E0 est à jour.
-3. **Pas de canvas libre.** Tranché : pas de poignées, pas de flèches ±1 mm / 10 mm, pas d'outil Pivoter. La géométrie est copiée du gabarit et `cadrage` ne porte pas de rotation. La barre d'outils d'un cadre est Recadrer, Remplacer, Vider.
+3. **Pas de canvas libre.** Tranché : pas de poignées sur les photos, pas d'outil Pivoter. La géométrie d'une photo est copiée du gabarit et `cadrage` ne porte pas de rotation. Seuls les cadres texte se déplacent et se redimensionnent (§ 11). La barre d'outils d'une photo est Recadrer, Remplacer, Vider.
 4. **Bibliothèque.** La modale de suppression indique « Vos photos restent dans votre bibliothèque ». Les photos appartiennent au projet et sont supprimées avec lui.
 5. **Tutoiement.** « Convertis en JPEG depuis ton téléphone » ; le reste de l'interface vouvoie.
 6. **Photos traitées à l'import.** Une photo n'existe en base qu'une fois traitée : plus d'états `en_attente` / `prete` / `echec`, ni de motifs d'échec stockés. Les états « En traitement » (import, réserve, éditeur) n'ont plus de support ; un fichier illisible est refusé et listé à la réponse de l'import.

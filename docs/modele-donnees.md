@@ -75,7 +75,7 @@ erDiagram
         float cadrage_x
         float cadrage_y
         float cadrage_zoom
-        text contenu_texte
+        jsonb contenu_texte
     }
     gabarit {
         uuid id PK
@@ -189,7 +189,7 @@ Catalogue, lisible par les visiteurs : il s'affiche avant l'inscription.
 
 ### emplacement
 
-`nature` et la géométrie sont **copiées du gabarit**. Le navigateur ne peut modifier que `photo_id`, le cadrage et `contenu_texte`.
+`nature` et la géométrie sont **copiées du gabarit**. Le navigateur ne peut modifier que `photo_id`, le cadrage et `contenu_texte`. Un cadre texte se déplace et se redimensionne par `placer_cadre_texte`.
 
 - **Un emplacement peut être vide.** Supprimer une photo vide les emplacements qui la portaient.
 - **Deux emplacements peuvent porter la même photo** : dupliquer une double page ne copie aucun fichier.
@@ -197,6 +197,29 @@ Catalogue, lisible par les visiteurs : il s'affiche avant l'inscription.
 - **Une table pour deux natures** : les colonnes inutiles restent vides, un `CHECK` garantit la cohérence.
 - **Le cadrage tient en trois colonnes** : `cadrage_x` et `cadrage_y` placent le centre visible (entre 0 et 1), `cadrage_zoom` vaut au moins 1. Ce repère ne dépend ni du cadre ni de la résolution.
 - Un emplacement vidé peut garder son ancien cadrage : sans effet, écrasé à la pose suivante.
+
+#### Le texte d'un cadre
+
+`contenu_texte` est un document JSON, `null` pour un cadre vide :
+
+```json
+{
+  "version": 1,
+  "blocs": [
+    { "type": "paragraphe", "alignement": "centre",
+      "segments": [
+        { "texte": "Été ", "gras": true },
+        { "texte": "2026", "police": "Great Vibes", "taille_pt": 24, "couleur": "#8a3b2e" }
+      ] },
+    { "type": "liste", "elements": [[{ "texte": "Un" }], [{ "texte": "Deux" }]] }
+  ]
+}
+```
+
+- **Le document ne stocke que les écarts au thème.** Un champ absent suit le thème : changer de thème restyle les passages sans réglage et laisse les autres.
+- Un paragraphe a un alignement (`gauche`, `centre`, `droite`), une liste à puces n'en a pas. Un passage porte `gras`, `italique`, `souligne`, `police`, `taille_pt` (6 à 72) et `couleur` (`#rrggbb`).
+- `contenu_texte_valide` vérifie la structure, les plages, les couleurs, 400 caractères de texte brut au plus et 20 000 octets. Zod ajoute le catalogue des polices côté navigateur.
+- `placer_cadre_texte` n'accepte que les cadres texte, à 12 mm au moins du bord de la double page, d'au moins 20 × 6 mm, sans chevaucher un autre emplacement (des bords qui se touchent sont permis).
 
 ### export
 
@@ -228,6 +251,7 @@ La valeur ne peut pas mentir : sur `double_page` et `emplacement`, seules les fo
 | Un seul export par projet | Unicité `projet_id` |
 | Emplacement cohérent avec sa nature | `CHECK` sur `nature`, `photo_id`, cadrage, `contenu_texte` |
 | Bornes du cadrage | `CHECK` : `cadrage_x`, `cadrage_y` entre 0 et 1, `cadrage_zoom >= 1` |
+| Texte d'un cadre valide | `CHECK` : `contenu_texte_valide(contenu_texte)` |
 | Photo posée du même projet | Clé étrangère `(projet_id, photo_id)` → `photo (projet_id, id)`, `ON DELETE SET NULL (photo_id)` |
 
 Les énumérés (`role_double_page`, `nature_emplacement`, `source_photo`, `format_vignette`) sont des types PostgreSQL. Les clés étrangères sont en `ON DELETE CASCADE`, sauf mention contraire.
@@ -242,7 +266,7 @@ La RLS choisit les **lignes** modifiables, pas les **colonnes**. Les colonnes mo
 | `projet` | `titre`, `brouillon` |
 | `emplacement` | `photo_id`, `cadrage_x`, `cadrage_y`, `cadrage_zoom`, `contenu_texte` |
 
-Ainsi, un Créateur ne peut ni déplacer un cadre, ni rattacher son livre à quelqu'un d'autre.
+Ainsi, un Créateur ne peut ni déplacer un cadre sans passer par `placer_cadre_texte`, ni rattacher son livre à quelqu'un d'autre.
 
 ---
 
@@ -260,6 +284,7 @@ Ce qu'une contrainte ne sait pas dire (comparer deux tables, écrire plusieurs l
 | Les intérieures sont remplacées d'un coup, par des gabarits actifs de la famille du modèle, photos du projet posées dans des cadres photo | `composer_livre` |
 | Les intérieures vont de 1 à N, sans doublon ni trou | `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page` |
 | Une intérieure ajoutée a un gabarit actif de la famille du modèle | `inserer_double_page` |
+| Un cadre texte reste dans les marges, garde une taille minimale et ne chevauche aucun emplacement | `placer_cadre_texte` |
 | La copie se place juste après la source et porte les mêmes photos | `dupliquer_double_page` |
 | La couverture et la 4e ne se déplacent, ne se suppriment ni ne se dupliquent | Fonctions d'ordre |
 | Les opérations d'ordre d'un même projet passent l'une après l'autre | Verrou en tête de chaque fonction |

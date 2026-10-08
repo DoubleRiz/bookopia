@@ -17,7 +17,7 @@ Ces termes ont un sens précis. Ils s'utilisent tels quels dans le code, la docu
 | **Couverture** | La première de couverture : une double page de rôle `couverture`, créée avec le projet |
 | **Quatrième** | La quatrième de couverture : une double page de rôle `quatrieme`, créée avec le projet |
 | **Double page** | L'unité d'édition : une planche de deux pages en vis-à-vis. On n'édite jamais une page seule. |
-| **Emplacement** | Une zone d'image à l'intérieur d'une double page. Sa géométrie vient du gabarit, copiée à la création. |
+| **Emplacement** | Une zone de photo ou de texte à l'intérieur d'une double page. Sa géométrie vient du gabarit, copiée à la création. |
 | **Réserve** | Toutes les photos importées d'un projet, posées ou non |
 | **Posée** | Se dit d'une photo référencée par au moins un emplacement. Calculé, jamais stocké. |
 | **Photo** | Une image importée, décrite par son fichier : dimensions, date de prise de vue, empreinte |

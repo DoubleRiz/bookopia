@@ -395,15 +395,9 @@ export function BarreMiseEnForme({
       >
         <Icone trace="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01" />
       </Outil>
-      <span className={styles.separateur} aria-hidden="true" />
-      <button
-        type="button"
-        className={[styles.outil, styles.revenir].join(" ")}
-        onMouseDown={garderLeFocus}
-        onClick={revenirAuTheme}
-      >
-        Revenir au thème
-      </button>
+      <Outil libelle="Revenir au thème" surClic={revenirAuTheme}>
+        <Icone trace="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" />
+      </Outil>
     </div>
   );
 }

@@ -5,8 +5,11 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--espace-1);
-  padding: var(--espace-2);
+  gap: 2px;
+  padding: var(--espace-2) var(--espace-3);
+  /* La hauteur de la barre du cadre (bouton de la cible minimale + son padding) : la double page
+     ne bouge pas quand la saisie s'ouvre. */
+  min-height: calc(var(--cible-min) + 2 * var(--espace-2));
   border-radius: var(--rayon-pill);
   background: var(--couleur-fond);
   box-shadow: var(--ombre-page);
@@ -42,7 +45,7 @@
 .separateur {
   width: 1px;
   height: 24px;
-  margin: 0 var(--espace-1);
+  margin: 0 2px;
   background: var(--couleur-lavande);
 }
 
@@ -55,7 +58,7 @@
 }
 
 .barre button.nomPolice {
-  min-width: 140px;
+  min-width: 104px;
   justify-content: space-between;
 }
 
@@ -138,8 +141,4 @@
   border: none;
   background: none;
   cursor: pointer;
-}
-
-.barre button.revenir {
-  font-size: var(--taille-petit);
 }
