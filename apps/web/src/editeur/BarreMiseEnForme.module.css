@@ -1,0 +1,145 @@
+/* La barre de mise en forme : une pastille flottante au-dessus de la double page, comme la
+   barre du cadre sélectionné. */
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espace-1);
+  padding: var(--espace-2);
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
+}
+
+.barre button.outil {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 var(--espace-2);
+  border: 1px solid transparent;
+  border-radius: var(--rayon-pill);
+  background: transparent;
+  color: var(--couleur-encre);
+  font-size: var(--taille-corps);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.barre button.outil:hover:not(:disabled),
+.barre button.outil.actif {
+  background: var(--couleur-lavande-pale);
+}
+
+.barre button.outil:disabled {
+  color: var(--couleur-texte-secondaire);
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.separateur {
+  width: 1px;
+  height: 24px;
+  margin: 0 var(--espace-1);
+  background: var(--couleur-lavande);
+}
+
+.souligne {
+  text-decoration: underline;
+}
+
+.police {
+  position: relative;
+}
+
+.barre button.nomPolice {
+  min-width: 140px;
+  justify-content: space-between;
+}
+
+.liste {
+  position: absolute;
+  z-index: 3;
+  top: 100%;
+  left: 0;
+  min-width: 100%;
+  max-height: 280px;
+  margin: var(--espace-1) 0 0;
+  padding: var(--espace-1);
+  overflow-y: auto;
+  border-radius: var(--rayon-carte, 12px);
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
+  list-style: none;
+}
+
+.option {
+  display: block;
+  width: 100%;
+  padding: var(--espace-2) var(--espace-3);
+  border: none;
+  border-radius: var(--rayon-pill);
+  background: transparent;
+  color: var(--couleur-encre);
+  font-size: 18px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.option:hover,
+.option[aria-selected="true"] {
+  background: var(--couleur-lavande-pale);
+}
+
+.taille {
+  display: inline-flex;
+  align-items: center;
+}
+
+.champTaille {
+  width: 40px;
+  padding: 4px 0;
+  border: 1px solid var(--couleur-lavande);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--couleur-encre);
+  font-size: var(--taille-corps);
+  font-weight: 700;
+  text-align: center;
+}
+
+.couleurs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-1);
+}
+
+.echantillon {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.echantillon.actif {
+  outline: 2px solid var(--couleur-cta);
+  outline-offset: 1px;
+}
+
+.selecteurCouleur {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.barre button.revenir {
+  font-size: var(--taille-petit);
+}

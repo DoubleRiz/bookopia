@@ -189,6 +189,7 @@ describe("DoublePage dans l'éditeur", () => {
     surSelection: rien,
     surSaisir: rien,
     surDepot: rien,
+    surPlacer: rien,
     surRecadrer: rien,
     surVider: rien,
   });

@@ -128,6 +128,22 @@ describe("reduireEditeur", () => {
     expect(emplacementDe(etat, "e2")).toBe(pose);
   });
 
+  it("place un cadre sans toucher à son contenu", () => {
+    const etat = reduireEditeur(depart, {
+      type: "placer",
+      emplacementId: "e1",
+      cadre: { x: 30, y: 40, largeur: 60, hauteur: 20 },
+    });
+    expect(emplacementDe(etat, "e1")).toEqual({
+      ...emplacementDe(depart, "e1"),
+      x: 30,
+      y: 40,
+      largeur: 60,
+      hauteur: 20,
+    });
+    expect(emplacementDe(etat, "e2")).toBe(emplacementDe(depart, "e2"));
+  });
+
   it("sélectionne puis désélectionne un emplacement", () => {
     const etat = reduireEditeur(depart, {
       type: "selectionner",

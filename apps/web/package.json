@@ -11,6 +11,10 @@
   "dependencies": {
     "@bookopia/shared": "*",
     "@supabase/supabase-js": "^2.117.2",
+    "@tiptap/core": "^3.31.4",
+    "@tiptap/pm": "^3.31.4",
+    "@tiptap/react": "^3.31.4",
+    "@tiptap/starter-kit": "^3.31.4",
     "exifr": "^7.1.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

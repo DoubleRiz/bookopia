@@ -164,6 +164,15 @@
   box-shadow: var(--ombre-page);
 }
 
+/* La barre de mise en forme du texte prend la place de la barre du cadre pendant la saisie. */
+.barreMiseEnForme {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  max-width: 100%;
+  min-height: var(--cible-min);
+}
+
 .aide {
   margin: 0;
   color: var(--couleur-texte-secondaire);
@@ -604,22 +613,74 @@
 
 /* Saisie d'un texte, posée sur son cadre : sans marge ni bord, pour que les lignes tombent
    là où le dessin et le PDF les posent. Le contour de sélection est un halo, hors de la zone. */
+/* La saisie d'un texte : l'éditeur posé sur le cadre, qui reprend la police, l'échelle, l'interligne
+   et l'alignement du dessin. Le texte du cadre ancré en bas repose sur son bord inférieur. */
+.saisieRacine {
+  display: contents;
+}
+
 .saisieTexte {
   position: absolute;
   z-index: 1;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 0;
-  border: none;
-  border-radius: 0;
-  outline: none;
+  overflow: hidden;
   background: transparent;
   box-shadow: 0 0 0 2px var(--couleur-cta);
   font-kerning: none;
-  overflow: hidden;
+  letter-spacing: 0;
+}
+
+/* Les espaces de fin de ligne se suspendent et les ligatures restent actives, comme dans le
+   rendu final : les réglages de ProseMirror par défaut coupent les lignes ailleurs. */
+.saisieTexte :global(.ProseMirror) {
+  outline: none;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
-  resize: none;
+  font-variant-ligatures: normal;
+  font-feature-settings: normal;
+}
+
+/* Le cadre porte déjà l'anneau de la saisie. */
+.saisieTexte :global(.ProseMirror:focus-visible) {
+  box-shadow: none;
+}
+
+.saisieTexte :global(.ProseMirror p) {
+  margin: 0;
+}
+
+.saisieTexte :global(.ProseMirror ul) {
+  margin: 0;
+  padding: 0 0 0 var(--retrait-puce);
+  list-style: none;
+}
+
+.saisieTexte :global(.ProseMirror li) {
+  position: relative;
+}
+
+.saisieTexte :global(.ProseMirror li::before) {
+  content: "•";
+  position: absolute;
+  left: calc(-1 * var(--retrait-puce));
+}
+
+/* Le gras et l'italique changent de fichier de police (décoration du passage) : le navigateur
+   n'en fabrique pas. Le soulignement est celui du passage. */
+.saisieTexte :global(.ProseMirror strong) {
+  font-weight: inherit;
+}
+
+.saisieTexte :global(.ProseMirror em) {
+  font-style: inherit;
+}
+
+.saisieTexte :global(.ProseMirror u) {
+  text-decoration: none;
 }
 
 /* « Le cadre est plein » : sous le cadre, lisible à toute échelle. Vide, il ne prend pas de place. */

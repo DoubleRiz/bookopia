@@ -1,5 +1,7 @@
 import {
+  lazy,
   type ReactNode,
+  Suspense,
   useEffect,
   useReducer,
   useRef,
@@ -53,6 +55,7 @@ import {
   type FileEcritures,
   type StatutEnregistrement,
 } from "./fileEcritures";
+import type { Cadre } from "./geometrieCadre";
 import { gabaritParDefaut } from "./gabaritParDefaut";
 import {
   annuler,
@@ -62,12 +65,16 @@ import {
   refaire,
 } from "./historique";
 import { type PhotoDeReserve, Reserve } from "./Reserve";
-import { SaisieTexte } from "./SaisieTexte";
 import { SurcoucheGabarits } from "./SurcoucheGabarits";
 import { SurcoucheRecadrage } from "./SurcoucheRecadrage";
 import { SurcoucheThemes } from "./SurcoucheThemes";
 
 type Photo = PhotoDeReserve & PhotoAffichee;
+
+// L'éditeur de texte (Tiptap) ne se charge qu'à la première saisie : l'écran s'ouvre sans lui.
+const SaisieTexte = lazy(() =>
+  import("./SaisieTexte").then((module) => ({ default: module.SaisieTexte })),
+);
 
 // Hors-ligne : bandeau persistant, gestes désactivés (spécifications fonctionnelles, §4).
 function abonnerConnexion(prevenir: () => void) {
@@ -184,6 +191,10 @@ export function Editeur({
   const [choixGabarit, setChoixGabarit] = useState(false);
   const [choixTheme, setChoixTheme] = useState(false);
   const [enSaisie, setEnSaisie] = useState<string | null>(null);
+  // Où la saisie range sa barre de mise en forme, à la place de la barre du cadre.
+  const [conteneurBarre, setConteneurBarre] = useState<HTMLDivElement | null>(
+    null,
+  );
   const revalidator = useRevalidator();
   const grille = useRef<HTMLUListElement>(null);
   const enLigne = useEnLigne();
@@ -275,7 +286,7 @@ export function Editeur({
     changerHistorique(enregistrer(historiqueCourant.current, { avant, apres }));
     file().ajouter({
       appliquer: () => dispatch(action),
-      ecrire: () => ecrireEmplacement(apres),
+      ecrire: () => ecrireEmplacement(apres, avant),
       retablir: () => {
         // Un geste refusé laisse l'historique incertain : on repart de zéro.
         changerHistorique(HISTORIQUE_VIDE);
@@ -303,7 +314,7 @@ export function Editeur({
     changerHistorique(resultat.historique);
     file().ajouter({
       appliquer: () => dispatch(action),
-      ecrire: () => ecrireEmplacement(cible),
+      ecrire: () => ecrireEmplacement(cible, avant),
       retablir: () => {
         changerHistorique(HISTORIQUE_VIDE);
         dispatch({ type: "retablir", emplacement: avant });
@@ -323,6 +334,8 @@ export function Editeur({
     );
   }
 
+  const placer = (emplacementId: string, cadre: Cadre) =>
+    geste(emplacementId, { type: "placer", emplacementId, cadre });
   const poser = (emplacementId: string, photoId: string) =>
     geste(emplacementId, { type: "poser", emplacementId, photoId });
   const vider = (emplacementId: string) =>
@@ -354,7 +367,7 @@ export function Editeur({
     changerHistorique(enregistrer(historiqueCourant.current, { avant, apres }));
     file().ajouter({
       appliquer: () => {},
-      ecrire: () => ecrireEmplacement(apres),
+      ecrire: () => ecrireEmplacement(apres, avant),
       retablir: () => {
         changerHistorique(HISTORIQUE_VIDE);
         texteEnregistre.current = avant;
@@ -536,6 +549,7 @@ export function Editeur({
         surSelection: (emplacementId) =>
           dispatch({ type: "selectionner", emplacementId }),
         surDepot: poser,
+        surPlacer: placer,
         surRecadrer: setARecadrer,
         surVider: vider,
       }
@@ -641,62 +655,69 @@ export function Editeur({
         <div className={styles.planDeTravail}>
           {courante ? (
             <>
-              <div
-                className={styles.barreOutils}
-                aria-label="Cadre sélectionné"
-              >
-                {selection?.nature === "texte" ? (
-                  <Bouton
-                    variante="secondaire"
-                    taille="petit"
-                    disabled={!actif || !habillage.mesures}
-                    onClick={() => ouvrirSaisie(selection.id)}
-                  >
-                    Écrire
-                  </Bouton>
-                ) : selection ? (
-                  <>
+              {saisieOuverte ? (
+                <div
+                  ref={setConteneurBarre}
+                  className={styles.barreMiseEnForme}
+                />
+              ) : (
+                <div
+                  className={styles.barreOutils}
+                  aria-label="Cadre sélectionné"
+                >
+                  {selection?.nature === "texte" ? (
                     <Bouton
                       variante="secondaire"
                       taille="petit"
-                      className={styles.segmentActif}
-                      disabled={!actif || !selection.photo_id}
-                      onClick={() => setARecadrer(selection.id)}
+                      disabled={!actif || !habillage.mesures}
+                      onClick={() => ouvrirSaisie(selection.id)}
                     >
-                      Recadrer
+                      Écrire
                     </Bouton>
-                    <Bouton
-                      variante="secondaire"
-                      taille="petit"
-                      disabled={!actif || photos.length === 0}
-                      onClick={() =>
-                        grille.current
-                          ?.querySelector<HTMLElement>("[role=button]")
-                          ?.focus()
-                      }
-                    >
-                      Remplacer
-                    </Bouton>
-                    <span className={styles.separateur} aria-hidden="true" />
-                    <Bouton
-                      variante="secondaire"
-                      taille="petit"
-                      disabled={!actif || !selection.photo_id}
-                      onClick={() => vider(selection.id)}
-                    >
-                      Vider
-                    </Bouton>
-                  </>
-                ) : (
-                  // L'aide n'a plus lieu d'être une fois une photo posée sur la double page.
-                  !courante.emplacement.some((e) => e.photo_id) && (
-                    <p className={styles.aide}>
-                      Glissez une photo de la réserve sur un cadre, ou
-                      sélectionnez un cadre puis choisissez la photo.
-                    </p>
-                  )
-                )}
-              </div>
+                  ) : selection ? (
+                    <>
+                      <Bouton
+                        variante="secondaire"
+                        taille="petit"
+                        className={styles.segmentActif}
+                        disabled={!actif || !selection.photo_id}
+                        onClick={() => setARecadrer(selection.id)}
+                      >
+                        Recadrer
+                      </Bouton>
+                      <Bouton
+                        variante="secondaire"
+                        taille="petit"
+                        disabled={!actif || photos.length === 0}
+                        onClick={() =>
+                          grille.current
+                            ?.querySelector<HTMLElement>("[role=button]")
+                            ?.focus()
+                        }
+                      >
+                        Remplacer
+                      </Bouton>
+                      <span className={styles.separateur} aria-hidden="true" />
+                      <Bouton
+                        variante="secondaire"
+                        taille="petit"
+                        disabled={!actif || !selection.photo_id}
+                        onClick={() => vider(selection.id)}
+                      >
+                        Vider
+                      </Bouton>
+                    </>
+                  ) : (
+                    // L'aide n'a plus lieu d'être une fois une photo posée sur la double page.
+                    !courante.emplacement.some((e) => e.photo_id) && (
+                      <p className={styles.aide}>
+                        Glissez une photo de la réserve sur un cadre, ou
+                        sélectionnez un cadre puis choisissez la photo.
+                      </p>
+                    )
+                  )}
+                </div>
+              )}
               <div className={styles.pageCourante}>
                 <DoublePage
                   doublePage={courante}
@@ -706,16 +727,19 @@ export function Editeur({
                   surcouche={
                     saisieOuverte &&
                     habillage.mesures && (
-                      <SaisieTexte
-                        key={saisieOuverte.id}
-                        emplacement={saisieOuverte}
-                        theme={habillage.theme}
-                        mesures={habillage.mesures}
-                        surChangement={(contenu) =>
-                          ecrireTexte(saisieOuverte.id, contenu)
-                        }
-                        surFin={fermerSaisie}
-                      />
+                      <Suspense fallback={null}>
+                        <SaisieTexte
+                          key={saisieOuverte.id}
+                          emplacement={saisieOuverte}
+                          theme={habillage.theme}
+                          mesures={habillage.mesures}
+                          barre={conteneurBarre}
+                          surChangement={(contenu) =>
+                            ecrireTexte(saisieOuverte.id, contenu)
+                          }
+                          surFin={fermerSaisie}
+                        />
+                      </Suspense>
                     )
                   }
                 />

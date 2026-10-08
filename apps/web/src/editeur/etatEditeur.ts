@@ -20,6 +20,11 @@ export type ActionEditeur =
       emplacementId: string;
       contenu: DocumentTexte | null;
     }
+  | {
+      type: "placer";
+      emplacementId: string;
+      cadre: { x: number; y: number; largeur: number; hauteur: number };
+    }
   | { type: "retablir"; emplacement: EmplacementDuLivre }
   | { type: "remplacerDoublesPages"; doublesPages: DoublePageDuLivre[] }
   | { type: "selectionner"; emplacementId: string | null };
@@ -95,6 +100,11 @@ export function reduireEditeur(
       return modifierEmplacement(etat, action.emplacementId, (e) => ({
         ...e,
         contenu_texte: action.contenu,
+      }));
+    case "placer":
+      return modifierEmplacement(etat, action.emplacementId, (e) => ({
+        ...e,
+        ...action.cadre,
       }));
     case "retablir":
       return modifierEmplacement(

@@ -17,10 +17,19 @@ import {
   type DragEvent,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
+  useRef,
   useState,
 } from "react";
 import type { DoublePageDuLivre } from "../api/doublesPages";
+import {
+  type Cadre,
+  chevaucheUnAutre,
+  memeCadre,
+  pousser,
+} from "../editeur/geometrieCadre";
 import { familleCss } from "../polices";
+import { Poignees, useGestesCadre, useMmParPixel } from "./CadreMobile";
 import styles from "./DoublePage.module.css";
 
 // Type du glisser-déposer d'une photo de la réserve : la donnée transportée est son identifiant.
@@ -35,6 +44,8 @@ export type InteractionDoublePage = {
   surSelection: (emplacementId: string | null) => void;
   surSaisir: (emplacementId: string) => void;
   surDepot: (emplacementId: string, photoId: string) => void;
+  // Un cadre texte déplacé ou redimensionné, dans les bornes que la base revérifie.
+  surPlacer: (emplacementId: string, cadre: Cadre) => void;
   surRecadrer: (emplacementId: string) => void;
   surVider: (emplacementId: string) => void;
 };
@@ -333,16 +344,39 @@ function avertissementTexte(
 }
 
 // La surface d'un cadre texte : un clic le sélectionne, un second clic, Entrée ou un double clic
-// ouvre la saisie.
+// ouvre la saisie. Sélectionné, il se déplace en le faisant glisser ou avec les flèches, et se
+// redimensionne par ses poignées ou avec Maj + flèches.
 function CibleTexte({
   emplacement,
   interaction,
+  svg,
+  autres,
+  surProvisoire,
+  mmParPixel,
 }: {
   emplacement: Emplacement & { style_texte: StyleTexte };
   interaction: InteractionDoublePage;
+  svg: RefObject<SVGSVGElement | null>;
+  autres: Cadre[];
+  surProvisoire: (provisoire: { id: string; cadre: Cadre } | null) => void;
+  mmParPixel: number;
 }) {
   const selectionne = interaction.selection === emplacement.id;
   const ecrit = !estVide(emplacement.contenu_texte);
+  const cadre: Cadre = {
+    x: emplacement.x,
+    y: emplacement.y,
+    largeur: emplacement.largeur,
+    hauteur: emplacement.hauteur,
+  };
+  const gestes = useGestesCadre({
+    svg,
+    emplacementId: emplacement.id,
+    cadre,
+    autres,
+    surProvisoire,
+    surPlacer: interaction.surPlacer,
+  });
 
   function activer() {
     if (selectionne) interaction.surSaisir(emplacement.id);
@@ -355,29 +389,54 @@ function CibleTexte({
       activer();
     } else if (evenement.key === "Escape") {
       interaction.surSelection(null);
+    } else if (
+      selectionne &&
+      (evenement.key === "ArrowLeft" ||
+        evenement.key === "ArrowRight" ||
+        evenement.key === "ArrowUp" ||
+        evenement.key === "ArrowDown")
+    ) {
+      evenement.preventDefault();
+      const suivant = pousser(cadre, evenement.key, evenement.shiftKey);
+      if (!memeCadre(suivant, cadre) && !chevaucheUnAutre(suivant, autres)) {
+        interaction.surPlacer(emplacement.id, suivant);
+      }
     }
   }
 
   return (
-    <rect
-      className={[styles.cible, selectionne && styles.selectionne]
-        .filter(Boolean)
-        .join(" ")}
-      x={emplacement.x}
-      y={emplacement.y}
-      width={emplacement.largeur}
-      height={emplacement.hauteur}
-      tabIndex={0}
-      role="button"
-      aria-pressed={selectionne}
-      aria-label={`${nomDuStyle(emplacement.style_texte)} ${emplacement.indice + 1}, ${ecrit ? "écrit" : "vide"}`}
-      onClick={(evenement) => {
-        evenement.stopPropagation();
-        activer();
-      }}
-      onDoubleClick={() => interaction.surSaisir(emplacement.id)}
-      onKeyDown={clavier}
-    />
+    <>
+      <rect
+        className={[styles.cible, selectionne && styles.selectionne]
+          .filter(Boolean)
+          .join(" ")}
+        x={emplacement.x}
+        y={emplacement.y}
+        width={emplacement.largeur}
+        height={emplacement.hauteur}
+        tabIndex={0}
+        role="button"
+        aria-pressed={selectionne}
+        aria-label={`${nomDuStyle(emplacement.style_texte)} ${emplacement.indice + 1}, ${ecrit ? "écrit" : "vide"}`}
+        style={
+          selectionne ? { cursor: "move", touchAction: "none" } : undefined
+        }
+        onClick={(evenement) => {
+          evenement.stopPropagation();
+          if (!gestes.avalerClic()) activer();
+        }}
+        onDoubleClick={() => interaction.surSaisir(emplacement.id)}
+        onKeyDown={clavier}
+        {...(selectionne ? gestes.surElement("corps") : {})}
+      />
+      {selectionne && (
+        <Poignees
+          cadre={cadre}
+          mmParPixel={mmParPixel}
+          ecouteurs={gestes.surElement}
+        />
+      )}
+    </>
   );
 }
 
@@ -479,13 +538,27 @@ export function DoublePage({
 }) {
   const libelle = libelleDoublePage(doublePage.role, doublePage.position);
   const [survole, setSurvole] = useState<string | null>(null);
+  const svg = useRef<SVGSVGElement>(null);
+  const mmParPixel = useMmParPixel(svg);
+  // Le cadre texte qu'on est en train de déplacer : il s'affiche à sa position provisoire.
+  const [provisoire, setProvisoire] = useState<{
+    id: string;
+    cadre: Cadre;
+  } | null>(null);
+  const emplacements = provisoire
+    ? doublePage.emplacement.map((emplacement) =>
+        emplacement.id === provisoire.id
+          ? { ...emplacement, ...provisoire.cadre }
+          : emplacement,
+      )
+    : doublePage.emplacement;
   const photoDe = (emplacement: Emplacement) =>
     emplacement.photo_id ? photos.get(emplacement.photo_id) : undefined;
-  const cadresPhoto = doublePage.emplacement.filter(
+  const cadresPhoto = emplacements.filter(
     (emplacement) => emplacement.nature === "photo",
   );
   // Les cadres texte qu'on peut ouvrir : un style que le thème montre, des polices prêtes.
-  const cadresTexte = doublePage.emplacement.flatMap((emplacement) => {
+  const cadresTexte = emplacements.flatMap((emplacement) => {
     const { style_texte } = emplacement;
     return emplacement.nature === "texte" &&
       style_texte &&
@@ -495,7 +568,7 @@ export function DoublePage({
       : [];
   });
   const avertissements = interaction
-    ? doublePage.emplacement.flatMap((emplacement) => {
+    ? emplacements.flatMap((emplacement) => {
         const avertissement =
           emplacement.nature === "photo"
             ? avertissementDe(emplacement, photoDe(emplacement))
@@ -508,6 +581,7 @@ export function DoublePage({
     <figure className={styles.doublePage}>
       <div className={styles.dessin}>
         <svg
+          ref={svg}
           className={styles.feuille}
           viewBox={`0 0 ${LARGEUR_DOUBLE_PAGE_MM} ${HAUTEUR_DOUBLE_PAGE_MM}`}
           role={interaction ? "group" : "img"}
@@ -521,7 +595,7 @@ export function DoublePage({
             height={HAUTEUR_DOUBLE_PAGE_MM}
             fill={habillage.theme.palette.fond}
           />
-          {doublePage.emplacement.map((emplacement) =>
+          {emplacements.map((emplacement) =>
             emplacement.nature === "photo" ? (
               <EmplacementPhoto
                 key={emplacement.id}
@@ -567,11 +641,28 @@ export function DoublePage({
           {interaction &&
             cadresTexte
               .filter((emplacement) => emplacement.id !== interaction.enSaisie)
+              // Le cadre sélectionné passe en dernier : ses poignées restent au-dessus des autres cadres.
+              .sort(
+                (a, b) =>
+                  Number(a.id === interaction.selection) -
+                  Number(b.id === interaction.selection),
+              )
               .map((emplacement) => (
                 <CibleTexte
                   key={`cible-${emplacement.id}`}
                   emplacement={emplacement}
                   interaction={interaction}
+                  svg={svg}
+                  autres={emplacements
+                    .filter((autre) => autre.id !== emplacement.id)
+                    .map(({ x, y, largeur, hauteur }): Cadre => ({
+                      x,
+                      y,
+                      largeur,
+                      hauteur,
+                    }))}
+                  surProvisoire={setProvisoire}
+                  mmParPixel={mmParPixel}
                 />
               ))}
         </svg>

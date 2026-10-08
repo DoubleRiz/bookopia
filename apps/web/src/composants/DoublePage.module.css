@@ -127,3 +127,12 @@
   background: var(--couleur-rose);
   color: var(--couleur-rose-encre);
 }
+
+/* Les poignées d'un cadre texte sélectionné : un carré de taille fixe à l'écran. */
+.poignee {
+  fill: #fff;
+  stroke: var(--couleur-cta);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+  touch-action: none;
+}

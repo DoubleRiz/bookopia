@@ -85,6 +85,9 @@ type Style = {
   souligne: boolean;
 };
 
+// Le style d'un passage une fois résolu, tel que l'écran et le PDF le dessinent.
+export type StyleDePassage = Style;
+
 type Morceau = { texte: string; style: Style; largeur: number };
 
 type Resolveur = (segment: SegmentTexte) => Style;
@@ -582,6 +585,16 @@ export function prefixeQuiTient(
     else haut = milieu - 1;
   }
   return texte.slice(0, bas);
+}
+
+// Ce qu'un passage devient à l'écran et dans le PDF : le fichier de police, le corps, la couleur.
+// L'éditeur s'en sert pour habiller la saisie comme le rendu final.
+export function styleDuSegment(
+  segment: SegmentTexte,
+  theme: Theme,
+  style_texte: StyleTexte,
+): StyleDePassage {
+  return resolveur(theme, style_texte).resoudre(segment);
 }
 
 // Les fichiers de police qu'un texte demande : celui du thème et ceux de ses passages.

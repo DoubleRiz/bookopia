@@ -101,12 +101,43 @@ export async function enregistrerComposition(
   return creees ?? 0;
 }
 
-// Écrit la photo et le cadrage d'un emplacement tels que l'éditeur les affiche.
-// La RLS et les contraintes de la table sont les seules gardiennes : photo d'un autre livre,
-// cadre texte, cadrage hors bornes. Aucune ligne modifiée : l'emplacement n'existe plus.
-export async function ecrireEmplacement(
+// Place un cadre texte : position et taille passent par la fonction SQL, qui revérifie les marges
+// de sécurité, la taille minimale et les chevauchements.
+export async function placerCadreTexte(
   emplacement: EmplacementDuLivre,
 ): Promise<void> {
+  verifier(
+    await supabase.rpc("placer_cadre_texte", {
+      p_emplacement_id: emplacement.id,
+      p_x: emplacement.x,
+      p_y: emplacement.y,
+      p_largeur: emplacement.largeur,
+      p_hauteur: emplacement.hauteur,
+    }),
+  );
+}
+
+const geometrieDiffere = (a: EmplacementDuLivre, b: EmplacementDuLivre) =>
+  a.x !== b.x ||
+  a.y !== b.y ||
+  a.largeur !== b.largeur ||
+  a.hauteur !== b.hauteur;
+
+// Écrit un emplacement tel que l'éditeur l'affiche : la photo, le cadrage, le texte, puis la
+// géométrie d'un cadre texte si elle a changé depuis `avant`. La RLS et les contraintes de la table
+// sont les seules gardiennes : photo d'un autre livre, cadrage hors bornes, texte invalide.
+// Aucune ligne modifiée : l'emplacement n'existe plus.
+export async function ecrireEmplacement(
+  emplacement: EmplacementDuLivre,
+  avant?: EmplacementDuLivre,
+): Promise<void> {
+  if (
+    avant &&
+    emplacement.nature === "texte" &&
+    geometrieDiffere(emplacement, avant)
+  ) {
+    await placerCadreTexte(emplacement);
+  }
   const modifie = verifier(
     await supabase
       .from("emplacement")
