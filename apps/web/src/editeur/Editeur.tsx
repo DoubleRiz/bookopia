@@ -95,6 +95,27 @@ const LIBELLES_STATUT: Record<StatutEnregistrement, string> = {
 // E7 : une double page intérieure à la fois, la bande des intérieures, la réserve.
 // Les gestes sur un emplacement s'affichent tout de suite et partent par la file d'écriture ;
 // les gestes de structure passent par les fonctions SQL, puis les doubles pages sont relues.
+// Flèche courbe d'annuler (vers la gauche) ou de refaire (son miroir).
+function IconeFleche({ sens }: { sens: "annuler" | "refaire" }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={sens === "refaire" ? { transform: "scaleX(-1)" } : undefined}
+    >
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+    </svg>
+  );
+}
+
 export function Editeur({
   projetId,
   titre,
@@ -551,25 +572,36 @@ export function Editeur({
       <div className={styles.outilsLivre}>
         <Bouton
           variante="tertiaire"
+          taille="petit"
+          className={styles.boutonIcone}
+          aria-label="Annuler"
+          title="Annuler"
           disabled={!actif || historique.passe.length === 0}
           onClick={annulerGeste}
         >
-          Annuler
+          <IconeFleche sens="annuler" />
         </Bouton>
         <Bouton
           variante="tertiaire"
+          taille="petit"
+          className={styles.boutonIcone}
+          aria-label="Refaire"
+          title="Refaire"
           disabled={!actif || historique.futur.length === 0}
           onClick={refaireGeste}
         >
-          Refaire
+          <IconeFleche sens="refaire" />
         </Bouton>
+        <span className={styles.separateur} aria-hidden="true" />
         <Bouton
           variante="secondaire"
+          taille="petit"
           disabled={!actif || themes.length < 2}
           onClick={() => setChoixTheme(true)}
         >
           Thème · {themeActuel.nom}
         </Bouton>
+        <span className={styles.separateur} aria-hidden="true" />
         {actionsLivre}
       </div>
       {!enLigne && (
@@ -647,10 +679,13 @@ export function Editeur({
                     </Bouton>
                   </>
                 ) : (
-                  <p className={styles.aide}>
-                    Glissez une photo de la réserve sur un cadre, ou
-                    sélectionnez un cadre puis choisissez la photo.
-                  </p>
+                  // L'aide n'a plus lieu d'être une fois une photo posée sur la double page.
+                  !courante.emplacement.some((e) => e.photo_id) && (
+                    <p className={styles.aide}>
+                      Glissez une photo de la réserve sur un cadre, ou
+                      sélectionnez un cadre puis choisissez la photo.
+                    </p>
+                  )
                 )}
               </div>
               <div className={styles.pageCourante}>

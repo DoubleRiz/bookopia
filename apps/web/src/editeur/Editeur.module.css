@@ -9,10 +9,24 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--espace-3);
+  gap: var(--espace-2);
   padding: var(--espace-2) var(--espace-6);
   border-bottom: 1px solid var(--couleur-lavande-pale);
   background: var(--couleur-fond);
+}
+
+/* Annuler et refaire : des icônes carrées, à la hauteur des autres boutons de la barre. */
+.boutonIcone {
+  width: 32px;
+  padding: 0;
+}
+
+/* Impossible à cliquer : grisé, sans fond ni contour. */
+.boutonIcone:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: var(--couleur-texte-secondaire);
+  opacity: 0.4;
 }
 
 .separateur {
