@@ -10,11 +10,48 @@ export const FICHIERS_POLICES = {
   "nunito-700": "nunito-700.ttf",
   "nunito-800": "nunito-800.ttf",
   "caveat-600": "caveat-600.ttf",
+  "montserrat-400": "montserrat-400.ttf",
+  "montserrat-700": "montserrat-700.ttf",
+  "montserrat-400-italique": "montserrat-400-italique.ttf",
+  "montserrat-700-italique": "montserrat-700-italique.ttf",
+  "lora-400": "lora-400.ttf",
+  "lora-700": "lora-700.ttf",
+  "lora-400-italique": "lora-400-italique.ttf",
+  "lora-700-italique": "lora-700-italique.ttf",
+  "playfair-display-400": "playfair-display-400.ttf",
+  "playfair-display-700": "playfair-display-700.ttf",
+  "playfair-display-400-italique": "playfair-display-400-italique.ttf",
+  "playfair-display-700-italique": "playfair-display-700-italique.ttf",
+  "dancing-script-400": "dancing-script-400.ttf",
+  "dancing-script-700": "dancing-script-700.ttf",
+  "courier-prime-400": "courier-prime-400.ttf",
+  "courier-prime-700": "courier-prime-700.ttf",
+  "courier-prime-400-italique": "courier-prime-400-italique.ttf",
+  "courier-prime-700-italique": "courier-prime-700-italique.ttf",
+  "great-vibes-400": "great-vibes-400.ttf",
+  "allura-400": "allura-400.ttf",
+  "parisienne-400": "parisienne-400.ttf",
+  "sacramento-400": "sacramento-400.ttf",
+  "alex-brush-400": "alex-brush-400.ttf",
 } as const;
 
 export type ClePolice = keyof typeof FICHIERS_POLICES;
 
-export const FAMILLES_POLICES = ["EB Garamond", "Nunito", "Caveat"] as const;
+export const FAMILLES_POLICES = [
+  "EB Garamond",
+  "Nunito",
+  "Caveat",
+  "Montserrat",
+  "Lora",
+  "Playfair Display",
+  "Dancing Script",
+  "Courier Prime",
+  "Great Vibes",
+  "Allura",
+  "Parisienne",
+  "Sacramento",
+  "Alex Brush",
+] as const;
 
 // Les variantes réelles de chaque famille. Une variante absente vaut null : le rendu ne fabrique
 // ni faux gras ni faux italique, et l'éditeur grise le bouton correspondant.
@@ -43,6 +80,67 @@ export const CATALOGUE_POLICES: Record<
   },
   Caveat: {
     regulier: "caveat-600",
+    gras: null,
+    italique: null,
+    gras_italique: null,
+  },
+  Montserrat: {
+    regulier: "montserrat-400",
+    gras: "montserrat-700",
+    italique: "montserrat-400-italique",
+    gras_italique: "montserrat-700-italique",
+  },
+  Lora: {
+    regulier: "lora-400",
+    gras: "lora-700",
+    italique: "lora-400-italique",
+    gras_italique: "lora-700-italique",
+  },
+  "Playfair Display": {
+    regulier: "playfair-display-400",
+    gras: "playfair-display-700",
+    italique: "playfair-display-400-italique",
+    gras_italique: "playfair-display-700-italique",
+  },
+  "Dancing Script": {
+    regulier: "dancing-script-400",
+    gras: "dancing-script-700",
+    italique: null,
+    gras_italique: null,
+  },
+  "Courier Prime": {
+    regulier: "courier-prime-400",
+    gras: "courier-prime-700",
+    italique: "courier-prime-400-italique",
+    gras_italique: "courier-prime-700-italique",
+  },
+  // Scripts attachés : une seule graisse, ni gras ni italique.
+  "Great Vibes": {
+    regulier: "great-vibes-400",
+    gras: null,
+    italique: null,
+    gras_italique: null,
+  },
+  Allura: {
+    regulier: "allura-400",
+    gras: null,
+    italique: null,
+    gras_italique: null,
+  },
+  Parisienne: {
+    regulier: "parisienne-400",
+    gras: null,
+    italique: null,
+    gras_italique: null,
+  },
+  Sacramento: {
+    regulier: "sacramento-400",
+    gras: null,
+    italique: null,
+    gras_italique: null,
+  },
+  "Alex Brush": {
+    regulier: "alex-brush-400",
     gras: null,
     italique: null,
     gras_italique: null,

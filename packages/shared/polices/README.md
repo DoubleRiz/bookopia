@@ -8,12 +8,16 @@ Les polices des thèmes (design system, § 15). Les mêmes fichiers servent à l
 | `eb-garamond-400-italique.ttf` | EB Garamond 400 italique |
 | `nunito-400.ttf` à `nunito-800.ttf` | Nunito 400, 600, 700, 800 |
 | `caveat-600.ttf` | Caveat 600 |
+| `montserrat-*`, `lora-*`, `playfair-display-*` | 400 et 700, droit et italique |
+| `dancing-script-400.ttf`, `dancing-script-700.ttf` | Dancing Script 400, 700 |
+| `courier-prime-*` | Courier Prime 400 et 700, droit et italique |
+| `great-vibes-400`, `allura-400`, `parisienne-400`, `sacramento-400`, `alex-brush-400` | Scripts attachés, une seule graisse |
 
 Licence SIL Open Font License 1.1 : `OFL-*.txt`.
 
 ## Origine
 
-Instances statiques des polices variables de [google/fonts](https://github.com/google/fonts) (`ofl/ebgaramond`, `ofl/nunito`, `ofl/caveat`), réduites au sous-ensemble latin de Google Fonts. Produites une fois avec [fonttools](https://github.com/fonttools/fonttools), qui n'est pas une dépendance du projet :
+Instances statiques des polices variables de [google/fonts](https://github.com/google/fonts) (`ofl/ebgaramond`, `ofl/nunito`, `ofl/caveat`, `ofl/montserrat`, `ofl/lora`, `ofl/playfairdisplay`, `ofl/dancingscript`, `ofl/courierprime`, `ofl/greatvibes`, `ofl/allura`, `ofl/parisienne`, `ofl/sacramento`, `ofl/alexbrush`), réduites au sous-ensemble latin de Google Fonts. Produites une fois avec [fonttools](https://github.com/fonttools/fonttools), qui n'est pas une dépendance du projet :
 
 ```bash
 fonttools varLib.instancer "Nunito[wght].ttf" wght=600 -o instance.ttf

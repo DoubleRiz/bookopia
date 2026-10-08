@@ -1,10 +1,33 @@
-import caveat600 from "@bookopia/shared/polices/caveat-600.ttf?url";
-import ebGaramond400Italique from "@bookopia/shared/polices/eb-garamond-400-italique.ttf?url";
 import ebGaramond500 from "@bookopia/shared/polices/eb-garamond-500.ttf?url";
+import ebGaramond400Italique from "@bookopia/shared/polices/eb-garamond-400-italique.ttf?url";
 import nunito400 from "@bookopia/shared/polices/nunito-400.ttf?url";
 import nunito600 from "@bookopia/shared/polices/nunito-600.ttf?url";
 import nunito700 from "@bookopia/shared/polices/nunito-700.ttf?url";
 import nunito800 from "@bookopia/shared/polices/nunito-800.ttf?url";
+import caveat600 from "@bookopia/shared/polices/caveat-600.ttf?url";
+import montserrat400 from "@bookopia/shared/polices/montserrat-400.ttf?url";
+import montserrat700 from "@bookopia/shared/polices/montserrat-700.ttf?url";
+import montserrat400Italique from "@bookopia/shared/polices/montserrat-400-italique.ttf?url";
+import montserrat700Italique from "@bookopia/shared/polices/montserrat-700-italique.ttf?url";
+import lora400 from "@bookopia/shared/polices/lora-400.ttf?url";
+import lora700 from "@bookopia/shared/polices/lora-700.ttf?url";
+import lora400Italique from "@bookopia/shared/polices/lora-400-italique.ttf?url";
+import lora700Italique from "@bookopia/shared/polices/lora-700-italique.ttf?url";
+import playfairDisplay400 from "@bookopia/shared/polices/playfair-display-400.ttf?url";
+import playfairDisplay700 from "@bookopia/shared/polices/playfair-display-700.ttf?url";
+import playfairDisplay400Italique from "@bookopia/shared/polices/playfair-display-400-italique.ttf?url";
+import playfairDisplay700Italique from "@bookopia/shared/polices/playfair-display-700-italique.ttf?url";
+import dancingScript400 from "@bookopia/shared/polices/dancing-script-400.ttf?url";
+import dancingScript700 from "@bookopia/shared/polices/dancing-script-700.ttf?url";
+import courierPrime400 from "@bookopia/shared/polices/courier-prime-400.ttf?url";
+import courierPrime700 from "@bookopia/shared/polices/courier-prime-700.ttf?url";
+import courierPrime400Italique from "@bookopia/shared/polices/courier-prime-400-italique.ttf?url";
+import courierPrime700Italique from "@bookopia/shared/polices/courier-prime-700-italique.ttf?url";
+import greatVibes400 from "@bookopia/shared/polices/great-vibes-400.ttf?url";
+import allura400 from "@bookopia/shared/polices/allura-400.ttf?url";
+import parisienne400 from "@bookopia/shared/polices/parisienne-400.ttf?url";
+import sacramento400 from "@bookopia/shared/polices/sacramento-400.ttf?url";
+import alexBrush400 from "@bookopia/shared/polices/alex-brush-400.ttf?url";
 import {
   type ClePolice,
   clePolice,
@@ -24,6 +47,29 @@ const URLS: Record<ClePolice, string> = {
   "nunito-700": nunito700,
   "nunito-800": nunito800,
   "caveat-600": caveat600,
+  "montserrat-400": montserrat400,
+  "montserrat-700": montserrat700,
+  "montserrat-400-italique": montserrat400Italique,
+  "montserrat-700-italique": montserrat700Italique,
+  "lora-400": lora400,
+  "lora-700": lora700,
+  "lora-400-italique": lora400Italique,
+  "lora-700-italique": lora700Italique,
+  "playfair-display-400": playfairDisplay400,
+  "playfair-display-700": playfairDisplay700,
+  "playfair-display-400-italique": playfairDisplay400Italique,
+  "playfair-display-700-italique": playfairDisplay700Italique,
+  "dancing-script-400": dancingScript400,
+  "dancing-script-700": dancingScript700,
+  "courier-prime-400": courierPrime400,
+  "courier-prime-700": courierPrime700,
+  "courier-prime-400-italique": courierPrime400Italique,
+  "courier-prime-700-italique": courierPrime700Italique,
+  "great-vibes-400": greatVibes400,
+  "allura-400": allura400,
+  "parisienne-400": parisienne400,
+  "sacramento-400": sacramento400,
+  "alex-brush-400": alexBrush400,
 };
 
 export class ErreurPolice extends Error {
