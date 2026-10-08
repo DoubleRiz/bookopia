@@ -623,6 +623,7 @@ export function Editeur({
                     <Bouton
                       variante="secondaire"
                       taille="petit"
+                      className={styles.segmentActif}
                       disabled={!actif || !selection.photo_id}
                       onClick={() => setARecadrer(selection.id)}
                     >
@@ -640,6 +641,7 @@ export function Editeur({
                     >
                       Remplacer
                     </Bouton>
+                    <span className={styles.separateur} aria-hidden="true" />
                     <Bouton
                       variante="secondaire"
                       taille="petit"

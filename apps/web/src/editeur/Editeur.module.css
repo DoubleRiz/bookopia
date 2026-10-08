@@ -12,7 +12,7 @@
   align-items: center;
   align-self: center;
   gap: var(--espace-1);
-  padding: var(--espace-1) var(--espace-2);
+  padding: var(--espace-2);
   border-radius: var(--rayon-pill);
   background: var(--couleur-fond);
   box-shadow: var(--ombre-page);
@@ -20,9 +20,37 @@
 
 .separateur {
   width: 1px;
-  height: 20px;
-  margin: 0 var(--espace-2);
+  height: 24px;
+  margin: 0 var(--espace-1);
   background: var(--couleur-lavande);
+}
+
+/* Les segments de la pastille (maquette E7) : du texte gras, sans contour ni fond au repos.
+   Le segment mis en avant porte une pastille lavande ; les autres la prennent au survol. */
+:is(.outilsLivre, .barreOutils) button {
+  min-height: var(--cible-min);
+  padding: 12px 22px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--couleur-encre);
+  font-size: var(--taille-corps);
+  font-weight: 700;
+}
+
+:is(.outilsLivre, .barreOutils) button:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--couleur-lavande-pale);
+}
+
+:is(.outilsLivre, .barreOutils) button.segmentActif:not(:disabled) {
+  background: var(--couleur-lavande-pale);
+}
+
+:is(.outilsLivre, .barreOutils) button:disabled {
+  border-color: transparent;
+  background: transparent;
+  color: var(--couleur-texte-secondaire);
+  opacity: 0.5;
 }
 
 .editeur > [role="alert"] {
@@ -118,7 +146,8 @@
 }
 
 .barreOutils:has(button) {
-  padding: var(--espace-1) var(--espace-2);
+  gap: var(--espace-1);
+  padding: var(--espace-2);
   border-radius: var(--rayon-pill);
   background: var(--couleur-fond);
   box-shadow: var(--ombre-page);
