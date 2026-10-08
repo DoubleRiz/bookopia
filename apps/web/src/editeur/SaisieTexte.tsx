@@ -1,10 +1,17 @@
 import {
+  clePolice,
+  type DocumentTexte,
   disposerTexte,
+  documentDepuisTexte,
   HAUTEUR_DOUBLE_PAGE_MM,
   INTERLIGNE,
   LARGEUR_DOUBLE_PAGE_MM,
+  LONGUEUR_MAX_TEXTE,
   type Mesures,
+  MM_PAR_POINT,
+  policeDuStyle,
   type StyleTexte,
+  texteBrut,
   type Theme,
 } from "@bookopia/shared";
 import {
@@ -20,10 +27,19 @@ import type { EmplacementDuLivre } from "../api/doublesPages";
 import { familleCss } from "../polices";
 import styles from "./Editeur.module.css";
 
-// Le plafond de la base (contrainte emplacement_plafond_texte).
-export const LONGUEUR_MAX_TEXTE = 400;
-
-const ALIGNEMENTS = { debut: "left", milieu: "center", fin: "right" } as const;
+// Le texte de départ de la saisie : l'alignement du thème, sauf pour « extérieur », qui suit
+// la page où se trouve le cadre.
+function alignementCss(
+  theme: Theme,
+  emplacement: { x: number; largeur: number },
+): "left" | "center" | "right" {
+  const { alignement } = theme.typographie;
+  if (alignement === "gauche") return "left";
+  if (alignement === "centre") return "center";
+  return emplacement.x + emplacement.largeur / 2 < LARGEUR_DOUBLE_PAGE_MM / 2
+    ? "left"
+    : "right";
+}
 
 const enPourcentage = (mm: number, total: number) => `${(mm / total) * 100}%`;
 
@@ -40,10 +56,12 @@ export function SaisieTexte({
   emplacement: EmplacementDuLivre & { style_texte: StyleTexte };
   theme: Theme;
   mesures: Mesures;
-  surChangement: (contenu: string) => void;
+  surChangement: (contenu: DocumentTexte | null) => void;
   surFin: () => void;
 }) {
-  const valeur = emplacement.contenu_texte ?? "";
+  const valeur = emplacement.contenu_texte
+    ? texteBrut(emplacement.contenu_texte)
+    : "";
   const [annonce, setAnnonce] = useState("");
   const zone = useRef<HTMLTextAreaElement>(null);
   // Position du curseur après un collage raccourci : React réécrit la valeur, le curseur suit.
@@ -64,8 +82,8 @@ export function SaisieTexte({
 
   const disposer = (texte: string) =>
     disposerTexte(
-      { ...emplacement, contenu_texte: texte },
-      theme.typographie,
+      { ...emplacement, contenu_texte: documentDepuisTexte(texte) },
+      theme,
       mesures,
     );
   const dispose = disposer(valeur);
@@ -78,7 +96,7 @@ export function SaisieTexte({
     }
     // Une espace en fin de ligne tient toujours : seul un texte raccourci fait taire l'annonce.
     if (suivant.length < valeur.length) setAnnonce("");
-    surChangement(suivant);
+    surChangement(documentDepuisTexte(suivant));
   }
 
   // Seul le début du collage qui tient est inséré, à la place de la sélection.
@@ -100,7 +118,7 @@ export function SaisieTexte({
     }
     setAnnonce(bas < colle.length ? "Le texte collé a été raccourci" : "");
     curseur.current = avant.length + bas;
-    surChangement(avant + colle.slice(0, bas) + apres);
+    surChangement(documentDepuisTexte(avant + colle.slice(0, bas) + apres));
   }
 
   function clavier(evenement: KeyboardEvent<HTMLTextAreaElement>) {
@@ -113,10 +131,17 @@ export function SaisieTexte({
 
   // En ancrage bas, la zone n'a que la hauteur de ses lignes et repose sur le bas du cadre,
   // là où le dessin les posera.
+  const police = policeDuStyle(theme.typographie, emplacement.style_texte);
+  const cle = clePolice(police);
+  const taille_mm = police.taille_pt * MM_PAR_POINT;
+  const hauteurDesLignes = dispose.lignes.reduce(
+    (somme, ligne) => somme + ligne.hauteur,
+    0,
+  );
   const hauteur =
     theme.typographie.ancrage === "bas"
       ? Math.min(
-          Math.max(1, dispose.lignes.length) * dispose.interligne_mm,
+          Math.max(taille_mm * INTERLIGNE, hauteurDesLignes),
           emplacement.hauteur,
         )
       : emplacement.hauteur;
@@ -136,11 +161,11 @@ export function SaisieTexte({
           top: enPourcentage(haut, HAUTEUR_DOUBLE_PAGE_MM),
           width: enPourcentage(emplacement.largeur, LARGEUR_DOUBLE_PAGE_MM),
           height: enPourcentage(hauteur, HAUTEUR_DOUBLE_PAGE_MM),
-          fontFamily: familleCss(dispose.police),
+          fontFamily: cle ? familleCss(cle) : undefined,
           // Des millimètres du dessin en largeur du conteneur : la zone suit l'échelle de la double page.
-          fontSize: `${(dispose.taille_mm / LARGEUR_DOUBLE_PAGE_MM) * 100}cqw`,
+          fontSize: `${(taille_mm / LARGEUR_DOUBLE_PAGE_MM) * 100}cqw`,
           lineHeight: INTERLIGNE,
-          textAlign: ALIGNEMENTS[dispose.ancre],
+          textAlign: alignementCss(theme, emplacement),
           color: theme.palette.texte,
         }}
         onChange={changer}

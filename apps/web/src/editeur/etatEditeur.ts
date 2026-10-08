@@ -1,4 +1,4 @@
-import type { Cadrage } from "@bookopia/shared";
+import type { Cadrage, DocumentTexte } from "@bookopia/shared";
 import type {
   DoublePageDuLivre,
   EmplacementDuLivre,
@@ -15,7 +15,11 @@ export type ActionEditeur =
   | { type: "poser"; emplacementId: string; photoId: string }
   | { type: "vider"; emplacementId: string }
   | { type: "recadrer"; emplacementId: string; cadrage: Cadrage }
-  | { type: "ecrireTexte"; emplacementId: string; contenu: string }
+  | {
+      type: "ecrireTexte";
+      emplacementId: string;
+      contenu: DocumentTexte | null;
+    }
   | { type: "retablir"; emplacement: EmplacementDuLivre }
   | { type: "remplacerDoublesPages"; doublesPages: DoublePageDuLivre[] }
   | { type: "selectionner"; emplacementId: string | null };
@@ -86,11 +90,11 @@ export function reduireEditeur(
         cadrage_y: action.cadrage.y,
         cadrage_zoom: action.cadrage.zoom,
       }));
-    // Un cadre vidé de son texte est vide en base : null, pas une chaîne vide.
+    // Un cadre vidé de son texte est vide en base : null, pas un document sans texte.
     case "ecrireTexte":
       return modifierEmplacement(etat, action.emplacementId, (e) => ({
         ...e,
-        contenu_texte: action.contenu === "" ? null : action.contenu,
+        contenu_texte: action.contenu,
       }));
     case "retablir":
       return modifierEmplacement(

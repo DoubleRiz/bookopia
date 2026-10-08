@@ -1,3 +1,4 @@
+import { documentDepuisTexte } from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import type {
   DoublePageDuLivre,
@@ -99,13 +100,15 @@ describe("reduireEditeur", () => {
     const ecrit = reduireEditeur(depart, {
       type: "ecrireTexte",
       emplacementId: "e1",
-      contenu: "Lisbonne",
+      contenu: documentDepuisTexte("Lisbonne"),
     });
-    expect(emplacementDe(ecrit, "e1")?.contenu_texte).toBe("Lisbonne");
+    expect(emplacementDe(ecrit, "e1")?.contenu_texte).toEqual(
+      documentDepuisTexte("Lisbonne"),
+    );
     const efface = reduireEditeur(ecrit, {
       type: "ecrireTexte",
       emplacementId: "e1",
-      contenu: "",
+      contenu: null,
     });
     expect(emplacementDe(efface, "e1")?.contenu_texte).toBeNull();
   });

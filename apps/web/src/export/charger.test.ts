@@ -1,4 +1,8 @@
-import type { ClePolice, Theme } from "@bookopia/shared";
+import {
+  type ClePolice,
+  documentDepuisTexte,
+  type Theme,
+} from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import {
   charger,
@@ -49,7 +53,7 @@ const texte = (
   ...emplacement(null),
   nature: "texte" as const,
   style_texte,
-  contenu_texte,
+  contenu_texte: documentDepuisTexte(contenu_texte ?? ""),
 });
 
 function livre(...doublesPages: (PhotoPosee | null)[][]): LivreLu {
@@ -155,7 +159,7 @@ describe("charger", () => {
     expect(rendu.polices).toEqual({ "caveat-600": octetsDe("caveat-600") });
     expect(rendu.doubles_pages[0]?.emplacements[0]).toMatchObject({
       style_texte: "legende",
-      contenu_texte: "Lisbonne",
+      contenu_texte: documentDepuisTexte("Lisbonne"),
     });
   });
 });

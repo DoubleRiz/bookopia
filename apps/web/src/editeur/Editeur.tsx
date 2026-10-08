@@ -13,7 +13,11 @@ import {
   useSearchParams,
 } from "react-router";
 import { ErreurBase, ErreurNonAuthentifie, ErreurReseau } from "../api/client";
-import type { GabaritAComposer } from "@bookopia/shared";
+import {
+  type DocumentTexte,
+  type GabaritAComposer,
+  memeDocument,
+} from "@bookopia/shared";
 import {
   changerGabarit,
   type DoublePageDuLivre,
@@ -340,7 +344,12 @@ export function Editeur({
     window.clearTimeout(minuterieTexte.current);
     const avant = texteEnregistre.current;
     const apres = avant && emplacementDe(etatCourant.current, avant.id);
-    if (!avant || !apres || apres.contenu_texte === avant.contenu_texte) return;
+    if (
+      !avant ||
+      !apres ||
+      memeDocument(apres.contenu_texte, avant.contenu_texte)
+    )
+      return;
     texteEnregistre.current = apres;
     changerHistorique(enregistrer(historiqueCourant.current, { avant, apres }));
     file().ajouter({
@@ -354,7 +363,7 @@ export function Editeur({
     });
   }
 
-  function ecrireTexte(emplacementId: string, contenu: string) {
+  function ecrireTexte(emplacementId: string, contenu: DocumentTexte | null) {
     const action: ActionEditeur = {
       type: "ecrireTexte",
       emplacementId,

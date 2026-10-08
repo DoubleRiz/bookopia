@@ -239,8 +239,8 @@ select results_eq(
 select results_eq(
   $$ select nature::text, x, y, largeur, hauteur, photo_id, contenu_texte from public.emplacement
      where double_page_id = (select id from copie) order by indice $$,
-  $$ values ('photo', 0::float8, 0::float8, 200::float8, 210::float8, null::uuid, null::text),
-            ('photo', 220::float8, 0::float8, 200::float8, 210::float8, null::uuid, null::text) $$,
+  $$ values ('photo', 0::float8, 0::float8, 200::float8, 210::float8, null::uuid, null::jsonb),
+            ('photo', 220::float8, 0::float8, 200::float8, 210::float8, null::uuid, null::jsonb) $$,
   'Les cadres du nouveau gabarit sont recréés, vides'
 );
 select is((select count(*) from public.photo), 1::bigint, 'La photo retirée reste dans la réserve');
@@ -267,7 +267,7 @@ set local role authenticated;
 insert into public.export (projet_id, cle_stockage) select projet_id, gen_random_uuid() from livre;
 select is((select modifie_le from public.projet), '2000-01-01'::timestamptz, 'Un export ne modifie pas le livre');
 
-update public.emplacement set contenu_texte = 'Titre' where nature = 'texte' and indice = 1
+update public.emplacement set contenu_texte = '{"version": 1, "blocs": [{"type": "paragraphe", "segments": [{"texte": "Titre"}]}]}'::jsonb where nature = 'texte' and indice = 1
   and double_page_id = (select id from public.double_page where role = 'couverture');
 select is((select modifie_le from public.projet), now(), 'Écrire dans un emplacement date la modification du livre');
 

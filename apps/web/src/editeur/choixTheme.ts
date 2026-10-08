@@ -1,4 +1,9 @@
-import { disposerTexte, type Mesures, type Theme } from "@bookopia/shared";
+import {
+  disposerTexte,
+  estVide,
+  type Mesures,
+  type Theme,
+} from "@bookopia/shared";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 
 export type EffetDuTheme = { masques: number; coupes: number };
@@ -14,10 +19,10 @@ export function effetDuTheme(
   for (const doublePage of doublesPages) {
     for (const emplacement of doublePage.emplacement) {
       const { style_texte, contenu_texte } = emplacement;
-      if (!style_texte || !contenu_texte?.trim()) continue;
+      if (!style_texte || estVide(contenu_texte)) continue;
       const dispose = disposerTexte(
         { ...emplacement, style_texte },
-        theme.typographie,
+        theme,
         mesures,
       );
       if (dispose.masque) effet.masques += 1;

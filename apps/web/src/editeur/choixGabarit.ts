@@ -1,12 +1,11 @@
-import type { GabaritAComposer } from "@bookopia/shared";
+import { estVide, type GabaritAComposer } from "@bookopia/shared";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 
 // Changer de gabarit recrée les cadres vides (RG-17) : on ne prévient que s'il y a à perdre.
 export function aDuContenu(doublePage: DoublePageDuLivre): boolean {
   return doublePage.emplacement.some(
     (emplacement) =>
-      emplacement.photo_id !== null ||
-      (emplacement.contenu_texte ?? "").trim() !== "",
+      emplacement.photo_id !== null || !estVide(emplacement.contenu_texte),
   );
 }
 

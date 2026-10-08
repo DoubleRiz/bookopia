@@ -1,6 +1,7 @@
 import {
   type DoublePageAControler,
   type EmplacementAControler,
+  lireDocumentTexte,
   themeSchema,
 } from "@bookopia/shared";
 import type { LivreLu } from "../export/charger";
@@ -51,7 +52,10 @@ export async function lireLivreARendre(projetId: string): Promise<LivreLu> {
     // plutôt que de donner un fond noir ou une police de substitution dans le PDF.
     theme: themeSchema.parse(projet.theme),
     doubles_pages: (doublesPages ?? []).map((doublePage) => ({
-      emplacements: doublePage.emplacement,
+      emplacements: doublePage.emplacement.map((emplacement) => ({
+        ...emplacement,
+        contenu_texte: lireDocumentTexte(emplacement.contenu_texte),
+      })),
     })),
   };
 }

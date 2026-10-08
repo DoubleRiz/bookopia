@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { disposerTexte } from "./mise-en-lignes";
 import { clePolice, FICHIERS_POLICES, type ClePolice } from "./polices";
 import { mesuresReelles } from "./polices-de-test";
-import type { Typographie } from "./typographie";
+import { documentDepuisTexte } from "./texte-riche";
+import type { Theme, Typographie } from "./typographie";
 
 const MODERNE: Typographie = {
   titre: { police: "Nunito", graisse: 800, italique: false, taille_pt: 18 },
@@ -19,6 +20,12 @@ const CARNET: Typographie = {
   ancrage: "bas",
   styles_masques: [],
 };
+
+const enTheme = (typographie: Typographie): Theme => ({
+  palette: { fond: "#ffffff", texte: "#000000" },
+  bordure_cadre: null,
+  typographie,
+});
 
 describe("clePolice", () => {
   it("trouve le fichier d'une police du catalogue", () => {
@@ -56,10 +63,15 @@ describe("les fichiers de police", () => {
       largeur: 79,
       hauteur: 14,
       style_texte: "legende" as const,
-      contenu_texte:
+      contenu_texte: documentDepuisTexte(
         "Le phare de Kermorvan au petit matin, avant la marée haute de septembre. Les mouettes tournent au-dessus du port.",
+      ),
     };
-    expect(disposerTexte(legende, MODERNE, mesuresReelles).deborde).toBe(false);
-    expect(disposerTexte(legende, CARNET, mesuresReelles).deborde).toBe(true);
+    expect(
+      disposerTexte(legende, enTheme(MODERNE), mesuresReelles).deborde,
+    ).toBe(false);
+    expect(
+      disposerTexte(legende, enTheme(CARNET), mesuresReelles).deborde,
+    ).toBe(true);
   });
 });

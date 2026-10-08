@@ -1,7 +1,7 @@
 -- Textes et thèmes : style des cadres texte, plafond des textes, changer_theme.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(19);
+select plan(17);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values
@@ -83,7 +83,7 @@ select is(
   'Changer de gabarit recrée les styles du nouveau gabarit'
 );
 
-update public.emplacement set contenu_texte = 'Le phare'
+update public.emplacement set contenu_texte = '{"version": 1, "blocs": [{"type": "paragraphe", "segments": [{"texte": "Le phare"}]}]}'::jsonb
 where double_page_id = (select id from page where position = 3) and nature = 'texte';
 
 create temporary table copie (id uuid);
@@ -96,7 +96,7 @@ select lives_ok(
 select results_eq(
   $$ select style_texte::text, contenu_texte from public.emplacement
      where double_page_id = (select id from copie) and nature = 'texte' $$,
-  $$ values ('titre_page', 'Le phare') $$,
+  $$ values ('titre_page', '{"version": 1, "blocs": [{"type": "paragraphe", "segments": [{"texte": "Le phare"}]}]}'::jsonb) $$,
   'La copie garde le style et le texte'
 );
 
@@ -126,16 +126,6 @@ select throws_ok(
   '23514', null, 'Un gabarit dont un cadre texte n''a pas de style ne crée rien'
 );
 
-select lives_ok(
-  $$ update public.emplacement set contenu_texte = repeat('a', 400)
-     where double_page_id = (select id from page where position = 2) and indice = 1 $$,
-  '400 caractères sont acceptés'
-);
-select throws_ok(
-  $$ update public.emplacement set contenu_texte = repeat('a', 401)
-     where double_page_id = (select id from page where position = 2) and indice = 1 $$,
-  '23514', null, 'Au-delà de 400 caractères, la base refuse'
-);
 
 -- ---------------------------------------------------------------------------
 -- changer_theme

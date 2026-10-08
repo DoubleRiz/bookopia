@@ -145,7 +145,7 @@ select throws_ok(
 );
 
 select lives_ok(
-  $$ update public.emplacement set contenu_texte = 'Été 2026'
+  $$ update public.emplacement set contenu_texte = '{"version": 1, "blocs": [{"type": "paragraphe", "segments": [{"texte": "Été 2026"}]}]}'::jsonb
      where nature = 'texte' and projet_id = (select projet_id from livre where proprietaire = 'alice') $$,
   'Alice écrit dans les emplacements texte de son livre'
 );

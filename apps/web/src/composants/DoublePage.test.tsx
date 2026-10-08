@@ -1,4 +1,8 @@
-import type { MesureTexte, Theme } from "@bookopia/shared";
+import {
+  documentDepuisTexte,
+  type MesureTexte,
+  type Theme,
+} from "@bookopia/shared";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { DoublePageDuLivre } from "../api/doublesPages";
@@ -152,12 +156,12 @@ describe("DoublePage", () => {
       emplacement({
         nature: "texte",
         style_texte: "titre",
-        contenu_texte: "Lisbonne",
+        contenu_texte: documentDepuisTexte("Lisbonne"),
       }),
     ]);
     expect(html).toContain('font-family="bookopia-nunito-800"');
     expect(html).toContain('fill="#1E1B2E"');
-    expect(html).toContain(">Lisbonne</tspan>");
+    expect(html).toContain(">Lisbonne</text>");
     expect(html).not.toContain("Écrire");
   });
 
@@ -222,7 +226,7 @@ describe("DoublePage dans l'éditeur", () => {
       id: "t1",
       nature: "texte",
       style_texte: "legende",
-      contenu_texte,
+      contenu_texte: documentDepuisTexte(contenu_texte ?? ""),
     });
 
   it("rend un cadre texte focalisable et nommé selon son style", () => {

@@ -1,5 +1,8 @@
 import {
+  DECALAGE_SOULIGNEMENT,
   dpiEffectif,
+  EPAISSEUR_SOULIGNEMENT,
+  estVide,
   HAUTEUR_DOUBLE_PAGE_MM,
   LARGEUR_DOUBLE_PAGE_MM,
   MM_PAR_POINT,
@@ -175,8 +178,6 @@ function Pastille({ emplacement, niveau, libelle, detail }: Avertissement) {
 const nomDuStyle = (style: StyleTexte) =>
   style === "legende" ? "Légende" : "Titre";
 
-const ANCRES_SVG = { debut: "start", milieu: "middle", fin: "end" } as const;
-
 // Ce que montre un cadre texte : ses lignes, coupées comme dans le PDF.
 type TexteAffiche =
   | { etat: "indisponible" | "vide" | "masque" }
@@ -190,11 +191,11 @@ function texteAffiche(
   if (!style_texte || !habillage.mesures) return { etat: "indisponible" };
   const dispose = tronquerPourTenir(
     { ...emplacement, style_texte },
-    habillage.theme.typographie,
+    habillage.theme,
     habillage.mesures,
   );
   if (dispose.masque) return { etat: "masque" };
-  if (!emplacement.contenu_texte?.trim()) return { etat: "vide" };
+  if (estVide(emplacement.contenu_texte)) return { etat: "vide" };
   return { etat: "ecrit", dispose };
 }
 
@@ -276,20 +277,45 @@ function EmplacementTexte({
           strokeWidth={bordure_cadre.filet_pt * MM_PAR_POINT}
         />
       )}
-      {!enSaisie && (
-        <text
-          className={styles.texte}
-          fontFamily={familleCss(dispose.police)}
-          fontSize={dispose.taille_mm}
-          fill={palette.texte}
-          textAnchor={ANCRES_SVG[dispose.ancre]}
-        >
-          {dispose.lignes.map((ligne, rang) => (
-            <tspan key={rang} x={ligne.x} y={ligne.y}>
-              {ligne.texte}
-            </tspan>
-          ))}
-        </text>
+      {!enSaisie && <TexteDessine dispose={dispose} />}
+    </>
+  );
+}
+
+// Les fragments du texte, tels que le PDF les dessine : chacun dans sa police, sa taille et sa
+// couleur, positionné par le module partagé. Le soulignement est un trait sous le fragment.
+function TexteDessine({
+  dispose,
+}: {
+  dispose: ReturnType<typeof tronquerPourTenir>;
+}) {
+  return (
+    <>
+      {dispose.lignes.flatMap((ligne, rang) =>
+        ligne.fragments.map((fragment, indice) => (
+          <g key={`${rang}-${indice}`}>
+            <text
+              className={styles.texte}
+              x={fragment.x}
+              y={fragment.y}
+              fontFamily={familleCss(fragment.police)}
+              fontSize={fragment.taille_mm}
+              fill={fragment.couleur}
+            >
+              {fragment.texte}
+            </text>
+            {fragment.souligne && (
+              <line
+                x1={fragment.x}
+                x2={fragment.x + fragment.largeur}
+                y1={fragment.y + fragment.taille_mm * DECALAGE_SOULIGNEMENT}
+                y2={fragment.y + fragment.taille_mm * DECALAGE_SOULIGNEMENT}
+                stroke={fragment.couleur}
+                strokeWidth={fragment.taille_mm * EPAISSEUR_SOULIGNEMENT}
+              />
+            )}
+          </g>
+        )),
       )}
     </>
   );
@@ -316,7 +342,7 @@ function CibleTexte({
   interaction: InteractionDoublePage;
 }) {
   const selectionne = interaction.selection === emplacement.id;
-  const ecrit = Boolean(emplacement.contenu_texte?.trim());
+  const ecrit = !estVide(emplacement.contenu_texte);
 
   function activer() {
     if (selectionne) interaction.surSaisir(emplacement.id);

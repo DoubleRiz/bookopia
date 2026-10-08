@@ -19,8 +19,13 @@ import {
   type Rectangle,
 } from "./cadrage";
 import type { StyleTexte } from "./gabarit";
-import { tronquerPourTenir } from "./mise-en-lignes";
+import {
+  DECALAGE_SOULIGNEMENT,
+  EPAISSEUR_SOULIGNEMENT,
+  tronquerPourTenir,
+} from "./mise-en-lignes";
 import { type ClePolice, creerMesure, type MesureTexte } from "./polices";
+import { type DocumentTexte, estVide } from "./texte-riche";
 import { type Theme } from "./typographie";
 
 export type PhotoARendre = {
@@ -38,7 +43,7 @@ export type EmplacementARendre = Rectangle & {
   cadrage_zoom: number;
   // Cadres texte seulement ; null pour une photo.
   style_texte: StyleTexte | null;
-  contenu_texte: string | null;
+  contenu_texte: DocumentTexte | null;
 };
 
 // Tout ce que le rendu doit savoir, déjà lu et téléchargé : aucun accès réseau ni base ici.
@@ -186,7 +191,9 @@ function preparerPolices(document: PDFDocument, livre: LivreARendre) {
 type Polices = ReturnType<typeof preparerPolices>;
 
 // Les lignes qui tiennent dans le cadre, la dernière coupée par « … » si le texte est plus long.
-// Un texte masqué par le thème ou vide n'est pas dessiné, ni son filet.
+// Un texte masqué par le thème ou vide n'est pas dessiné, ni son filet. Chaque fragment est
+// dessiné dans sa police, sa taille et sa couleur ; drawText ne soulignant pas, le soulignement
+// est un trait sous le fragment.
 async function dessinerTexte(
   page: PDFPage,
   emplacement: EmplacementARendre,
@@ -194,10 +201,10 @@ async function dessinerTexte(
   polices: Polices,
 ) {
   const { style_texte, contenu_texte } = emplacement;
-  if (!style_texte || !contenu_texte?.trim()) return;
+  if (!style_texte || estVide(contenu_texte)) return;
   const dispose = tronquerPourTenir(
     { ...emplacement, style_texte, contenu_texte },
-    theme.typographie,
+    theme,
     polices.mesure,
   );
   if (dispose.masque || dispose.lignes.length === 0) return;
@@ -214,23 +221,28 @@ async function dessinerTexte(
     });
   }
 
-  const police = await polices.integree(dispose.police);
-  const mesure = polices.mesure(dispose.police);
   for (const ligne of dispose.lignes) {
-    const largeur = mesure.largeur(ligne.texte, dispose.taille_mm);
-    const debut =
-      dispose.ancre === "debut"
-        ? ligne.x
-        : dispose.ancre === "milieu"
-          ? ligne.x - largeur / 2
-          : ligne.x - largeur;
-    page.drawText(ligne.texte, {
-      x: pt(DECALAGE_COUPE_MM + debut),
-      y: pt(DECALAGE_COUPE_MM + HAUTEUR_DOUBLE_PAGE_MM - ligne.y),
-      size: pt(dispose.taille_mm),
-      font: police,
-      color: encre,
-    });
+    for (const fragment of ligne.fragments) {
+      const x = pt(DECALAGE_COUPE_MM + fragment.x);
+      const y = pt(DECALAGE_COUPE_MM + HAUTEUR_DOUBLE_PAGE_MM - fragment.y);
+      const teinte = couleur(fragment.couleur);
+      page.drawText(fragment.texte, {
+        x,
+        y,
+        size: pt(fragment.taille_mm),
+        font: await polices.integree(fragment.police),
+        color: teinte,
+      });
+      if (fragment.souligne) {
+        const dessous = y - pt(fragment.taille_mm * DECALAGE_SOULIGNEMENT);
+        page.drawLine({
+          start: { x, y: dessous },
+          end: { x: x + pt(fragment.largeur), y: dessous },
+          thickness: pt(fragment.taille_mm * EPAISSEUR_SOULIGNEMENT),
+          color: teinte,
+        });
+      }
+    }
   }
 }
 

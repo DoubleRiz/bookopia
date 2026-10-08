@@ -16,6 +16,54 @@ export type ClePolice = keyof typeof FICHIERS_POLICES;
 
 export const FAMILLES_POLICES = ["EB Garamond", "Nunito", "Caveat"] as const;
 
+// Les variantes réelles de chaque famille. Une variante absente vaut null : le rendu ne fabrique
+// ni faux gras ni faux italique, et l'éditeur grise le bouton correspondant.
+export type VariantesPolice = {
+  regulier: ClePolice;
+  gras: ClePolice | null;
+  italique: ClePolice | null;
+  gras_italique: ClePolice | null;
+};
+
+export const CATALOGUE_POLICES: Record<
+  (typeof FAMILLES_POLICES)[number],
+  VariantesPolice
+> = {
+  "EB Garamond": {
+    regulier: "eb-garamond-500",
+    gras: null,
+    italique: "eb-garamond-400-italique",
+    gras_italique: null,
+  },
+  Nunito: {
+    regulier: "nunito-400",
+    gras: "nunito-700",
+    italique: null,
+    gras_italique: null,
+  },
+  Caveat: {
+    regulier: "caveat-600",
+    gras: null,
+    italique: null,
+    gras_italique: null,
+  },
+};
+
+// La variante d'une famille pour un gras et un italique demandés. Sans la variante exacte,
+// on retire d'abord l'italique puis le gras, jamais de simulation : null si rien ne convient.
+export function varianteDePolice(
+  famille: keyof typeof CATALOGUE_POLICES,
+  gras: boolean,
+  italique: boolean,
+): ClePolice | null {
+  const variantes = CATALOGUE_POLICES[famille];
+  if (gras && italique && variantes.gras_italique)
+    return variantes.gras_italique;
+  if (gras && variantes.gras) return variantes.gras;
+  if (italique && variantes.italique) return variantes.italique;
+  return null;
+}
+
 export type Police = {
   police: (typeof FAMILLES_POLICES)[number];
   graisse: number;

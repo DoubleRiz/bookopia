@@ -1,8 +1,9 @@
 import {
   type ClePolice,
-  clePolice,
+  type DocumentTexte,
+  estVide,
   type LivreARendre,
-  policeDuStyle,
+  policesDuTexte,
   type Rectangle,
   type StyleTexte,
   type Theme,
@@ -27,7 +28,7 @@ export type LivreLu = {
       cadrage_y: number | null;
       cadrage_zoom: number | null;
       style_texte: StyleTexte | null;
-      contenu_texte: string | null;
+      contenu_texte: DocumentTexte | null;
     })[];
   }[];
 };
@@ -44,10 +45,15 @@ export function policesUtiles(livre: LivreLu): ClePolice[] {
   const cles = new Set<ClePolice>();
   for (const doublePage of livre.doubles_pages) {
     for (const { style_texte, contenu_texte } of doublePage.emplacements) {
-      if (!style_texte || !contenu_texte?.trim()) continue;
+      if (!style_texte || estVide(contenu_texte)) continue;
       if (typographie.styles_masques.includes(style_texte)) continue;
-      const cle = clePolice(policeDuStyle(typographie, style_texte));
-      if (cle) cles.add(cle);
+      for (const cle of policesDuTexte(
+        contenu_texte,
+        livre.theme,
+        style_texte,
+      )) {
+        cles.add(cle);
+      }
     }
   }
   return [...cles];

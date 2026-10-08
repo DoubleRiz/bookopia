@@ -9,6 +9,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { type DefinitionGabarit, definitionGabaritSchema } from "./gabarit";
 import { FICHIERS_POLICES, type ClePolice } from "./polices";
+import { documentDepuisTexte } from "./texte-riche";
 import { octetsDePolice } from "./polices-de-test";
 import { type LivreARendre, rendre } from "./rendu-pdf";
 import { type Theme, themeSchema } from "./typographie";
@@ -69,7 +70,10 @@ function livreDe(gabarit: DefinitionGabarit, theme: Theme): LivreARendre {
           cadrage_y: 0.5,
           cadrage_zoom: 1,
           style_texte: cadre.style ?? null,
-          contenu_texte: cadre.nature === "texte" ? "Lisbonne au matin" : null,
+          contenu_texte:
+            cadre.nature === "texte"
+              ? documentDepuisTexte("Lisbonne au matin")
+              : null,
         })),
       },
     ],

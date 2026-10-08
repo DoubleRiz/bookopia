@@ -1,4 +1,8 @@
-import type { DefinitionGabarit, GabaritAComposer } from "@bookopia/shared";
+import {
+  type DefinitionGabarit,
+  documentDepuisTexte,
+  type GabaritAComposer,
+} from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 import { aDuContenu, apercuDuGabarit, resumeDuGabarit } from "./choixGabarit";
@@ -76,7 +80,12 @@ describe("aDuContenu", () => {
   it("est vrai dès qu'un texte est saisi", () => {
     expect(
       aDuContenu(
-        doublePage([emplacement({ nature: "texte", contenu_texte: "Été" })]),
+        doublePage([
+          emplacement({
+            nature: "texte",
+            contenu_texte: documentDepuisTexte("Été"),
+          }),
+        ]),
       ),
     ).toBe(true);
   });
@@ -84,7 +93,12 @@ describe("aDuContenu", () => {
   it("ignore un texte fait seulement d'espaces", () => {
     expect(
       aDuContenu(
-        doublePage([emplacement({ nature: "texte", contenu_texte: "  " })]),
+        doublePage([
+          emplacement({
+            nature: "texte",
+            contenu_texte: documentDepuisTexte("  "),
+          }),
+        ]),
       ),
     ).toBe(false);
   });

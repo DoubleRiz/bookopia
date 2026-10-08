@@ -1,4 +1,8 @@
-import type { MesureTexte, Theme } from "@bookopia/shared";
+import {
+  documentDepuisTexte,
+  type MesureTexte,
+  type Theme,
+} from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 import { effetDuTheme, resumeDeLEffet } from "./choixTheme";
@@ -43,7 +47,7 @@ const texte = (
   cadrage_x: null,
   cadrage_y: null,
   cadrage_zoom: null,
-  contenu_texte,
+  contenu_texte: documentDepuisTexte(contenu_texte ?? ""),
 });
 
 const livre = (...emplacements: Emplacement[]): DoublePageDuLivre[] => [

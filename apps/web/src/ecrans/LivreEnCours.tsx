@@ -1,4 +1,8 @@
-import { composerLivre, type GabaritAComposer } from "@bookopia/shared";
+import {
+  composerLivre,
+  type GabaritAComposer,
+  policesDuTexte,
+} from "@bookopia/shared";
 import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
@@ -69,9 +73,22 @@ async function lireThemes(): Promise<ThemeDuCatalogue[]> {
 
 // Les polices du thème, avant d'afficher le moindre texte. Illisibles, l'éditeur reste utilisable
 // pour les photos : les textes ne s'affichent pas et ne s'écrivent pas.
-async function policesPretes(theme: ThemeDuCatalogue): Promise<boolean> {
+async function policesPretes(
+  theme: ThemeDuCatalogue,
+  doublesPages: DoublePageDuLivre[],
+): Promise<boolean> {
+  // Les polices du thème, et celles que les passages mis en forme demandent.
+  const cles = new Set(policesDuTheme(theme.typographie));
+  for (const doublePage of doublesPages) {
+    for (const { style_texte, contenu_texte } of doublePage.emplacement) {
+      if (!style_texte || !contenu_texte) continue;
+      for (const cle of policesDuTexte(contenu_texte, theme, style_texte)) {
+        cles.add(cle);
+      }
+    }
+  }
   try {
-    await preparerPolices(policesDuTheme(theme.typographie));
+    await preparerPolices([...cles]);
     return true;
   } catch (erreur) {
     if (erreur instanceof ErreurPolice) return false;
@@ -103,7 +120,7 @@ export async function chargerLivreEnCours({
     return {
       projet,
       theme,
-      polices: await policesPretes(theme),
+      polices: await policesPretes(theme, doublesPages),
       themes: await lireThemes(),
       doublesPages,
       gabarits: await lireGabarits(projet.id),

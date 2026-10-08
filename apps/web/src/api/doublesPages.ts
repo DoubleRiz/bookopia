@@ -1,14 +1,16 @@
 import {
   definitionGabaritSchema,
+  type DocumentTexte,
   type DoublePageComposee,
   type GabaritAComposer,
+  lireDocumentTexte,
 } from "@bookopia/shared";
 import { supabase } from "../supabase";
 import { ErreurBase, verifier } from "./client";
 
 // Les doubles pages du livre, dans l'ordre du livre. L'énuméré role est déclaré dans cet ordre :
 // trier par role puis position donne couverture, intérieures, 4e.
-export async function listerDoublesPages(projetId: string) {
+async function lireDoublesPages(projetId: string) {
   const doublesPages = verifier(
     await supabase
       .from("double_page")
@@ -27,11 +29,30 @@ export async function listerDoublesPages(projetId: string) {
   return doublesPages ?? [];
 }
 
-export type DoublePageDuLivre = Awaited<
-  ReturnType<typeof listerDoublesPages>
->[number];
+type DoublePageLue = Awaited<ReturnType<typeof lireDoublesPages>>[number];
 
-export type EmplacementDuLivre = DoublePageDuLivre["emplacement"][number];
+// Le texte d'un cadre est un document JSON que la base valide en structure seulement :
+// Zod le relit ici, et un document mal formé échoue au chargement.
+export type EmplacementDuLivre = Omit<
+  DoublePageLue["emplacement"][number],
+  "contenu_texte"
+> & { contenu_texte: DocumentTexte | null };
+
+export type DoublePageDuLivre = Omit<DoublePageLue, "emplacement"> & {
+  emplacement: EmplacementDuLivre[];
+};
+
+export async function listerDoublesPages(
+  projetId: string,
+): Promise<DoublePageDuLivre[]> {
+  return (await lireDoublesPages(projetId)).map((doublePage) => ({
+    ...doublePage,
+    emplacement: doublePage.emplacement.map((emplacement) => ({
+      ...emplacement,
+      contenu_texte: lireDocumentTexte(emplacement.contenu_texte),
+    })),
+  }));
+}
 
 // Les gabarits que le moteur peut choisir : intérieurs actifs de la famille du modèle d'origine.
 // Un gabarit mal formé échoue ici, au parse, avant toute écriture.

@@ -1,3 +1,4 @@
+import { documentDepuisTexte } from "./texte-riche";
 import {
   decodePDFRawStream,
   PDFArray,
@@ -249,7 +250,7 @@ describe("rendre, les textes", () => {
       photo: null,
       ...centre,
       style_texte: style,
-      contenu_texte: contenu,
+      contenu_texte: documentDepuisTexte(contenu ?? ""),
     });
     return {
       theme,
@@ -348,6 +349,53 @@ describe("rendre, les textes", () => {
       "S",
     );
     expect(avecFilet - sansFilet).toBe(1);
+  });
+
+  it("dessine chaque passage dans sa police et souligne ce qui l'est", async () => {
+    const livre = livreAvecTextes(null, null);
+    const legende = livre.doubles_pages[0]?.emplacements[1];
+    if (!legende) throw new Error("Légende absente");
+    legende.contenu_texte = {
+      version: 1,
+      blocs: [
+        {
+          type: "paragraphe",
+          segments: [
+            { texte: "Le Tage " },
+            { texte: "au matin", souligne: true, couleur: "#8a3b2e" },
+          ],
+        },
+      ],
+    };
+    const sansSoulignement = compter(
+      await operateursDe(
+        await rendre(livreAvecTextes(null, "Le Tage au matin")),
+      ),
+      "S",
+    );
+    const pdf = await rendre(livre);
+    const operateurs = await operateursDe(pdf);
+    // Deux fragments sur une ligne, un trait de soulignement de plus, la couleur du passage.
+    expect(compter(operateurs, "Tj")).toBe(2);
+    expect(compter(operateurs, "S") - sansSoulignement).toBe(1);
+    // #8a3b2e : 138, 59 et 46 sur 255.
+    expect(operateurs).toContain(`${138 / 255} ${59 / 255} ${46 / 255} rg`);
+  });
+
+  it("n'intègre que les polices des passages dessinés", async () => {
+    const livre = livreAvecTextes(null, null);
+    const legende = livre.doubles_pages[0]?.emplacements[1];
+    if (!legende) throw new Error("Légende absente");
+    // Titre en EB Garamond : la famille Nunito n'est pas fournie, le rendu doit échouer.
+    legende.contenu_texte = {
+      version: 1,
+      blocs: [
+        { type: "paragraphe", segments: [{ texte: "a", police: "Nunito" }] },
+      ],
+    };
+    await expect(rendre(livre)).rejects.toThrow(
+      "Police manquante : nunito-400",
+    );
   });
 
   it("échoue plutôt que de substituer une police manquante", async () => {
