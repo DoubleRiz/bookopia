@@ -24,6 +24,7 @@ import {
 } from "../import/importer";
 import { calculerEmpreinte, preparateur } from "../import/preparer";
 import { sousSession } from "../session";
+import iconeEnvoi from "../assets/envoi.png";
 import styles from "./ImportPhotos.module.css";
 import {
   ColonneGooglePhotos,
@@ -198,7 +199,6 @@ export function ImportPhotos() {
           )}
           <div className={styles.colonnes}>
             <section className={styles.colonne}>
-              <h3 className={styles.colonneTitre}>Depuis cet appareil</h3>
               <label
                 htmlFor={idChamp}
                 className={[styles.zone, survol && styles.survol]
@@ -211,12 +211,8 @@ export function ImportPhotos() {
                 onDragLeave={() => setSurvol(false)}
                 onDrop={deposer}
               >
-                <span className={styles.zoneTitre}>
-                  Glissez vos photos ici, ou cliquez pour les choisir
-                </span>
-                <span className={styles.zoneAide}>
-                  Les photos déjà dans le livre sont sautées.
-                </span>
+                <img className={styles.zoneIcone} src={iconeEnvoi} alt="" />
+                <span className={styles.zoneTitre}>Depuis votre appareil</span>
                 <input
                   id={idChamp}
                   className={styles.champ}
@@ -231,7 +227,6 @@ export function ImportPhotos() {
               </label>
             </section>
             <section className={styles.colonne}>
-              <h3 className={styles.colonneTitre}>Depuis Google Photos</h3>
               <ColonneGooglePhotos
                 key={rangGoogle}
                 onSelection={(selection) =>

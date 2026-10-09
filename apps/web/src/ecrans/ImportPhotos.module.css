@@ -17,8 +17,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--espace-2);
+  justify-content: center;
+  gap: var(--espace-3);
   padding: var(--espace-12) var(--espace-6);
+  font: inherit;
   border: 2px dashed var(--couleur-lavande);
   border-radius: var(--rayon-carte);
   background: var(--couleur-lavande-pale);
@@ -26,12 +28,22 @@
   cursor: pointer;
 }
 
-.zone:focus-within {
+.zone:focus-within,
+.zone:focus-visible {
   box-shadow: var(--anneau-focus);
 }
 
 .survol {
   border-color: var(--couleur-encre);
+}
+
+.zone:hover {
+  border-color: var(--couleur-encre);
+}
+
+.zoneIcone {
+  width: 48px;
+  height: 48px;
 }
 
 .zoneTitre {
@@ -138,14 +150,8 @@
   gap: var(--espace-3);
 }
 
-.colonne > :last-child:not(h3) {
+.colonne > :last-child {
   flex: 1;
-}
-
-.colonneTitre {
-  color: var(--couleur-encre);
-  font-size: var(--taille-petit);
-  font-weight: 700;
 }
 
 .lienGoogle {

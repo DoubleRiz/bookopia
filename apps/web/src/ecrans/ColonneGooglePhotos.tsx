@@ -15,6 +15,7 @@ import {
   telecharger,
 } from "../import/google/selecteur";
 import type { Source } from "../import/importer";
+import logoGooglePhotos from "../assets/google-photos.png";
 import styles from "./ImportPhotos.module.css";
 
 // Ce que la colonne remet à l'import. `terminer` supprime la session Google : les adresses
@@ -118,15 +119,14 @@ export function ColonneGooglePhotos({
   return (
     <>
       {etat.nom === "repos" && (
-        <>
-          <span className={styles.zoneAide}>
-            Choisissez vos photos dans Google Photos : elles arrivent ici dès
-            que vous validez.
-          </span>
-          <Bouton type="button" onClick={() => void choisir()}>
-            Choisir dans Google Photos
-          </Bouton>
-        </>
+        <button
+          type="button"
+          className={styles.zone}
+          onClick={() => void choisir()}
+        >
+          <img className={styles.zoneIcone} src={logoGooglePhotos} alt="" />
+          <span className={styles.zoneTitre}>Depuis Google Photos</span>
+        </button>
       )}
       {etat.nom === "connexion" && (
         <Bouton type="button" disabled enCours>
