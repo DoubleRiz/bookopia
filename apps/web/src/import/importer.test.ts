@@ -6,9 +6,13 @@ import {
   ErreurDoublon,
   importer,
   type PhotoPreparee,
+  type Source,
+  sourceLocale,
 } from "./importer";
+import { ErreurGoogleNonAutorise } from "./google/selecteur";
 
-const fichier = (nom: string) => new File([nom], nom, { type: "image/jpeg" });
+const fichier = (nom: string): Source =>
+  sourceLocale(new File([nom], nom, { type: "image/jpeg" }));
 
 const preparee = (largeurPx = 4000, hauteurPx = 3000): PhotoPreparee => ({
   largeurPx,
@@ -68,7 +72,9 @@ describe("importer", () => {
 
   it("écarte un doublon à l'intérieur de la sélection", async () => {
     const dep = dependances();
-    const memeContenu = new File(["a"], "copie.jpg", { type: "image/jpeg" });
+    const memeContenu = sourceLocale(
+      new File(["a"], "copie.jpg", { type: "image/jpeg" }),
+    );
     const bilan = await importer([fichier("a"), memeContenu], dep);
     expect(dep.envoyes).toHaveLength(1);
     expect(bilan.doublons).toBe(1);
@@ -160,6 +166,54 @@ describe("importer", () => {
     const fichiers = Array.from({ length: 10 }, (_, i) => fichier(`f${i}`));
     await expect(importer(fichiers, dep)).rejects.toBeInstanceOf(
       ErreurNonAuthentifie,
+    );
+  });
+
+  it("compte comme échec de téléchargement une source qu'on n'obtient pas", async () => {
+    const dep = dependances();
+    const bilan = await importer(
+      [
+        {
+          nom: "google.jpg",
+          obtenir: async () => {
+            throw new Error("réseau");
+          },
+        },
+        fichier("ok"),
+      ],
+      dep,
+    );
+    expect(dep.envoyes).toEqual(["ok"]);
+    expect(bilan.echecs).toEqual([
+      { nom: "google.jpg", raison: "telechargement" },
+    ]);
+  });
+
+  it("refuse après obtention un fichier de mauvais format ou trop lourd", async () => {
+    const dep = dependances();
+    const pdf = new File(["x"], "doc.pdf", { type: "application/pdf" });
+    const lourd = new File(["x"], "lourd.jpg", { type: "image/jpeg" });
+    Object.defineProperty(lourd, "size", { value: 11 * 1024 * 1024 });
+    const bilan = await importer(
+      [sourceLocale(pdf), sourceLocale(lourd), fichier("ok")],
+      dep,
+    );
+    expect(dep.envoyes).toEqual(["ok"]);
+    expect(bilan.echecs).toEqual([
+      { nom: "doc.pdf", raison: "format" },
+      { nom: "lourd.jpg", raison: "taille" },
+    ]);
+  });
+
+  it("s'arrête quand Google refuse le jeton en cours d'import", async () => {
+    const sources: Source[] = Array.from({ length: 10 }, (_, i) => ({
+      nom: `g${i}`,
+      obtenir: async () => {
+        throw new ErreurGoogleNonAutorise();
+      },
+    }));
+    await expect(importer(sources, dependances())).rejects.toBeInstanceOf(
+      ErreurGoogleNonAutorise,
     );
   });
 });

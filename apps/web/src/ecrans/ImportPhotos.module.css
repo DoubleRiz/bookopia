@@ -118,3 +118,43 @@
   color: var(--couleur-texte-secondaire);
   font-size: var(--taille-petit);
 }
+
+.colonnes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--espace-4);
+}
+
+@media (max-width: 640px) {
+  .colonnes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.colonne {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--espace-3);
+}
+
+.colonne > :last-child:not(h3) {
+  flex: 1;
+}
+
+.colonneTitre {
+  color: var(--couleur-encre);
+  font-size: var(--taille-petit);
+  font-weight: 700;
+}
+
+.lienGoogle {
+  color: var(--couleur-encre);
+  font-weight: 700;
+}
+
+.erreurColonne {
+  color: var(--couleur-rose-encre);
+  font-size: var(--taille-petit);
+  font-weight: 600;
+}

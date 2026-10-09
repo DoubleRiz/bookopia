@@ -1,4 +1,15 @@
 import { ErreurNonAuthentifie } from "../api/client";
+import { filtrer } from "./filtrer";
+import { ErreurGoogleNonAutorise } from "./google/selecteur";
+
+// Une photo à importer : le fichier est obtenu au moment de la traiter. Un fichier local est déjà
+// là ; une photo Google est téléchargée à ce moment, pour ne pas garder toute la sélection en mémoire.
+export type Source = { nom: string; obtenir: () => Promise<File> };
+
+export const sourceLocale = (fichier: File): Source => ({
+  nom: fichier.name,
+  obtenir: async () => fichier,
+});
 
 // Sortie de la préparation dans le navigateur : ce qui est déposé, et ce que la ligne photo retient.
 export type PhotoPreparee = {
@@ -31,7 +42,10 @@ export type DependancesImport = {
   envoyer: (photo: PhotoAEnvoyer) => Promise<void>;
 };
 
-export type Echec = { nom: string; raison: "illisible" | "envoi" };
+export type Echec = {
+  nom: string;
+  raison: "illisible" | "envoi" | "telechargement" | "format" | "taille";
+};
 
 export type Avancement = {
   total: number;
@@ -48,15 +62,15 @@ export type Avancement = {
 const FICHIERS_EN_PARALLELE = 3;
 const COTE_LONG_CONSEILLE_PX = 1000;
 
-// Une erreur porte sur un fichier, jamais sur la file. Seule une session expirée arrête tout :
-// les fichiers suivants seraient refusés de la même façon.
+// Une erreur porte sur un fichier, jamais sur la file. Seule une session expirée, de Supabase
+// ou de Google, arrête tout : les fichiers suivants seraient refusés de la même façon.
 export async function importer(
-  fichiers: File[],
+  sources: Source[],
   dependances: DependancesImport,
   { onAvancement }: { onAvancement?: (avancement: Avancement) => void } = {},
 ): Promise<Avancement> {
   const avancement: Avancement = {
-    total: fichiers.length,
+    total: sources.length,
     traites: 0,
     importees: 0,
     doublons: 0,
@@ -66,10 +80,26 @@ export async function importer(
   // Lues une fois : la reprise d'un import interrompu saute ainsi ce qui est déjà arrivé.
   // Chaque empreinte y entre avant la préparation, ce qui écarte aussi les doublons de la sélection.
   const empreintes = await dependances.lireEmpreintes();
-  const file = [...fichiers];
+  const file = [...sources];
   let arrete = false;
 
-  async function traiter(fichier: File) {
+  async function traiter(source: Source) {
+    let fichier: File;
+    try {
+      fichier = await source.obtenir();
+    } catch (erreur) {
+      if (erreur instanceof ErreurGoogleNonAutorise) throw erreur;
+      avancement.echecs.push({ nom: source.nom, raison: "telechargement" });
+      return;
+    }
+    // Le poids d'une photo Google n'est connu qu'une fois reçue. Pour un fichier local,
+    // la sélection a déjà filtré : ce contrôle ne refuse rien.
+    const { refuses } = filtrer([fichier]);
+    if (refuses[0]) {
+      avancement.echecs.push({ nom: source.nom, raison: refuses[0].raison });
+      return;
+    }
+
     let empreinte: string;
     try {
       empreinte = await dependances.calculerEmpreinte(fichier);
@@ -117,13 +147,9 @@ export async function importer(
   }
 
   async function ouvrier() {
-    for (
-      let fichier = file.shift();
-      fichier && !arrete;
-      fichier = file.shift()
-    ) {
+    for (let source = file.shift(); source && !arrete; source = file.shift()) {
       try {
-        await traiter(fichier);
+        await traiter(source);
       } catch (erreur) {
         arrete = true;
         throw erreur;

@@ -13,10 +13,22 @@ import { Bouton } from "../composants/Bouton";
 import { Modale } from "../composants/Modale";
 import { envoyeur } from "../import/envoyer";
 import { filtrer, type Refus, TYPES_ACCEPTES } from "../import/filtrer";
-import { type Avancement, type Echec, importer } from "../import/importer";
+import { oublierJeton } from "../import/google/connexion";
+import { ErreurGoogleNonAutorise } from "../import/google/selecteur";
+import {
+  type Avancement,
+  type Echec,
+  importer,
+  type Source,
+  sourceLocale,
+} from "../import/importer";
 import { calculerEmpreinte, preparateur } from "../import/preparer";
 import { sousSession } from "../session";
 import styles from "./ImportPhotos.module.css";
+import {
+  ColonneGooglePhotos,
+  type SelectionGoogle,
+} from "./ColonneGooglePhotos";
 import type { chargerLivreEnCours } from "./LivreEnCours";
 
 export async function chargerImport({ request }: LoaderFunctionArgs) {
@@ -31,6 +43,9 @@ const RAISONS_REFUS: Record<Refus["raison"], string> = {
 const RAISONS_ECHEC: Record<Echec["raison"], string> = {
   illisible: "Fichier illisible",
   envoi: "Envoi impossible",
+  telechargement: "Téléchargement impossible",
+  format: RAISONS_REFUS.format,
+  taille: RAISONS_REFUS.taille,
 };
 
 function pluriel(nombre: number, singulier: string, plurielTexte: string) {
@@ -40,7 +55,7 @@ function pluriel(nombre: number, singulier: string, plurielTexte: string) {
 type Phase =
   | { nom: "selection" }
   | { nom: "envoi"; avancement: Avancement }
-  | { nom: "fin"; bilan: Avancement };
+  | { nom: "fin"; bilan: Avancement; videosEcartees: number };
 
 // Un même fichier choisi deux fois (deux glisser-déposer) ne compte qu'une fois dans la sélection.
 function cleDeFichier(fichier: File) {
@@ -61,6 +76,8 @@ export function ImportPhotos() {
   const [phase, setPhase] = useState<Phase>({ nom: "selection" });
   const [erreur, setErreur] = useState<string | null>(null);
   const [survol, setSurvol] = useState(false);
+  // Remonter la colonne Google annule son attente : un dépôt local prend le pas.
+  const [rangGoogle, setRangGoogle] = useState(0);
 
   const enEnvoi = phase.nom === "envoi";
 
@@ -96,6 +113,7 @@ export function ImportPhotos() {
     ]);
     setRefuses([...refuses, ...tri.refuses]);
     setErreur(null);
+    setRangGoogle((rang) => rang + 1);
   };
 
   const deposer = (evenement: DragEvent) => {
@@ -104,13 +122,16 @@ export function ImportPhotos() {
     ajouter(Array.from(evenement.dataTransfer.files));
   };
 
-  const lancer = async () => {
-    const fichiers = acceptes;
+  const lancer = async (
+    sources: Source[],
+    { videosEcartees = 0, terminer }: Partial<SelectionGoogle> = {},
+  ) => {
+    const locale = terminer === undefined;
     setErreur(null);
     setPhase({
       nom: "envoi",
       avancement: {
-        total: fichiers.length,
+        total: sources.length,
         traites: 0,
         importees: 0,
         doublons: 0,
@@ -120,7 +141,7 @@ export function ImportPhotos() {
     });
     try {
       const bilan = await importer(
-        fichiers,
+        sources,
         {
           lireEmpreintes: () => lireEmpreintes(projet.id),
           calculerEmpreinte,
@@ -131,21 +152,31 @@ export function ImportPhotos() {
           onAvancement: (avancement) => setPhase({ nom: "envoi", avancement }),
         },
       );
-      setAcceptes([]);
-      setRefuses([]);
-      setPhase({ nom: "fin", bilan });
+      if (locale) {
+        setAcceptes([]);
+        setRefuses([]);
+      }
+      setPhase({ nom: "fin", bilan, videosEcartees });
     } catch (probleme) {
       if (probleme instanceof ErreurNonAuthentifie) {
         void navigate(`/connexion?retour=${encodeURIComponent(pathname)}`);
         return;
       }
       setPhase({ nom: "selection" });
+      if (probleme instanceof ErreurGoogleNonAutorise) {
+        oublierJeton();
+        setErreur(
+          "Votre accès à Google Photos a expiré. Reconnectez-vous : les photos déjà arrivées seront sautées.",
+        );
+        return;
+      }
       setErreur(
         probleme instanceof ErreurReseau
           ? "Le serveur ne répond pas. Vérifiez votre connexion, puis réessayez : les photos déjà arrivées seront sautées."
           : "L'import n'a pas pu démarrer. Réessayez dans un instant.",
       );
     } finally {
+      void terminer?.();
       // La réserve, dessous, montre ce qui est arrivé, même après une interruption.
       void revalidate();
     }
@@ -165,36 +196,50 @@ export function ImportPhotos() {
               {erreur}
             </p>
           )}
-          <label
-            htmlFor={idChamp}
-            className={[styles.zone, survol && styles.survol]
-              .filter(Boolean)
-              .join(" ")}
-            onDragOver={(evenement) => {
-              evenement.preventDefault();
-              setSurvol(true);
-            }}
-            onDragLeave={() => setSurvol(false)}
-            onDrop={deposer}
-          >
-            <span className={styles.zoneTitre}>
-              Glissez vos photos ici, ou cliquez pour les choisir
-            </span>
-            <span className={styles.zoneAide}>
-              Les photos déjà dans le livre sont sautées.
-            </span>
-            <input
-              id={idChamp}
-              className={styles.champ}
-              type="file"
-              multiple
-              accept={TYPES_ACCEPTES.join(",")}
-              onChange={(evenement) => {
-                ajouter(Array.from(evenement.currentTarget.files ?? []));
-                evenement.currentTarget.value = "";
-              }}
-            />
-          </label>
+          <div className={styles.colonnes}>
+            <section className={styles.colonne}>
+              <h3 className={styles.colonneTitre}>Depuis cet appareil</h3>
+              <label
+                htmlFor={idChamp}
+                className={[styles.zone, survol && styles.survol]
+                  .filter(Boolean)
+                  .join(" ")}
+                onDragOver={(evenement) => {
+                  evenement.preventDefault();
+                  setSurvol(true);
+                }}
+                onDragLeave={() => setSurvol(false)}
+                onDrop={deposer}
+              >
+                <span className={styles.zoneTitre}>
+                  Glissez vos photos ici, ou cliquez pour les choisir
+                </span>
+                <span className={styles.zoneAide}>
+                  Les photos déjà dans le livre sont sautées.
+                </span>
+                <input
+                  id={idChamp}
+                  className={styles.champ}
+                  type="file"
+                  multiple
+                  accept={TYPES_ACCEPTES.join(",")}
+                  onChange={(evenement) => {
+                    ajouter(Array.from(evenement.currentTarget.files ?? []));
+                    evenement.currentTarget.value = "";
+                  }}
+                />
+              </label>
+            </section>
+            <section className={styles.colonne}>
+              <h3 className={styles.colonneTitre}>Depuis Google Photos</h3>
+              <ColonneGooglePhotos
+                key={rangGoogle}
+                onSelection={(selection) =>
+                  void lancer(selection.sources, selection)
+                }
+              />
+            </section>
+          </div>
           {refuses.length > 0 && (
             <div className={styles.liste}>
               <span className={styles.libelle}>
@@ -224,7 +269,7 @@ export function ImportPhotos() {
             <Bouton
               type="button"
               disabled={acceptes.length === 0}
-              onClick={() => void lancer()}
+              onClick={() => void lancer(acceptes.map(sourceLocale))}
             >
               {acceptes.length > 0
                 ? `Importer ${pluriel(acceptes.length, "photo", "photos")}`
@@ -255,6 +300,7 @@ export function ImportPhotos() {
       {phase.nom === "fin" && (
         <Bilan
           bilan={phase.bilan}
+          videosEcartees={phase.videosEcartees}
           onRecommencer={() => setPhase({ nom: "selection" })}
           onVoir={() => void navigate(adresseDuLivre)}
         />
@@ -265,10 +311,12 @@ export function ImportPhotos() {
 
 function Bilan({
   bilan,
+  videosEcartees,
   onRecommencer,
   onVoir,
 }: {
   bilan: Avancement;
+  videosEcartees: number;
   onRecommencer: () => void;
   onVoir: () => void;
 }) {
@@ -284,6 +332,12 @@ function Bilan({
           {bilan.doublons === 1
             ? "1 photo était déjà dans le livre."
             : `${bilan.doublons} photos étaient déjà dans le livre.`}
+        </p>
+      )}
+      {videosEcartees > 0 && (
+        <p>
+          {pluriel(videosEcartees, "vidéo écartée", "vidéos écartées")} : non
+          prises en charge.
         </p>
       )}
       {bilan.avertissements.length > 0 && (
