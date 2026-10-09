@@ -225,10 +225,12 @@ Le front affiche les fichiers par URL signée de courte durée (`createSignedUrl
 
 ### Google Photos — Picker API
 
-Dépriorisé : l'envoi de fichiers reste le parcours par défaut.
+L'envoi de fichiers reste le parcours par défaut ; Google Photos est une seconde colonne de la modale d'import.
 
-- Session et suivi depuis le navigateur ; les fichiers sont rapatriés aussitôt (les `baseUrl` expirent en une heure), puis traités comme un import.
-- **À vérifier d'abord** : le navigateur peut-il télécharger les `baseUrl` (CORS) ? Sinon, une Edge Function sert de relais.
+- Jeton par le script Google Identity Services (*token client*), chargé à la demande, gardé en mémoire une heure. Scope `photospicker.mediaitems.readonly`.
+- Session, suivi et téléchargement depuis le navigateur : l'API Picker et les `baseUrl` acceptent le CORS (vérifié le 9 octobre 2026). Pas d'Edge Function.
+- Chaque photo est téléchargée pendant l'import, avant l'expiration des `baseUrl` (une heure), et suit le même chemin qu'un fichier local.
+- Le sélecteur s'ouvre par un lien cliqué par le Créateur : un `window.open` après un appel réseau est bloqué.
 - Rester en mode *Testing* dans Google Cloud, le jury en utilisateurs de test.
 - Plan B : import d'un export Google Takeout.
 
