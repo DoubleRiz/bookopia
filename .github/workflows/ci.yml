@@ -1,0 +1,79 @@
+# Intégration continue : tout ce qui doit passer avant qu'une PR rejoigne main.
+# Les deux jobs sont des vérifications obligatoires de la protection de main.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Un nouveau push sur la même PR annule la vérification devenue inutile.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  code:
+    name: Lint, types et tests unitaires
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+
+  base-et-parcours:
+    name: Base (pgTAP) et parcours (e2e)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+
+      # Même version de la CLI qu'en local, pour que la base démarre à l'identique.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.106.0
+      # Seuls la base, l'auth, l'API REST et le stockage servent aux tests : on écarte le reste
+      # pour démarrer plus vite. start applique les migrations puis le seed.
+      - name: Démarrer Supabase
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit,realtime,postgres-meta
+
+      - name: Tests pgTAP (RLS et fonctions SQL)
+        run: supabase test db
+
+      # Le front lit le .env à la racine : on le remplit avec l'URL et la clé publique de
+      # l'instance locale du runner, qui ne sont pas des secrets.
+      - name: Écrire le .env du front
+        run: |
+          supabase status -o env \
+            | sed -n -e 's/^API_URL=/VITE_SUPABASE_URL=/p' -e 's/^ANON_KEY=/VITE_SUPABASE_ANON_KEY=/p' \
+            > .env
+          grep -q VITE_SUPABASE_ANON_KEY .env
+
+      - name: Installer Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Parcours e2e (Playwright)
+        run: npm run e2e
+
+      - name: Garder les traces des parcours en échec
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: traces-playwright
+          path: test-results/
+          retention-days: 7
