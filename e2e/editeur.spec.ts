@@ -16,7 +16,7 @@ async function creerLivreAvecPhotos(page: Page) {
 
   await page.getByRole("button", { name: "Importer des photos" }).click();
   const fenetre = page.getByRole("dialog", { name: "Importer des photos" });
-  await fenetre.getByLabel(/Glissez vos photos ici/).setInputFiles(
+  await fenetre.getByLabel(/Depuis votre appareil/).setInputFiles(
     (
       [
         ["rouge", [200, 40, 40]],

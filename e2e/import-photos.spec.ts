@@ -23,7 +23,7 @@ test("le Créateur importe des photos dans la réserve de son livre", async ({
 
   const bleu = png(1200, 800, [40, 80, 200]);
   const fenetre = page.getByRole("dialog", { name: "Importer des photos" });
-  await fenetre.getByLabel(/Glissez vos photos ici/).setInputFiles([
+  await fenetre.getByLabel(/Depuis votre appareil/).setInputFiles([
     { name: "bleu.png", mimeType: "image/png", buffer: bleu },
     { name: "copie-du-bleu.png", mimeType: "image/png", buffer: bleu },
     {
@@ -45,7 +45,7 @@ test("le Créateur importe des photos dans la réserve de son livre", async ({
   await fenetre
     .getByRole("button", { name: "Importer d'autres photos" })
     .click();
-  await fenetre.getByLabel(/Glissez vos photos ici/).setInputFiles([
+  await fenetre.getByLabel(/Depuis votre appareil/).setInputFiles([
     { name: "bleu.png", mimeType: "image/png", buffer: bleu },
     {
       name: "rouge.png",

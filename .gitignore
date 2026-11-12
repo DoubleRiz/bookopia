@@ -4,5 +4,6 @@ node_modules/
 dist/
 test-results/
 playwright-report/
-.claude/
+.claude/*
+!.claude/commands/
 archive/packages/db/src/generated/
