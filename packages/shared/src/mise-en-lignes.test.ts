@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   disposerTexte,
   type LigneDisposee,
+  policesDuTexte,
   prefixeQuiTient,
   RETRAIT_PUCE_MM,
+  styleDuSegment,
   type TexteAPlacer,
   tronquerPourTenir,
 } from "./mise-en-lignes";
@@ -374,5 +376,68 @@ describe("prefixeQuiTient", () => {
     expect(
       prefixeQuiTient(cadre(), theme, mesures, "aaaaaaaaaa bbbbbbbbbb cc"),
     ).toBe("aaaaaaaaaa bbbbbbbbbb ");
+  });
+});
+
+describe("styleDuSegment", () => {
+  it("garde la police, le corps et la couleur du thème pour un passage sans style", () => {
+    expect(styleDuSegment({ texte: "a" }, theme, "legende")).toEqual({
+      police: "nunito-400",
+      taille_mm: 2,
+      couleur: "#112233",
+      souligne: false,
+    });
+  });
+
+  it("applique la famille, la graisse, le corps et la couleur du passage", () => {
+    expect(
+      styleDuSegment(
+        {
+          texte: "a",
+          police: "Lora",
+          gras: true,
+          taille_pt: 12,
+          couleur: "#aa0000",
+          souligne: true,
+        },
+        theme,
+        "legende",
+      ),
+    ).toEqual({
+      police: "lora-700",
+      taille_mm: 12 * MM_PAR_POINT,
+      couleur: "#aa0000",
+      souligne: true,
+    });
+  });
+});
+
+describe("policesDuTexte", () => {
+  it("demande la seule police du thème quand le cadre est vide", () => {
+    expect(policesDuTexte(null, theme, "titre")).toEqual(["nunito-800"]);
+  });
+
+  it("ajoute les polices des passages, paragraphes et listes, sans doublon", () => {
+    const document: DocumentTexte = {
+      version: 1,
+      blocs: [
+        {
+          type: "paragraphe",
+          segments: [{ texte: "a" }, { texte: "b", gras: true }],
+        },
+        {
+          type: "liste",
+          elements: [
+            [{ texte: "c", police: "Lora", italique: true }],
+            [{ texte: "d", gras: true }],
+          ],
+        },
+      ],
+    };
+    expect(policesDuTexte(document, theme, "legende")).toEqual([
+      "nunito-400",
+      "nunito-700",
+      "lora-400-italique",
+    ]);
   });
 });
