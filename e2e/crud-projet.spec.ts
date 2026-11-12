@@ -25,7 +25,7 @@ test("le Créateur crée, renomme et supprime un livre", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Été à Lisbonne" }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "← Mes livres" }).click();
+  await page.getByRole("link", { name: "Mes livres" }).click();
 
   await expect(page).toHaveURL("/livres");
   await expect(page.getByText("Été à Lisbonne")).toBeVisible();
