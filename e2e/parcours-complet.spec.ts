@@ -1,31 +1,28 @@
 import { expect, test } from "@playwright/test";
 import { PDFDict, PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
-import { allerA, creerLivreImporte, ecrire } from "./parcours";
+import { allerA, bande, creerLivreImporte, ecrire } from "./parcours";
 
 // BK-036 : le parcours principal d'une traite, import → édition → couverture → export. Les
 // morceaux sont déjà éprouvés un à un (premier-pdf, editeur, textes-themes) ; celui-ci vérifie
-// qu'ils tiennent ensemble, et que la couverture travaillée se retrouve dans le PDF.
+// qu'ils tiennent ensemble : la couverture n'est plus signalée vide, le PDF a ses pages, ses photos
+// et la police de son titre.
 test("le Créateur importe, compose, soigne sa couverture et exporte son livre", async ({
   page,
 }) => {
   await creerLivreImporte(page, 3);
   await page.getByRole("button", { name: "Composer le livre" }).click();
-  const bande = page.getByRole("navigation", {
-    name: "Doubles pages du livre",
-  });
-  await expect(bande.locator("image")).toHaveCount(3);
+  await expect(bande(page).locator("image")).toHaveCount(3);
 
-  // Édition : une photo vidée, reposée depuis la réserve.
-  const cadre = page
-    .getByRole("group", { name: "Pages 2 et 3" })
-    .getByRole("button", { name: /^Cadre 1,/ });
-  await cadre.click();
-  await page.getByRole("button", { name: "Vider" }).click();
-  await expect(cadre).toHaveAccessibleName("Cadre 1, vide");
+  // Édition : un recadrage (il ne change pas les photos posées, donc le compte du PDF reste exact).
   await page
-    .getByRole("button", { name: /^Poser « photo-1\.png »/ })
-    .press("Enter");
-  await expect(cadre).toHaveAccessibleName("Cadre 1, photo posée");
+    .getByRole("group", { name: "Pages 2 et 3" })
+    .getByRole("button", { name: /^Cadre 1,/ })
+    .click();
+  await page.getByRole("button", { name: "Recadrer" }).click();
+  const recadrage = page.getByRole("dialog", { name: "Recadrer la photo" });
+  await recadrage.getByLabel("Zoom").fill("2");
+  await recadrage.getByRole("button", { name: "Valider" }).click();
+  await expect(recadrage).toBeHidden();
   await expect(page.getByRole("status")).toHaveText("Enregistré");
 
   // Couverture : une photo et un titre.
@@ -62,9 +59,10 @@ test("le Créateur importe, compose, soigne sa couverture et exporte son livre",
   expect(reponse.ok()).toBe(true);
   const document = await PDFDocument.load(await reponse.body());
 
-  // Une page par double page. Une photo posée deux fois n'est embarquée qu'une fois : les trois
-  // photos font trois images. Le titre de la couverture est le seul texte : une police embarquée.
-  expect(document.getPageCount()).toBeGreaterThanOrEqual(3);
+  // Une page par double page : couverture, 4e et trois intérieures. Une photo posée deux fois
+  // n'est embarquée qu'une fois : les trois photos font trois images. Le titre de la couverture
+  // est le seul texte du livre : une seule police embarquée.
+  expect(document.getPageCount()).toBe(5);
   const objets = document.context
     .enumerateIndirectObjects()
     .map(([, objet]) => objet);

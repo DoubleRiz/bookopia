@@ -1,7 +1,7 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Route, test } from "@playwright/test";
 import { PDFDocument } from "pdf-lib";
-import { creerLivreImporte, MOT_DE_PASSE } from "./parcours";
 import { png } from "./images";
+import { creerLivreImporte, MOT_DE_PASSE } from "./parcours";
 
 // BK-116 : les états d'erreur dans le navigateur. Le réseau est coupé (setOffline, route.abort)
 // ou une requête est refusée (route.fulfill) ; chaque test vérifie le message, puis la reprise.
@@ -75,7 +75,7 @@ test("une écriture refusée rétablit le geste, puis se rejoue", async ({
   await cadre.click();
   await expect(cadre).toHaveAttribute("aria-pressed", "true");
 
-  const refuser = (route: import("@playwright/test").Route) =>
+  const refuser = (route: Route) =>
     route.request().method() === "PATCH"
       ? route.fulfill(REFUS)
       : route.continue();
@@ -119,10 +119,8 @@ test("un fichier dont l'envoi échoue figure dans le bilan, les autres passent",
   // de dépôt d'un même fichier, le premier vu.
   let refuse: string | null = null;
   await page.route("**/storage/v1/object/photos/**", (route) => {
-    const { url, method } = {
-      url: route.request().url(),
-      method: route.request().method(),
-    };
+    const url = route.request().url();
+    const method = route.request().method();
     if (method === "POST" && (refuse ??= url) === url) {
       return route.fulfill({
         status: 500,
@@ -173,7 +171,7 @@ test("un export qui échoue le dit et laisse le PDF précédent téléchargeable
   ).toBeGreaterThan(0);
 });
 
-test("une session expirée ramène à la connexion, puis à l'écran demandé", async ({
+test("une session absente ramène à la connexion, puis à l'écran demandé", async ({
   page,
 }) => {
   const email = await creerLivreImporte(page);
@@ -192,7 +190,7 @@ test("une session expirée ramène à la connexion, puis à l'écran demandé", 
   await page.getByLabel("Adresse e-mail").fill(email);
   await page.getByLabel("Mot de passe").fill(MOT_DE_PASSE);
   await page.getByRole("button", { name: "Se connecter" }).click();
-  await expect(page).toHaveURL(new RegExp(`${adresse}$`));
+  await expect(page).toHaveURL((url) => url.pathname === adresse);
   await expect(page.getByRole("group", { name: "Pages 2 et 3" })).toBeVisible();
 });
 

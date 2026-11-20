@@ -1,6 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 import { png } from "./images";
 
+export const MOT_DE_PASSE = "parcours-e2e-local";
+
 // Un livre « Raconté » (thème Carnet) avec une photo, sans composition : ses intérieures gardent
 // les gabarits choisis à la création, et on applique ceux qui portent des textes.
 export async function creerLivreRaconte(page: Page) {
@@ -8,7 +10,7 @@ export async function creerLivreRaconte(page: Page) {
   await page.goto("/inscription");
   await page.getByLabel("Votre nom").fill("Créateur de test");
   await page.getByLabel("Adresse e-mail").fill(email);
-  await page.getByLabel("Mot de passe").fill("parcours-e2e-local");
+  await page.getByLabel("Mot de passe").fill(MOT_DE_PASSE);
   await page.getByRole("button", { name: "Créer mon compte" }).click();
 
   await page.getByRole("button", { name: "Créer mon premier livre" }).click();
@@ -67,8 +69,6 @@ export async function ecrire(page: Page, cadre: string, texte: string) {
   await page.keyboard.type(texte);
   return zone;
 }
-
-export const MOT_DE_PASSE = "parcours-e2e-local";
 
 // Un Créateur neuf avec un livre « Carnet de test » et `nombre` photos dans sa réserve, sur la
 // réserve. Rend l'adresse du compte, pour se reconnecter.
