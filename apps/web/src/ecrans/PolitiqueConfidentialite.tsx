@@ -44,10 +44,16 @@ export function PolitiqueConfidentialite() {
               fichier, dimensions et date de prise de vue.
             </li>
             <li>Les PDF que vous exportez.</li>
+            <li>
+              À chaque connexion : votre adresse IP et votre navigateur,
+              enregistrés par Supabase dans ses sessions et son journal de
+              connexions.
+            </li>
           </ul>
           <p>
             Bookopia n'utilise aucun traceur, aucun cookie publicitaire et
-            aucune mesure d'audience. Le navigateur ne garde qu'un réglage
+            aucune mesure d'audience. Le navigateur garde deux choses : votre
+            session de connexion, nécessaire au service, et un réglage
             d'affichage (réserve de photos ouverte ou fermée).
           </p>
         </section>

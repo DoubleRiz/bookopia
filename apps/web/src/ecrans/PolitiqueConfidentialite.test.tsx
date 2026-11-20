@@ -26,6 +26,12 @@ describe("PolitiqueConfidentialite", () => {
     expect(page).toContain("date de prise de vue");
   });
 
+  // supabase-js garde la session dans le localStorage, et Supabase Auth journalise chaque connexion.
+  it("dit ce que le navigateur garde et ce que la connexion enregistre", () => {
+    expect(page).toContain("session de connexion");
+    expect(page).toContain("adresse IP");
+  });
+
   it("donne les finalités et les bases légales", () => {
     expect(page).toContain("Finalité");
     expect(page).toContain("exécution du service");
