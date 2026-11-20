@@ -68,8 +68,8 @@ Option « Leaked password protection » de Supabase Auth (comparaison avec Have 
 |---|---|---|---|
 | `enable_confirmations` | `false` (maintenu) | `true` | En local et en e2e, les comptes `@bookopia.test` se connectent sans boîte mail. En ligne, SMTP par défaut de Supabase : 2 e-mails par heure (`email_sent`), insuffisant dès quelques inscriptions. Il faudra un SMTP propre pour la démonstration (hors périmètre, à noter) |
 | `secure_password_change` | `true` | `true` | Changer le mot de passe demande une connexion récente ; aucun écran ne le change aujourd'hui, donc aucun impact |
-| `password_requirements` | `lower_upper_letters_digits` | idem | Un mot de passe sans majuscule, minuscule ou chiffre est refusé. Les e2e et le seed doivent respecter la règle : à vérifier |
-| `site_url`, `additional_redirect_urls` | `http://127.0.0.1:3000` et le port local du front | l'adresse du front en ligne, seule | Une seule adresse autorisée en ligne : pas de redirection vers un aperçu |
+| `password_requirements` | vide (maintenu) | `lower_upper_letters_digits` | Un mot de passe sans majuscule, minuscule ou chiffre est refusé en ligne. Local inchangé : sept parcours e2e créent leur compte avec `parcours-e2e-local`, que la règle refuserait ; les changer toucherait des fichiers d'une autre branche. À aligner quand ces parcours seront stables |
+| `site_url`, `additional_redirect_urls` | `http://localhost:5173` (le front de `npm run dev`, remplace un port 3000 inutilisé) | l'adresse du front en ligne, seule | Une seule adresse autorisée en ligne : pas de redirection vers un aperçu |
 | Décisions 2 et 3 | — | consignées ci-dessus | |
 
 L'adresse du front en ligne n'existe qu'après BK-098 : en attendant, les critères « adresse en ligne » (BK-119, vérification `curl -I` de BK-121) restent à faire sur le projet hébergé.
