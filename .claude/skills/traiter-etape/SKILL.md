@@ -18,7 +18,7 @@ Invoquer ce skill sur une étape vaut demande explicite, au sens de `CLAUDE.md`,
 
 ## 1. Lire l'étape
 
-- Les étapes vivent dans la base « 🗺️ Suivi du projet » (`collection://5be075ee-cce9-45b6-be65-542444a51a8d`). Si aucune n'est indiquée, proposer celles « À faire » du lot en cours et faire choisir.
+- Les étapes vivent dans la base « 🗺️ Suivi du projet » (`collection://7731b961-f581-836e-82b9-873f77b7750f`). Si aucune n'est indiquée, proposer celles « À faire » du lot en cours et faire choisir.
 - Lire chaque étape : critères d'acceptation, livrable, notes, écran visé (spécifications E0 à E10) et règles RG citées. Les spécifications fonctionnelles priment sur le modèle de données.
 - Si Notion ne répond pas (connecteur absent ou non authentifié), le dire et demander le lien ou le texte de l'étape. Ne pas deviner les critères.
 - Restituer en quelques lignes : ce qui sera livré, les critères, ce qui reste flou. Poser les questions sur le flou maintenant, pas pendant l'implémentation.
