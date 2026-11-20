@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
+import { creerMesure } from "./mesure-police";
 import {
-  creerMesure,
   FICHIERS_POLICES,
   type ClePolice,
   type MesureTexte,

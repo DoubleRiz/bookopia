@@ -1,4 +1,4 @@
-import { rendre } from "@bookopia/shared";
+import { rendre } from "@bookopia/shared/rendu-pdf";
 import {
   cheminPdf,
   deposerPdf,

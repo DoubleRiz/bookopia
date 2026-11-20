@@ -4,6 +4,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./rendu-pdf": "./src/rendu-pdf.ts",
+    "./mesure-police": "./src/mesure-police.ts",
     "./polices/*": "./polices/*"
   },
   "scripts": {
