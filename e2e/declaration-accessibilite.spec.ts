@@ -33,6 +33,17 @@ test("le Visiteur lit la déclaration d'accessibilité depuis le pied de l'accue
   }
 });
 
+// L'engagement « Accessible » de l'accueil renvoie au résultat réel de l'audit.
+test("l'engagement d'accessibilité de l'accueil mène à la déclaration", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("link", { name: "Lire la déclaration d'accessibilité" })
+    .click();
+  await expect(page).toHaveURL(/\/accessibilite$/);
+});
+
 test("la page s'ouvre directement, sans compte", async ({ page }) => {
   await page.goto("/accessibilite");
   await expect(

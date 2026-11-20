@@ -80,7 +80,13 @@ const ETAPES = [
 ];
 
 // Chaque phrase décrit ce que fait réellement l'application : une cible, jamais une conformité non auditée.
-const ENGAGEMENTS = [
+const ENGAGEMENTS: {
+  reference: string;
+  titre: string;
+  points: string[];
+  lien?: { vers: string; texte: string };
+  teinte: string | undefined;
+}[] = [
   {
     reference: "RGAA · WCAG 2.2 AA",
     titre: "Accessible",
@@ -89,6 +95,11 @@ const ENGAGEMENTS = [
       "Tout ce qui se fait à la souris se fait aussi au clavier.",
       "Les animations s'arrêtent si votre système le demande.",
     ],
+    // La référence est une cible : la déclaration donne le résultat réel de l'audit (BK-131).
+    lien: {
+      vers: "/accessibilite",
+      texte: "Lire la déclaration d'accessibilité",
+    },
     teinte: styles.ciel,
   },
   {
@@ -284,6 +295,14 @@ export function Accueil() {
                     <li key={point}>{point}</li>
                   ))}
                 </ul>
+                {engagement.lien && (
+                  <Link
+                    to={engagement.lien.vers}
+                    className={styles.lienEngagement}
+                  >
+                    {engagement.lien.texte}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
