@@ -47,7 +47,7 @@ jobs:
       # Même version de la CLI qu'en local, pour que la base démarre à l'identique.
       - uses: supabase/setup-cli@v1
         with:
-          version: 2.106.0
+          version: 3.2.0
       # Seuls la base, l'auth, l'API REST et le stockage servent aux tests : on écarte le reste
       # pour démarrer plus vite. start applique les migrations puis le seed.
       - name: Démarrer Supabase
