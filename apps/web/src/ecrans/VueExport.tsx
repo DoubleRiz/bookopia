@@ -109,8 +109,8 @@ export function VueExport({
           className={styles.lienLigne}
         >
           {libelles[doublePageId] ?? "Double page"}
-          <span className={styles.corriger} aria-hidden="true">
-            Corriger →
+          <span className={styles.corriger}>
+            Corriger <span aria-hidden="true">→</span>
           </span>
         </Link>
         <span className={styles.detail}>{detail}</span>

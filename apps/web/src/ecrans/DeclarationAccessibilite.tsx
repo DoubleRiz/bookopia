@@ -40,13 +40,18 @@ export function DeclarationAccessibilite() {
         <section>
           <h2>Résultats des tests</h2>
           <p>
-            L'audit du 20 novembre 2026 montre que 83,1 % des critères
-            applicables du RGAA sont respectés : 49 critères conformes sur 59.
+            L'audit du 20 novembre 2026, après les premières corrections, montre
+            que 89,5 % des critères applicables du RGAA sont respectés : 51
+            critères conformes sur 57. Avant les corrections, le taux était de
+            83,1 %.
           </p>
           <p>
-            Deux critères n'ont pas encore été vérifiés : la compatibilité des
-            composants de l'éditeur avec un lecteur d'écran, et la validité du
-            code source. Le taux sera mis à jour quand ils le seront.
+            Quatre critères n'ont pas encore été vérifiés : la compatibilité des
+            composants de l'éditeur avec un lecteur d'écran, la validité du code
+            source, et deux corrections de l'éditeur (retour du focus après
+            Échap, focus visible sur la miniature de la double page) à revoir
+            dans l'éditeur lui-même. Le taux sera mis à jour quand ils le
+            seront.
           </p>
         </section>
 
@@ -63,25 +68,8 @@ export function DeclarationAccessibilite() {
               l'éditeur, n'est pas assez contrastée.
             </li>
             <li>
-              Sur l'accueil, le nom des liens « Essayer ce modèle » ne reprend
-              pas leur texte visible. Sur l'écran d'export, le mot « Corriger »
-              des liens de la liste n'est pas lu par les lecteurs d'écran.
-            </li>
-            <li>
-              Dans l'éditeur, quitter l'écriture d'un texte avec Échap fait
-              perdre la position du clavier dans la page.
-            </li>
-            <li>
-              Sur la page de connexion, le lien « Créer un compte » ne se
-              distingue du texte voisin que par sa couleur.
-            </li>
-            <li>
-              Dans l'éditeur, la miniature de la double page affichée ne montre
-              pas le focus du clavier.
-            </li>
-            <li>
-              À 320 pixels de large, l'accueil défile à l'horizontale, et un
-              bouton de l'éditeur recouvre une consigne.
+              À 320 pixels de large, dans l'éditeur, un bouton recouvre une
+              consigne.
             </li>
             <li>
               Les pages publiques et la liste des livres n'offrent qu'un seul

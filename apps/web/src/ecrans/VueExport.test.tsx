@@ -46,6 +46,17 @@ describe("VueExport", () => {
     expect(html).toContain("102 DPI");
   });
 
+  it("garde « Corriger » dans le nom du lien, seule la flèche est masquée (RGAA 6.1)", () => {
+    const html = rendre({
+      controle: {
+        faibles: [{ double_page_id: "d2", emplacement_id: "e1", dpi: 101.6 }],
+        vides: [],
+      },
+    });
+    expect(html).toContain('Corriger <span aria-hidden="true">→</span>');
+    expect(html).not.toMatch(/aria-hidden="true">\s*Corriger/);
+  });
+
   it("liste les cadres photo vides avec un lien vers la double page", () => {
     const html = rendre({
       controle: {

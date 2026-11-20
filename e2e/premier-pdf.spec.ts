@@ -52,7 +52,7 @@ test("le Créateur compose son livre et en exporte le PDF", async ({ page }) => 
   await expect(
     page.getByRole("heading", { name: "Cadres photo vides" }),
   ).toBeVisible();
-  const vide = page.getByRole("link", { name: "Couverture", exact: true });
+  const vide = page.getByRole("link", { name: /^Couverture Corriger/ });
   await expect(vide).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Quatrième de couverture" }),

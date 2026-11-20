@@ -236,6 +236,11 @@ describe("DoublePage dans l'éditeur", () => {
     expect(html).toContain("Écrire une légende");
   });
 
+  it("repère le cadre texte par son identifiant, pour lui rendre le focus après Échap (RGAA 7.3)", () => {
+    const html = rendre([texte(null)], undefined, interaction(null));
+    expect(html).toContain('data-emplacement="t1"');
+  });
+
   it("ne rend pas un cadre texte focalisable tant que les polices manquent", () => {
     const html = rendre([texte("Lisbonne")], undefined, interaction(null), {
       theme: MODERNE,

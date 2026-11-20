@@ -9,10 +9,11 @@ Grille d'audit de Bookopia selon le RGAA 4.1.2 (106 critères). Elle fonde la [d
 | Date | 20 novembre 2026 |
 | Auditeur | Gautier Baleda, avec un agent IA (auto-audit, pas d'auditeur externe) |
 | Référentiel | RGAA 4.1.2, niveau AA |
+| Corrections | 20 novembre 2026 (BK-135) : 6.1, 10.6 et 10.11 sur l'accueil corrigés ; 7.3 et 10.7 corrigés mais à revérifier dans l'éditeur |
 | État | **Partiellement conforme** |
-| Taux global | **83,1 %** : 49 critères conformes sur 59 applicables, 10 non conformes |
-| Critères à vérifier | 2 (7.1 et 8.2), exclus du taux. Selon leur résultat, le taux final est compris entre 80,3 % et 83,6 % |
-| Taux moyen par page | 94,9 % |
+| Taux global | **89,5 %** : 51 critères conformes sur 57 applicables, 6 non conformes (83,1 % avant les corrections) |
+| Critères à vérifier | 4 (7.1, 7.3, 8.2 et 10.7), exclus du taux. Selon leur résultat, le taux final est compris entre 83,6 % et 90,2 % |
+| Taux moyen par page | 96,7 % (94,9 % avant les corrections) |
 
 Le taux global compte un critère comme non conforme dès qu'il l'est sur une seule page. Le taux moyen fait la moyenne des taux de chaque page.
 
@@ -20,12 +21,12 @@ Le taux global compte un critère comme non conforme dès qu'il l'est sur une se
 
 | Code | Page | Adresse | Taux |
 |---|---|---|---|
-| A | E0 Accueil | `/` | 92,1 % |
-| C | E1 Connexion | `/connexion` | 95,5 % |
+| A | E0 Accueil | `/` | 97,4 % |
+| C | E1 Connexion | `/connexion` | 97,7 % |
 | L | E4 Mes livres, avec les surcouches Nouveau livre, Renommer et Supprimer | `/livres`, `/livres/nouveau` | 96,1 % |
 | I | E5 Import de photos (surcouche de l'éditeur) | `/livre/:id/import` | 100 % |
-| E | E7 Éditeur | `/livre/:id` | 89,1 % |
-| X | E9 Export | `/livre/:id/export` | 92,5 % |
+| E | E7 Éditeur | `/livre/:id` | 93,2 % |
+| X | E9 Export | `/livre/:id/export` | 95,0 % |
 | M | Mentions légales | `/mentions-legales` | 97,0 % |
 | D | Déclaration d'accessibilité | `/accessibilite` | 97,0 % |
 
@@ -58,21 +59,30 @@ Ce qui n'a pas été fait :
 | 1.3 | E | Les photos de la réserve sont nommées par leur nom de fichier (« phare.png »). Le design system prévoit un texte alternatif « lieu et date » par défaut, modifiable : il n'est pas implémenté |
 | 3.3 | C, L | Bordure des champs de saisie `#CDBCEB` sur blanc : 1,75:1, pour 3:1 attendu. Le champ n'a pas d'autre limite visible |
 | 3.3 | E | Cadre photo vide : fond `#F4EFFC` et bordure `#CDBCEB` sur la page `#FFF5E6` (1,05:1 et 1,62:1). Cadre texte : bordure `#A9A3BC`, 2,25:1 |
-| 6.1 | A | Liens « Essayer ce modèle » : leur nom accessible est « Essayer le modèle Généreux », qui ne contient pas l'intitulé visible (« ce » au lieu de « le ») |
-| 6.1 | X | Liens de la liste des points à vérifier : « Corriger → » est visible mais masqué aux technologies d'assistance (`aria-hidden`), le nom se réduit à « Couverture », « Pages 2 et 3 »… |
-| 7.3 | E | Après Échap dans un cadre texte en cours d'écriture, le focus est perdu (il revient au `<body>`) : au clavier, il faut repartir du début de la page |
-| 10.6 | C | « Créer un compte », dans l'en-tête, suit le texte « Pas encore de compte ? » : il s'en distingue par la couleur seule (1,2:1 entre les deux), sans soulignement |
-| 10.7 | E | Miniature de la double page courante : la règle `.courante .choisirPage` écrase l'anneau de `:focus-visible`. Au focus, rien ne change |
-| 10.11 | A | À 320 px, la page défile d'une vingtaine de pixels à l'horizontale (342 à 345 px de large selon le chargement des polices) : le bouton « Connexion » de l'en-tête dépasse |
-| 10.11 | E | À 320 px, le bouton « Changer le gabarit » recouvre une partie de la consigne « Glissez une photo de la réserve sur un cadre… » |
+| 10.11 | E | Non corrigé (BK-135, éditeur non rejoué à 320 px). À 320 px, le bouton « Changer le gabarit » recouvre une partie de la consigne « Glissez une photo de la réserve sur un cadre… » |
 | 12.1 | A, L, M, D | Un seul système de navigation (le menu). Ni plan du site ni recherche. Connexion, import, éditeur et export font partie d'un processus et en sont exemptés |
 | 13.3, 13.4 | X | Le PDF exporté est un fichier d'impression : ni balisé, ni accompagné d'une version accessible |
+
+## Corrections de BK-135
+
+| Critère | Page | Correction | Vérifié |
+|---|---|---|---|
+| 6.1 | A | Nom du lien « Essayer ce modèle : Généreux », qui commence par l'intitulé visible | Test de composant |
+| 6.1 | X | Seule la flèche de « Corriger → » est masquée : le mot est lu | Test de composant |
+| 10.6 | C | « Créer un compte » est souligné | Capture à 320 px |
+| 10.11 | A | En-tête resserré à moins de 720 px : plus de défilement horizontal (345 px mesurés avant, 320 après) | Mesure à 320 px |
+| 7.3 | E | Après Échap, le focus retourne au cadre texte (`data-emplacement`) | Test de composant sur l'attribut seulement : à rejouer dans l'éditeur |
+| 10.7 | E | Règle ajoutée pour que l'anneau de focus s'affiche sur la miniature courante | Aucune : à rejouer dans l'éditeur |
+
+L'éditeur et l'export n'ont pas été essayés dans le navigateur : pas de Supabase local (Docker absent) pendant ces corrections.
 
 ## À vérifier
 
 | Critère | Pages | Ce qu'il reste à faire |
 |---|---|---|
 | 7.1 | I, E, X | Composants personnalisés de l'éditeur : boutons sur `div` et sur `rect` SVG, groupe, figure, statut « Enregistré », zone de texte riche. Leur nom, leur rôle et leur état sont corrects dans l'arbre d'accessibilité : reste à les entendre avec VoiceOver |
+| 7.3 | E | Corrigé (focus rendu au cadre texte après Échap). Reste à le rejouer dans l'éditeur : clavier, Échap en cours d'écriture |
+| 10.7 | E | Corrigé (anneau de focus sur la miniature courante). Reste à le voir dans l'éditeur, au Tab |
 | 8.2 | toutes | Validation du code source généré |
 
 Restent aussi à essayer avec VoiceOver, sans critère RGAA propre :
@@ -160,7 +170,7 @@ A accueil · C connexion · L Mes livres · I import · E éditeur · X export �
 
 | Critère | Intitulé | A | C | L | I | E | X | M | D | Site |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 6.1 | Lien explicite | **NC** | C | C | C | C | **NC** | C | C | **NC** |
+| 6.1 | Lien explicite | C | C | C | C | C | C | C | C | C |
 | 6.2 | Lien avec un intitulé | C | C | C | C | C | C | C | C | C |
 
 ### 7. Scripts
@@ -169,7 +179,7 @@ A accueil · C connexion · L Mes livres · I import · E éditeur · X export �
 |---|---|---|---|---|---|---|---|---|---|---|
 | 7.1 | Script compatible avec les technologies d'assistance | C | C | C | **AV** | **AV** | **AV** | C | C | **AV** |
 | 7.2 | Alternative au script pertinente | NA | NA | NA | NA | NA | NA | NA | NA | NA |
-| 7.3 | Script contrôlable au clavier et à la souris | C | C | C | C | **NC** | C | C | C | **NC** |
+| 7.3 | Script contrôlable au clavier et à la souris | C | C | C | C | **AV** | C | C | C | **AV** |
 | 7.4 | Changement de contexte signalé ou à l'initiative de l'utilisateur | NA | C | C | C | C | C | NA | NA | C |
 | 7.5 | Messages de statut restitués | NA | C | NA | C | C | C | NA | NA | C |
 
@@ -206,12 +216,12 @@ A accueil · C connexion · L Mes livres · I import · E éditeur · X export �
 | 10.3 | Information compréhensible sans feuilles de styles | C | C | C | C | C | C | C | C | C |
 | 10.4 | Texte lisible à 200 % | C | C | C | C | C | C | C | C | C |
 | 10.5 | Couleurs de police et de fond déclarées ensemble | C | C | C | C | C | C | C | C | C |
-| 10.6 | Lien dans un texte visible par rapport au texte | NA | **NC** | NA | NA | NA | NA | C | C | **NC** |
-| 10.7 | Prise de focus visible | C | C | C | C | **NC** | C | C | C | **NC** |
+| 10.6 | Lien dans un texte visible par rapport au texte | NA | C | NA | NA | NA | NA | C | C | C |
+| 10.7 | Prise de focus visible | C | C | C | C | **AV** | C | C | C | **AV** |
 | 10.8 | Contenus cachés ignorés par les technologies d'assistance | C | C | C | C | C | C | C | C | C |
 | 10.9 | Information pas donnée par la forme, la taille ou la position seules | C | C | C | C | C | C | NA | NA | C |
 | 10.10 | Idem, implémentation | C | C | C | C | C | C | NA | NA | C |
-| 10.11 | Pas de défilement dans deux dimensions à 320 px | **NC** | C | C | C | **NC** | C | C | C | **NC** |
+| 10.11 | Pas de défilement dans deux dimensions à 320 px | C | C | C | C | **NC** | C | C | C | **NC** |
 | 10.12 | Espacement du texte redéfinissable | C | C | C | C | C | C | C | C | C |
 | 10.13 | Contenus additionnels au survol ou au focus contrôlables | NA | NA | NA | NA | NA | NA | NA | NA | NA |
 | 10.14 | Contenus additionnels en CSS atteignables au clavier | NA | NA | NA | NA | NA | NA | NA | NA | NA |

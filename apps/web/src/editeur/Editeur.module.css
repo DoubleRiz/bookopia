@@ -314,6 +314,11 @@
   box-shadow: var(--halo-champ);
 }
 
+/* Sans cette règle, celle de la page courante écrase l'anneau (RGAA 10.7). */
+.courante .choisirPage:focus-visible {
+  box-shadow: var(--anneau-focus), var(--halo-champ);
+}
+
 /* Miniature visée pendant un réordonnancement. */
 .visee {
   outline: 2px dashed var(--couleur-cta);

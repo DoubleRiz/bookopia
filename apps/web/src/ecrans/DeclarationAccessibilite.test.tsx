@@ -15,7 +15,7 @@ describe("DeclarationAccessibilite", () => {
   it("annonce l'état de conformité et le taux mesuré par l'audit", () => {
     expect(page).toContain("partiellement conforme");
     expect(page).toContain("RGAA, version 4.1.2");
-    expect(page).toContain("83,1 %");
+    expect(page).toContain("89,5 %");
   });
 
   it("liste les non-conformités relevées par l'audit", () => {
@@ -30,7 +30,9 @@ describe("DeclarationAccessibilite", () => {
   });
 
   it("dit ce qui n'a pas encore été vérifié", () => {
-    expect(page).toContain("Deux critères n&#x27;ont pas encore été vérifiés");
+    expect(page).toContain(
+      "Quatre critères n&#x27;ont pas encore été vérifiés",
+    );
     expect(page).toContain("lecteur d&#x27;écran");
   });
 
