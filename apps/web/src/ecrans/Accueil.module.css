@@ -482,7 +482,18 @@
 
 @media (width < 720px) {
   .entete {
+    gap: var(--espace-1);
     padding: var(--espace-3) var(--espace-4);
+  }
+
+  /* À 320 px, l'en-tête doit tenir sans faire défiler la page (RGAA 10.11). */
+  .lienNavigation {
+    margin-right: 0;
+    padding-inline: 8px;
+  }
+
+  .entete > a:last-child {
+    padding-inline: 14px;
   }
 
   .accroche {
