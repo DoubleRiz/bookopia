@@ -235,6 +235,8 @@ export function Accueil() {
                           className={styles.livreOuvert}
                           src={exemple.src}
                           srcSet={exemple.srcSet}
+                          // Sous la ligne de flottaison : chargée à l'approche du catalogue.
+                          loading="lazy"
                           alt=""
                         />
                       ) : (
