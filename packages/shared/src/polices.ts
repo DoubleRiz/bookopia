@@ -1,4 +1,3 @@
-
 // Les polices des thèmes : un fichier TTF par graisse et style, dans packages/shared/polices.
 // Les mêmes octets servent à l'écran, à la mesure et au PDF.
 export const FICHIERS_POLICES = {

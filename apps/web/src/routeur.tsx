@@ -10,14 +10,7 @@ import {
   EcranCreateurProvisoire,
 } from "./ecrans/EcranCreateur";
 import { ErreurChargement } from "./ecrans/ErreurChargement";
-import { chargerExport, Export } from "./ecrans/Export";
-import { chargerImport, ImportPhotos } from "./ecrans/ImportPhotos";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
-import {
-  actionLivreEnCours,
-  chargerLivreEnCours,
-  LivreEnCours,
-} from "./ecrans/LivreEnCours";
 import {
   actionMesLivres,
   chargerMesLivres,
@@ -33,8 +26,12 @@ import { type AvecSurcouche, useFocusDePage } from "./ecrans/focusDePage";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
 
-type DonneesLivre = Awaited<ReturnType<typeof chargerLivreEnCours>>;
-type DonneesExport = Awaited<ReturnType<typeof chargerExport>>;
+type DonneesLivre = Awaited<
+  ReturnType<typeof import("./ecrans/LivreEnCours").chargerLivreEnCours>
+>;
+type DonneesExport = Awaited<
+  ReturnType<typeof import("./ecrans/Export").chargerExport>
+>;
 // Lu par EcranCreateur : l'écran occupe toute la fenêtre, sans l'en-tête.
 type PleinCadre = { pleinCadre: boolean };
 
@@ -137,10 +134,16 @@ export const routeur = createBrowserRouter([
                   pleinCadre: true,
                   titre: (d?: DonneesLivre) => d?.projet.titre ?? "Livre",
                 } satisfies AvecTitre & PleinCadre,
-                loader: chargerLivreEnCours,
                 shouldRevalidate: revaliderSaufPageCourante,
-                action: actionLivreEnCours,
-                Component: LivreEnCours,
+                // L'éditeur, l'import et l'export ne sont téléchargés qu'à leur ouverture (BK-133).
+                lazy: async () => {
+                  const m = await import("./ecrans/LivreEnCours");
+                  return {
+                    loader: m.chargerLivreEnCours,
+                    action: m.actionLivreEnCours,
+                    Component: m.LivreEnCours,
+                  };
+                },
                 children: [
                   // E5, surcouche sur E7 : la réserve reste affichée dessous.
                   {
@@ -149,8 +152,13 @@ export const routeur = createBrowserRouter([
                       titre: "Importer des photos",
                       surcouche: true,
                     } satisfies AvecTitre & AvecSurcouche,
-                    loader: chargerImport,
-                    Component: ImportPhotos,
+                    lazy: async () => {
+                      const m = await import("./ecrans/ImportPhotos");
+                      return {
+                        loader: m.chargerImport,
+                        Component: m.ImportPhotos,
+                      };
+                    },
                   },
                 ],
               },
@@ -162,8 +170,10 @@ export const routeur = createBrowserRouter([
                   titre: (d?: DonneesExport) =>
                     d ? `Exporter · ${d.projet.titre}` : "Exporter",
                 } satisfies AvecTitre & PleinCadre,
-                loader: chargerExport,
-                Component: Export,
+                lazy: async () => {
+                  const m = await import("./ecrans/Export");
+                  return { loader: m.chargerExport, Component: m.Export };
+                },
               },
             ],
           },

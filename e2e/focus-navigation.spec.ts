@@ -32,3 +32,33 @@ test("le focus ne bouge pas quand seule la recherche de l'adresse change", async
 
   await expect(page.getByLabel("Adresse e-mail")).toBeFocused();
 });
+
+// BK-133 : l'éditeur et l'export sont chargés à l'ouverture de leur écran. Le titre n'existe
+// qu'une fois le morceau reçu : le focus doit l'attendre, pas tomber sur le corps de la page.
+test("le focus arrive sur le titre des écrans chargés à la demande", async ({
+  page,
+}) => {
+  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@bookopia.test`;
+  await page.goto("/inscription");
+  await page.getByLabel("Votre nom").fill("Créateur de test");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByLabel("Mot de passe").fill("parcours-e2e-local");
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+  await page.getByRole("button", { name: "Créer mon premier livre" }).click();
+  const creation = page.getByRole("dialog", { name: "Nouveau livre" });
+  await creation.getByLabel("Titre du livre").fill("Bretagne");
+  await creation.getByRole("button", { name: "Créer le livre" }).click();
+
+  // Première arrivée sur l'éditeur : son morceau de code vient d'être chargé.
+  const titre = page.getByRole("heading", { level: 1, name: "Bretagne" });
+  await expect(page).toHaveURL(/\/livre\/[^/]+$/);
+  await expect(titre).toBeFocused();
+
+  // Navigation côté client vers l'export, sans passer par la composition du livre.
+  await page.evaluate(() => {
+    window.history.pushState({}, "", `${window.location.pathname}/export`);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await expect(page).toHaveURL(/\/export$/);
+  await expect(titre).toBeFocused();
+});

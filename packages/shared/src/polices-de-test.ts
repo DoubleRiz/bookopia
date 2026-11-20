@@ -1,10 +1,6 @@
 import { readFileSync } from "node:fs";
 import { creerMesure } from "./mesure-police";
-import {
-  FICHIERS_POLICES,
-  type ClePolice,
-  type MesureTexte,
-} from "./polices";
+import { FICHIERS_POLICES, type ClePolice, type MesureTexte } from "./polices";
 
 // Les vrais fichiers du dépôt, pour les tests : ce que l'écran et le PDF utilisent.
 export function octetsDePolice(cle: ClePolice): Uint8Array {
