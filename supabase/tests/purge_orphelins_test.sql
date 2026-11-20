@@ -3,7 +3,7 @@
 -- Délai : 24 heures. Le navigateur supprime ensuite les fichiers listés par l'API Storage.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(5);
+select plan(6);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values
@@ -44,6 +44,8 @@ select pg_temp.fichier('exports', 'aaaaaaaa-0000-4000-8000-000000000001/' || pg_
 select pg_temp.fichier('exports', 'aaaaaaaa-0000-4000-8000-000000000001/' || pg_temp.livre('alice') || '/' || pg_temp.cle(12) || '.pdf', '48 hours');
 -- D'un livre supprimé : le dossier du livre n'existe plus en base.
 select pg_temp.fichier('photos',  'aaaaaaaa-0000-4000-8000-000000000001/' || gen_random_uuid() || '/originaux/' || pg_temp.cle(5) || '.jpg', '48 hours');
+-- Un fichier dont le nom n'est pas une clé (déposé à la main) n'est référencé par rien : orphelin.
+select pg_temp.fichier('photos',  'aaaaaaaa-0000-4000-8000-000000000001/' || pg_temp.livre('alice') || '/originaux/n-importe-quoi.jpg', '48 hours');
 -- Bob : un orphelin ancien, qui ne regarde pas Alice.
 select pg_temp.fichier('photos',  'bbbbbbbb-0000-4000-8000-000000000002/' || pg_temp.livre('bob') || '/originaux/' || pg_temp.cle(4) || '.jpg', '48 hours');
 
@@ -54,8 +56,14 @@ select set_eq(
   $$ select bucket_id, regexp_replace(chemin, '^.*/', '') from public.lister_fichiers_orphelins() $$,
   $$ values ('photos', '00000000-0000-4000-9000-000000000002.jpg'),
             ('exports', '00000000-0000-4000-9000-000000000012.pdf'),
-            ('photos', '00000000-0000-4000-9000-000000000005.jpg') $$,
+            ('photos', '00000000-0000-4000-9000-000000000005.jpg'),
+            ('photos', 'n-importe-quoi.jpg') $$,
   'Seuls les fichiers anciens et sans ligne sont listés, livre supprimé compris'
+);
+
+select ok(
+  exists (select 1 from public.lister_fichiers_orphelins() where chemin like '%/n-importe-quoi.jpg'),
+  'Un fichier dont le nom n''est pas une clé est listé : rien ne le référence'
 );
 
 select is_empty(

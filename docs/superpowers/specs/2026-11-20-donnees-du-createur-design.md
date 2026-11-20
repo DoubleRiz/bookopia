@@ -42,7 +42,7 @@ Le critère « la clé `service_role` n'est pas utilisée par l'application » e
 Détail de A :
 
 - `supprimer_mon_compte()` : `security definer`, `search_path = ''`, commentée, révoquée à `public` et `anon`, accordée à `authenticated`. Entrées revérifiées : sans `auth.uid()` (appel anonyme) elle lève `42501` ; elle ne prend **aucun argument**, le compte visé est toujours celui du jeton, ce qui supprime toute usurpation par paramètre.
-- Elle ajoute une entrée à la liste blanche de `privileges_fonctions_test.sql` (13 fonctions).
+- Elle ajoute une entrée à la liste blanche de `privileges_fonctions_test.sql` (13 fonctions, puis 14 avec `lister_fichiers_orphelins`).
 - Le propriétaire de la fonction doit pouvoir supprimer dans `auth.users` : à vérifier à l'implémentation (`postgres` y a le droit sur Supabase ; sinon la décision revient ici).
 - Web : `supprimerCompte()` dans `api/authentification.ts` (liste récursive des deux buckets sous `{auth.uid()}/`, `remove` par lots, `rpc`, `signOut`), et un bouton « Supprimer mon compte » avec confirmation dans l'interface. Où placer le bouton : voir « Point à trancher » ci-dessous.
 
@@ -91,7 +91,7 @@ Il n'existe pas d'écran de compte dans les spécifications E0 à E10 ; l'étape
 
 **`apps/web`** : les deux fonctions d'API, le bouton et sa modale, les tests Vitest (le vidage par lots, l'échec silencieux de la purge, la confirmation obligatoire). Essai navigateur : créer un compte `@bookopia.test`, importer, supprimer le compte, vérifier le disque du conteneur Storage.
 
-**Aucun changement dans `packages/shared`.**
+**Aucun changement de code dans `packages/shared`** ; seul `src/base.ts` reçoit les deux signatures des nouvelles fonctions (complété à la main : le générateur local produit un format trop différent du fichier committé).
 
 ## Critères
 
@@ -109,6 +109,11 @@ Il n'existe pas d'écran de compte dans les spécifications E0 à E10 ; l'étape
 
 ## Écarts avec l'implémentation et preuves
 
+- Le code web est regroupé dans `api/compte.ts` (suppression du compte et purge) et `api/dossiers.ts` (parcours des dossiers, confirmation), et non dans `authentification.ts` et `photos.ts` : le client Supabase est remplacé par un faux dans `compte.test.ts`, les fonctions pures se testent sans lui.
+- La purge se lance **une fois par chargement de page** (drapeau de module) : le loader de la liste se relance après chaque action, relister les fichiers à chaque fois serait inutile. Un Créateur qui se reconnecte sans recharger attend le prochain chargement ; un échec ne consomme pas la purge de la page.
+- Le premier dossier se filtre par `name like '{uid}/%'` plutôt que par `storage.foldername` : le motif permet d'utiliser l'index de `storage.objects`, l'extraction par fonction parcourait les fichiers de tous les Créateurs. `supprimer_mon_compte` ne regarde que les buckets `photos` et `exports`, les seuls que le navigateur vide.
+- **Coût assumé, course résiduelle :** un dépôt d'un autre onglet, pris entre la vérification de `supprimer_mon_compte` et sa suppression, laisserait un fichier sans propriétaire (Storage écrit l'objet, puis sa ligne, dans sa propre transaction). La fenêtre est de l'ordre de la milliseconde et SQL ne peut pas la fermer sans verrou.
+- Un fichier dont le nom n'est pas une clé n'est référencé par rien : il est listé et purgé après 24 h (testé).
 - Le bouton est une section « Mon compte » sous la liste de E4 (`MesLivres.tsx`), la modale est `SupprimerCompte.tsx`.
 - `entrees_fonctions_test.sql` : 34 assertions. Le contrôle de couverture liste 12 fonctions (les 10 de la liste blanche qui sont `security definer`, plus les deux nouvelles). `privileges_fonctions_test.sql` passe à 14 fonctions autorisées.
 - **Essai de bout en bout, par l'API** (même suite d'appels que le front), compte `@bookopia.test` : trois fichiers déposés (original, vignette, PDF) ; la fonction refuse (`fichiers`) tant qu'ils existent ; `lister_fichiers_orphelins` les liste une fois vieillis à 48 h ; après suppression par l'API Storage, le disque du conteneur Storage passe de 3 fichiers à 0 ; `supprimer_mon_compte` rend 204 et plus rien du compte ne reste dans `auth.users`, `utilisateur`, `projet` ni `storage.objects`.

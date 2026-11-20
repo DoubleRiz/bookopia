@@ -51,10 +51,13 @@ reset role;
 select is((select count(*) from auth.users where id in ('aaaaaaaa-0000-4000-8000-000000000001', 'bbbbbbbb-0000-4000-8000-000000000002')), 2::bigint,
   'Aucun compte n''a été supprimé sans jeton');
 
--- Anonyme : pas le droit d'exécuter la fonction.
-set local role anon;
-select throws_ok('select public.supprimer_mon_compte()', '42501', null, 'Un visiteur n''exécute pas la fonction');
-reset role;
+-- Un visiteur (anon) n'a pas le droit d'exécuter la fonction : le droit lui-même est vérifié,
+-- un appel sans jeton lèverait 42501 même si le droit était ouvert.
+select is(
+  has_function_privilege('anon', 'public.supprimer_mon_compte()', 'execute'),
+  false,
+  'Un visiteur n''a pas le droit d''exécuter la fonction'
+);
 
 -- Alice a encore des fichiers : refusé, et rien n'est supprimé.
 set local role authenticated;

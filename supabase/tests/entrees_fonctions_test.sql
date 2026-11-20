@@ -12,8 +12,9 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(34);
 
--- Couverture : toute fonction security definer ouverte à authenticated doit avoir son cas ici.
--- Une fonction ajoutée plus tard fait échouer ce test jusqu'à ce qu'on écrive son cas.
+-- Couverture : une fonction security definer ouverte à authenticated, ajoutée plus tard, fait échouer
+-- ce test tant qu'on ne l'a pas ajoutée à la liste ci-dessous, donc tant qu'on n'a pas relu ce fichier
+-- pour lui écrire son cas.
 select set_eq(
   $$ select p.oid::regprocedure::text from pg_proc p
      where p.pronamespace = 'public'::regnamespace and p.prosecdef
@@ -34,7 +35,7 @@ select set_eq(
     'supprimer_mon_compte()',
     'lister_fichiers_orphelins()'
   ],
-  'Chaque fonction security definer exécutable par authenticated a son cas dans ce fichier'
+  'La liste des fonctions security definer ouvertes à authenticated n''a pas changé : une nouvelle fonction exige son cas ici'
 );
 
 insert into auth.users (id, email, raw_user_meta_data)
@@ -120,15 +121,15 @@ select is(public.est_mon_projet(gen_random_uuid()), false, 'est_mon_projet : un 
 -- ---------------------------------------------------------------------------
 
 select throws_ok($$ select public.inserer_double_page(null, '00000000-0000-4000-b000-000000000003', 1) $$,
-  'P0001', null, 'inserer_double_page : un livre nul est refusé');
+  'P0001', 'introuvable', 'inserer_double_page : un livre nul est refusé');
 select throws_ok($$ select public.deplacer_double_page((select double_page_id from sienne), null) $$,
-  'P0001', null, 'deplacer_double_page : une position nulle est refusée');
+  'P0001', 'invalide', 'deplacer_double_page : une position nulle est refusée');
 select throws_ok($$ select public.supprimer_double_page(null) $$,
   'P0001', 'introuvable', 'supprimer_double_page : une double page nulle est introuvable');
 select throws_ok($$ select public.composer_livre(null, null) $$,
   'P0001', 'introuvable', 'composer_livre : un livre nul est introuvable');
 select throws_ok($$ select public.changer_theme((select livre_id from sienne), null) $$,
-  'P0001', null, 'changer_theme : un thème nul est refusé');
+  'P0001', 'invalide', 'changer_theme : un thème nul est refusé');
 select throws_ok($$ select public.creer_projet(null, '00000000-0000-4000-d000-000000000001',
        array_fill('00000000-0000-4000-b000-000000000003'::uuid, array[10])) $$,
   'P0001', 'invalide', 'creer_projet : un titre nul est refusé');

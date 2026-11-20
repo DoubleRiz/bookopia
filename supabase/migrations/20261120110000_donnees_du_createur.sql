@@ -13,6 +13,10 @@
 -- Refuse tant qu'il reste une ligne dans storage.objects à son nom : le navigateur vide d'abord ses
 -- dossiers par l'API Storage, puis appelle cette fonction. Après la suppression, ses fichiers n'auraient
 -- plus de propriétaire et plus aucun moyen d'être retirés par un jeton.
+-- Coût assumé : un dépôt d'un autre onglet, pris entre la vérification et la suppression, laisserait
+-- un fichier sans propriétaire (Storage écrit l'objet puis sa ligne, dans sa propre transaction).
+-- La fenêtre est de l'ordre de la milliseconde et SQL ne peut pas la fermer sans verrou.
+-- Seuls les deux buckets du projet comptent : le navigateur ne vide que ceux-là.
 -- security definer : authenticated n'a pas le droit de supprimer dans auth.users.
 create function public.supprimer_mon_compte()
 returns void
@@ -29,7 +33,8 @@ begin
 
   if exists (
     select 1 from storage.objects
-    where (storage.foldername(name))[1] = v_utilisateur_id::text
+    where bucket_id in ('photos', 'exports')
+      and name like v_utilisateur_id::text || '/%'
   ) then
     raise exception 'fichiers' using detail = 'Il reste des fichiers à supprimer avant le compte';
   end if;
@@ -47,6 +52,8 @@ $$;
 -- un import lent sans jamais retirer un fichier en cours d'envoi.
 -- Le navigateur supprime les fichiers listés par l'API Storage (la règle de suppression de
 -- storage.objects accepte le premier dossier égal à auth.uid()).
+-- Le premier dossier se filtre par « like » sur le nom : l'index de storage.objects sert,
+-- une extraction du dossier par fonction obligerait à parcourir les fichiers de tous les Créateurs.
 -- security definer : authenticated ne lit pas storage.objects en entier, et la comparaison
 -- doit voir toutes ses photos. Le filtre sur auth.uid() remplace la RLS.
 create function public.lister_fichiers_orphelins()
@@ -67,7 +74,7 @@ begin
   select o.bucket_id, o.name
   from storage.objects o
   where o.bucket_id in ('photos', 'exports')
-    and (storage.foldername(o.name))[1] = v_utilisateur_id::text
+    and o.name like v_utilisateur_id::text || '/%'
     and o.created_at < now() - interval '24 hours'
     and not exists (
       select 1

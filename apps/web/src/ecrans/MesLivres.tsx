@@ -37,6 +37,7 @@ import { ModaleSupprimerCompte } from "./SupprimerCompte";
 export async function chargerMesLivres({ request }: LoaderFunctionArgs) {
   const projets = await sousSession(request, listerProjets);
   // Session confirmée : on retire en arrière-plan les fichiers abandonnés (BK-126), sans attendre.
+  // Une seule fois par chargement de page, voir purgerOrphelins.
   void purgerOrphelins();
   return projets;
 }

@@ -5,9 +5,14 @@ import { cheminsSousDossier, enLots, type EntreeDossier } from "./dossiers";
 const BUCKETS = ["photos", "exports"] as const;
 type Bucket = (typeof BUCKETS)[number];
 
-// L'API Storage rend 100 entrées par page au plus.
-const TAILLE_PAGE = 100;
+// Entrées demandées par page de liste (le défaut de l'API est 100) : moins d'appels pour un gros dossier.
+const TAILLE_PAGE = 1000;
 const TAILLE_LOT = 100;
+
+// Une purge par chargement de page : le loader de la liste des livres se relance après chaque
+// action (renommer, supprimer, créer), inutile de relister les fichiers à chaque fois.
+// Un Créateur qui se reconnecte sans recharger la page attend le prochain chargement.
+let purgeLancee = false;
 
 async function listerUnNiveau(
   bucket: Bucket,
@@ -51,13 +56,22 @@ export async function supprimerCompte() {
   }
 
   verifier(await supabase.rpc("supprimer_mon_compte"));
-  // Le compte n'existe plus : seule la session du navigateur est à effacer.
-  await supabase.auth.signOut({ scope: "local" });
+  // Le compte n'existe plus : la purge de la prochaine session repartira de zéro.
+  purgeLancee = false;
+  // Seule la session du navigateur est à effacer. Un échec ici ne change rien au résultat :
+  // le compte est supprimé, la modale ne doit pas annoncer le contraire.
+  try {
+    await supabase.auth.signOut({ scope: "local" });
+  } catch {
+    // La session locale expirera d'elle-même.
+  }
 }
 
 // Retire les fichiers sans ligne, plus vieux que le délai fixé en base (24 h).
 // Silencieuse : un échec laisse les fichiers pour la visite suivante, jamais une erreur à l'écran.
 export async function purgerOrphelins() {
+  if (purgeLancee) return;
+  purgeLancee = true;
   try {
     const orphelins =
       verifier(await supabase.rpc("lister_fichiers_orphelins")) ?? [];
@@ -69,5 +83,6 @@ export async function purgerOrphelins() {
     }
   } catch {
     // Rejoué à la prochaine ouverture de la liste des livres.
+    purgeLancee = false;
   }
 }
