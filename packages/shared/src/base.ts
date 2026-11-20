@@ -471,6 +471,10 @@ export type Database = {
         Args: { p_gabarit_id: string; p_position: number; p_projet_id: string };
         Returns: string;
       };
+      lister_fichiers_orphelins: {
+        Args: Record<PropertyKey, never>;
+        Returns: { bucket_id: string; chemin: string }[];
+      };
       placer_cadre_texte: {
         Args: {
           p_emplacement_id: string;
@@ -484,6 +488,10 @@ export type Database = {
       segments_texte_valides: { Args: { p_segments: Json }; Returns: number };
       supprimer_double_page: {
         Args: { p_double_page_id: string };
+        Returns: undefined;
+      };
+      supprimer_mon_compte: {
+        Args: Record<PropertyKey, never>;
         Returns: undefined;
       };
       verrouiller_interieure: {
