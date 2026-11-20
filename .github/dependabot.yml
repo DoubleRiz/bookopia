@@ -1,0 +1,18 @@
+# Mises à jour automatiques : une PR par semaine et par écosystème, groupées pour limiter le bruit.
+# Les PR de sécurité de GitHub partent toujours à part, sans attendre ce calendrier.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dependances:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
