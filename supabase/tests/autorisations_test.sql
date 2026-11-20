@@ -2,7 +2,7 @@
 -- Chacun ne voit et ne modifie que ses livres ; le navigateur n'écrit que ce qui lui est accordé.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(36);
+select plan(41);
 
 -- ---------------------------------------------------------------------------
 -- Mise en place, en superutilisateur
@@ -227,8 +227,46 @@ select throws_ok(
 -- Fichiers
 select lives_ok(
   $$ insert into storage.objects (bucket_id, name)
-     values ('photos', 'aaaaaaaa-0000-4000-8000-000000000001/projet/originaux/une.jpg') $$,
-  'Alice dépose un fichier dans son dossier'
+     select 'photos', 'aaaaaaaa-0000-4000-8000-000000000001/' || projet_id || '/originaux/une.jpg'
+     from livre where proprietaire = 'alice' $$,
+  'Alice dépose un fichier dans son dossier, sous son livre'
+);
+
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name)
+     select 'photos', 'aaaaaaaa-0000-4000-8000-000000000001/' || projet_id || '/originaux/intrus.jpg'
+     from livre where proprietaire = 'bob' $$,
+  '42501', null,
+  'Alice ne dépose rien sous le livre de Bob'
+);
+
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name)
+     values ('photos', 'aaaaaaaa-0000-4000-8000-000000000001/projet/originaux/x.jpg') $$,
+  '42501', null,
+  'Un dossier qui n''est pas un livre est refusé'
+);
+
+select lives_ok(
+  $$ insert into storage.objects (bucket_id, name)
+     select 'photos', 'aaaaaaaa-0000-4000-8000-000000000001/' || upper(projet_id::text) || '/originaux/deux.jpg'
+     from livre where proprietaire = 'alice' $$,
+  'Un livre écrit en majuscules reste reconnu'
+);
+
+select lives_ok(
+  $$ insert into storage.objects (bucket_id, name)
+     select 'exports', 'aaaaaaaa-0000-4000-8000-000000000001/' || projet_id || '/' || gen_random_uuid() || '.pdf'
+     from livre where proprietaire = 'alice' $$,
+  'Alice dépose le PDF de son livre'
+);
+
+select throws_ok(
+  $$ insert into storage.objects (bucket_id, name)
+     select 'exports', 'aaaaaaaa-0000-4000-8000-000000000001/' || projet_id || '/' || gen_random_uuid() || '.pdf'
+     from livre where proprietaire = 'bob' $$,
+  '42501', null,
+  'Alice ne dépose pas de PDF sous le livre de Bob'
 );
 
 select throws_ok(
