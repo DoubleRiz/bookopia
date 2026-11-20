@@ -5,7 +5,12 @@ import {
 } from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import type { DoublePageDuLivre } from "../api/doublesPages";
-import { aDuContenu, apercuDuGabarit, resumeDuGabarit } from "./choixGabarit";
+import {
+  aDuContenu,
+  apercuDuGabarit,
+  classerLesGabarits,
+  resumeDuGabarit,
+} from "./choixGabarit";
 
 type Emplacement = DoublePageDuLivre["emplacement"][number];
 
@@ -159,5 +164,75 @@ describe("resumeDuGabarit", () => {
     expect(resumeDuGabarit(gabarit("b10", ["photo", "texte"]))).toBe(
       "1 photo · 1 texte",
     );
+  });
+});
+
+describe("classerLesGabarits", () => {
+  const place = (
+    id: string,
+    nom: string,
+    cadres: ["photo" | "texte", number, number][],
+  ): GabaritAComposer => ({
+    id,
+    nom,
+    definition: cadres.map(([nature, x, largeur], indice) => ({
+      indice,
+      nature,
+      x,
+      y: 0,
+      largeur,
+      hauteur: 50,
+      ...(nature === "texte" ? { style: "legende" as const } : {}),
+    })) as DefinitionGabarit,
+  });
+
+  const symetrique = place("s", "Duo", [
+    ["photo", 12, 188],
+    ["photo", 220, 188],
+  ]);
+  const gauche = place("g", "Pleine page", [["photo", 0, 200]]);
+  const droite = place("d", "Pleine page (miroir)", [["photo", 220, 200]]);
+  const texteGauche = place("tg", "Photo et texte", [
+    ["photo", 12, 188],
+    ["texte", 240, 150],
+  ]);
+  const texteDroite = place("td", "Photo et texte (miroir)", [
+    ["photo", 220, 188],
+    ["texte", 30, 150],
+  ]);
+
+  it("sépare sans texte et avec texte", () => {
+    const groupes = classerLesGabarits([texteGauche, symetrique, gauche]);
+    expect(groupes.map((g) => g.titre)).toEqual(["Sans texte", "Avec texte"]);
+    expect(groupes[1]?.gabarits.map((g) => g.id)).toEqual(["tg"]);
+  });
+
+  it("met chaque miroir juste après son original, du plus simple au plus riche", () => {
+    const groupes = classerLesGabarits([
+      symetrique,
+      texteDroite,
+      droite,
+      texteGauche,
+      gauche,
+    ]);
+    expect(groupes[0]?.gabarits.map((g) => g.id)).toEqual(["g", "d", "s"]);
+    expect(groupes[1]?.gabarits.map((g) => g.id)).toEqual(["tg", "td"]);
+  });
+
+  it("apparie un miroir aux cotes décimales", () => {
+    const original = place("o", "Décimal", [["photo", 12.3, 188.4]]);
+    const miroir = place("m", "Décimal (miroir)", [["photo", 219.3, 188.4]]);
+    const autre = place("a", "Autre", [["photo", 0, 100]]);
+    expect(
+      classerLesGabarits([miroir, autre, original])[0]?.gabarits.map(
+        (g) => g.id,
+      ),
+    ).toEqual(["a", "o", "m"]);
+  });
+
+  it("omet un groupe vide", () => {
+    expect(classerLesGabarits([gauche]).map((groupe) => groupe.titre)).toEqual([
+      "Sans texte",
+    ]);
   });
 });

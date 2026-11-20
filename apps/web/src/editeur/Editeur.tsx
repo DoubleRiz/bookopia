@@ -71,6 +71,25 @@ import { SurcoucheThemes } from "./SurcoucheThemes";
 
 type Photo = PhotoDeReserve & PhotoAffichee;
 
+// L'état de la réserve est un confort du navigateur : dépliée par défaut, sans lui.
+const CLE_RESERVE = "bookopia.reserve-ouverte";
+
+function lireReserveOuverte(): boolean {
+  try {
+    return localStorage.getItem(CLE_RESERVE) !== "non";
+  } catch {
+    return true;
+  }
+}
+
+function ecrireReserveOuverte(ouverte: boolean) {
+  try {
+    localStorage.setItem(CLE_RESERVE, ouverte ? "oui" : "non");
+  } catch {
+    // Stockage indisponible : l'état ne sera pas retenu, rien de plus.
+  }
+}
+
 // L'éditeur de texte (Tiptap) ne se charge qu'à la première sélection d'un cadre texte : l'écran
 // s'ouvre sans lui.
 const SaisieTexte = lazy(() =>
@@ -128,6 +147,27 @@ function IconeFleche({ sens }: { sens: "annuler" | "refaire" }) {
   );
 }
 
+// Une page découpée en deux zones : le gabarit, c'est la façon dont la double page est découpée.
+function IconeGabarit() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M9 3v18" />
+      <path d="M9 12h12" />
+    </svg>
+  );
+}
+
 export function Editeur({
   projetId,
   titre,
@@ -137,6 +177,7 @@ export function Editeur({
   doublesPages,
   photos,
   gabarits,
+  tousLesGabarits,
   actionsLivre,
   surImporter,
   surSupprimerPhoto,
@@ -151,6 +192,8 @@ export function Editeur({
   photos: Photo[];
   // Intérieurs actifs de la famille du livre ; vide si le catalogue est illisible.
   gabarits: GabaritAComposer[];
+  // Tout le catalogue intérieur, pour changer de gabarit ; vide si illisible.
+  tousLesGabarits: GabaritAComposer[];
   actionsLivre: ReactNode;
   surImporter: () => void;
   surSupprimerPhoto: (photo: PhotoDeReserve) => void;
@@ -198,6 +241,9 @@ export function Editeur({
   );
   const revalidator = useRevalidator();
   const grille = useRef<HTMLUListElement>(null);
+  const [reserveOuverte, setReserveOuverte] = useState(lireReserveOuverte);
+  // Retenu quel que soit le geste qui déplie ou replie : la bascule, ou « Remplacer ».
+  useEffect(() => ecrireReserveOuverte(reserveOuverte), [reserveOuverte]);
   const enLigne = useEnLigne();
   const actif = enLigne && !structureEnCours;
 
@@ -600,12 +646,7 @@ export function Editeur({
         importFait={photos.length > 0}
         actions={
           photos.length > 0 && (
-            <>
-              <Bouton variante="secondaire" onClick={surImporter}>
-                Importer des photos
-              </Bouton>
-              <LienBouton vers="export">Vérifier et exporter</LienBouton>
-            </>
+            <LienBouton vers="export">Vérifier et exporter</LienBouton>
           )
         }
       />
@@ -651,7 +692,14 @@ export function Editeur({
       )}
       {message && <Banniere titre={message} />}
 
-      <div className={styles.espaceTravail}>
+      <div
+        className={[
+          styles.espaceTravail,
+          !reserveOuverte && styles.reserveReplieeEspace,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         <BandeDoublesPages
           couverture={couverture}
           quatrieme={quatrieme}
@@ -661,11 +709,9 @@ export function Editeur({
           photos={photosAffichees}
           actif={actif}
           peutAjouter={gabaritParDefautId !== null}
-          peutChangerGabarit={gabarits.length > 1}
           surChoisir={choisirPage}
           surAjouter={ajouter}
           surDeplacer={deplacer}
-          surChangerGabarit={() => setChoixGabarit(true)}
           surDupliquer={dupliquer}
           surSupprimer={setASupprimer}
         />
@@ -697,11 +743,15 @@ export function Editeur({
                         variante="secondaire"
                         taille="petit"
                         disabled={!actif || photos.length === 0}
-                        onClick={() =>
-                          grille.current
-                            ?.querySelector<HTMLElement>("[role=button]")
-                            ?.focus()
-                        }
+                        onClick={() => {
+                          setReserveOuverte(true);
+                          // La grille n'est focalisable qu'une fois la réserve dépliée.
+                          requestAnimationFrame(() =>
+                            grille.current
+                              ?.querySelector<HTMLElement>("[role=button]")
+                              ?.focus(),
+                          );
+                        }}
                       >
                         Remplacer
                       </Bouton>
@@ -727,6 +777,18 @@ export function Editeur({
                 </div>
               )}
               <div className={styles.pageCourante}>
+                {courante.role === "interieur" && (
+                  <button
+                    type="button"
+                    className={styles.boutonGabarit}
+                    aria-label="Changer le gabarit"
+                    title="Changer le gabarit"
+                    disabled={!actif || tousLesGabarits.length < 2}
+                    onClick={() => setChoixGabarit(true)}
+                  >
+                    <IconeGabarit />
+                  </button>
+                )}
                 <DoublePage
                   doublePage={courante}
                   habillage={habillage}
@@ -773,6 +835,8 @@ export function Editeur({
           surSupprimer={surSupprimerPhoto}
           surImporter={surImporter}
           refGrille={grille}
+          ouverte={reserveOuverte}
+          surBasculer={() => setReserveOuverte((ouverte) => !ouverte)}
         />
       </div>
 
@@ -793,7 +857,7 @@ export function Editeur({
       )}
       {choixGabarit && courante && (
         <SurcoucheGabarits
-          gabarits={gabarits}
+          gabarits={tousLesGabarits}
           courante={courante}
           habillage={habillage}
           surChoisir={(gabaritId) => appliquerGabarit(courante.id, gabaritId)}

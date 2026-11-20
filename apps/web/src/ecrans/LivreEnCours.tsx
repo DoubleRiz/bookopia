@@ -1,8 +1,4 @@
-import {
-  composerLivre,
-  type GabaritAComposer,
-  policesDuTexte,
-} from "@bookopia/shared";
+import { composerLivre, policesDuTexte } from "@bookopia/shared";
 import { useCallback, useEffect, useState } from "react";
 import {
   type ActionFunctionArgs,
@@ -20,6 +16,7 @@ import {
   type DoublePageDuLivre,
   enregistrerComposition,
   listerDoublesPages,
+  listerGabaritsDeLEditeur,
   listerGabaritsDuLivre,
 } from "../api/doublesPages";
 import {
@@ -49,13 +46,14 @@ import styles from "./LivreEnCours.module.css";
 
 const identifiantSchema = z.uuid();
 
-// Les gabarits de l'éditeur : ajout d'une double page, changement de gabarit. Un catalogue
-// illisible ne bloque pas l'écran : ces gestes sont désactivés, et « Composer le livre » dira l'erreur.
-async function lireGabarits(projetId: string): Promise<GabaritAComposer[]> {
+// Les gabarits de l'éditeur : ajout d'une double page (famille du livre), changement de gabarit
+// (tout le catalogue). Un catalogue illisible ne bloque pas l'écran : ces gestes sont désactivés,
+// et « Composer le livre » dira l'erreur.
+async function lireGabarits(projetId: string) {
   try {
-    return await listerGabaritsDuLivre(projetId);
+    return await listerGabaritsDeLEditeur(projetId);
   } catch (erreur) {
-    if (erreur instanceof z.ZodError) return [];
+    if (erreur instanceof z.ZodError) return { duLivre: [], tous: [] };
     throw erreur;
   }
 }
@@ -117,13 +115,19 @@ export async function chargerLivreEnCours({
     );
     const doublesPages = await listerDoublesPages(projet.id);
     const theme = lireTheme(projet.theme);
+    const [polices, themes, gabarits] = await Promise.all([
+      policesPretes(theme, doublesPages),
+      lireThemes(),
+      lireGabarits(projet.id),
+    ]);
     return {
       projet,
       theme,
-      polices: await policesPretes(theme, doublesPages),
-      themes: await lireThemes(),
+      polices,
+      themes,
       doublesPages,
-      gabarits: await lireGabarits(projet.id),
+      gabarits: gabarits.duLivre,
+      tousLesGabarits: gabarits.tous,
       photos: photos.map((photo) => ({ ...photo, url: urls.get(photo.id) })),
     };
   });
@@ -334,8 +338,16 @@ function ComposerLeLivre({
 
 // E7 : l'éditeur, et l'import (E5) qui s'ouvre par-dessus à sa propre adresse.
 export function LivreEnCours() {
-  const { projet, theme, polices, themes, doublesPages, gabarits, photos } =
-    useLoaderData<typeof chargerLivreEnCours>();
+  const {
+    projet,
+    theme,
+    polices,
+    themes,
+    doublesPages,
+    gabarits,
+    tousLesGabarits,
+    photos,
+  } = useLoaderData<typeof chargerLivreEnCours>();
   const navigate = useNavigate();
   const ouvrirImport = () => void navigate("import");
   const [aSupprimer, setASupprimer] = useState<Photo | null>(null);
@@ -358,6 +370,7 @@ export function LivreEnCours() {
         doublesPages={doublesPages}
         photos={photos}
         gabarits={gabarits}
+        tousLesGabarits={tousLesGabarits}
         actionsLivre={
           <ComposerLeLivre
             doublesPages={doublesPages}

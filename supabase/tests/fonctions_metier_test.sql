@@ -1,7 +1,7 @@
 -- Fonctions métier : création d'un projet, ordre des intérieures, automatismes.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(43);
+select plan(45);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values ('aaaaaaaa-0000-4000-8000-000000000001', 'alice@exemple.fr', '{"nom_affichage": "Alice"}');
@@ -192,11 +192,6 @@ select throws_ok(
 );
 
 select throws_ok(
-  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000004') $$,
-  'P0001', 'invalide', 'Un gabarit d''une autre famille est refusé'
-);
-
-select throws_ok(
   $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-c000-000000000001') $$,
   'P0001', 'invalide', 'Un gabarit de couverture n''habille pas une intérieure'
 );
@@ -245,6 +240,21 @@ select results_eq(
 );
 select is((select count(*) from public.photo), 1::bigint, 'La photo retirée reste dans la réserve');
 select is(pg_temp.rangs((select projet_id from livre)), pg_temp.suite(11), 'Changer de gabarit ne touche pas aux rangs');
+
+-- Le choix manuel n'est pas limité à la famille du modèle : 04 est « rythmé », 12 le miroir de 02.
+select lives_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000004') $$,
+  'Un gabarit d''une autre famille est accepté'
+);
+select lives_ok(
+  $$ select public.changer_gabarit((select id from copie), '00000000-0000-4000-b000-000000000012') $$,
+  'Passer au miroir du gabarit 02'
+);
+select results_eq(
+  $$ select x, largeur from public.emplacement where double_page_id = (select id from copie) $$,
+  $$ values (220::float8, 200::float8) $$,
+  'Le miroir pose la photo sur la page droite'
+);
 
 -- ---------------------------------------------------------------------------
 -- Automatismes

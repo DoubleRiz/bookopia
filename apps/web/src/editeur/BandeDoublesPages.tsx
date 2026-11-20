@@ -1,4 +1,4 @@
-import { type DragEvent, useState } from "react";
+import { type DragEvent, type KeyboardEvent, useState } from "react";
 import type { DoublePageDuLivre } from "../api/doublesPages";
 import { Bouton } from "../composants/Bouton";
 import {
@@ -14,8 +14,8 @@ import { Glissable } from "./Glissable";
 const TYPE_GLISSER_DOUBLE_PAGE = "application/x-bookopia-double-page";
 
 // Le livre en miniatures, dans son ordre : couverture, intérieures, 4e. On choisit la page
-// courante ; on réordonne une intérieure en glissant sa miniature, ou par les boutons de la
-// page courante (clavier). La couverture et la 4e ne se déplacent ni ne se suppriment.
+// courante ; on réordonne une intérieure en glissant sa miniature, ou au clavier avec Alt + flèche
+// gauche ou droite sur sa miniature. La couverture et la 4e ne se déplacent ni ne se suppriment.
 export function BandeDoublesPages({
   couverture,
   quatrieme,
@@ -25,11 +25,9 @@ export function BandeDoublesPages({
   photos,
   actif,
   peutAjouter,
-  peutChangerGabarit,
   surChoisir,
   surAjouter,
   surDeplacer,
-  surChangerGabarit,
   surDupliquer,
   surSupprimer,
 }: {
@@ -41,16 +39,13 @@ export function BandeDoublesPages({
   photos: Map<string, PhotoAffichee>;
   actif: boolean;
   peutAjouter: boolean;
-  peutChangerGabarit: boolean;
   surChoisir: (doublePageId: string) => void;
   surAjouter: () => void;
   surDeplacer: (doublePageId: string, position: number) => void;
-  surChangerGabarit: () => void;
   surDupliquer: (doublePageId: string) => void;
   surSupprimer: (doublePageId: string) => void;
 }) {
   const [survolee, setSurvolee] = useState<string | null>(null);
-  const rang = courante?.position ?? 0;
   const interieureCourante = courante?.role === "interieur";
 
   // Une miniature qui se choisit ; seules les intérieures se glissent et reçoivent un dépôt.
@@ -76,6 +71,9 @@ export function BandeDoublesPages({
         onDrop={
           deplacable ? (evenement) => depot(evenement, doublePage) : undefined
         }
+        onKeyDown={
+          deplacable ? (evenement) => clavier(evenement, doublePage) : undefined
+        }
       >
         <Glissable
           className={styles.choisirPage}
@@ -84,6 +82,9 @@ export function BandeDoublesPages({
           glissable={actif && deplacable}
           aria-current={estCourante ? "page" : undefined}
           aria-label={libelleDoublePage(doublePage.role, doublePage.position)}
+          aria-keyshortcuts={
+            deplacable ? "Alt+ArrowLeft Alt+ArrowRight" : undefined
+          }
           surDebutGlisser={(evenement) => {
             evenement.dataTransfer.setData(
               TYPE_GLISSER_DOUBLE_PAGE,
@@ -121,6 +122,21 @@ export function BandeDoublesPages({
     surDeplacer(deplacee, cible.position);
   }
 
+  // Alt + flèche : l'intérieure prend le rang voisin, sans sortir des intérieures.
+  function clavier(evenement: KeyboardEvent, doublePage: DoublePageDuLivre) {
+    if (!actif || !evenement.altKey || doublePage.position === null) return;
+    const pas =
+      evenement.key === "ArrowLeft"
+        ? -1
+        : evenement.key === "ArrowRight"
+          ? 1
+          : 0;
+    const rang = doublePage.position + pas;
+    if (pas === 0 || rang < 1 || rang > interieures.length) return;
+    evenement.preventDefault();
+    surDeplacer(doublePage.id, rang);
+  }
+
   return (
     <nav className={styles.bande} aria-label="Doubles pages du livre">
       <div className={styles.enteteBande}>
@@ -147,30 +163,6 @@ export function BandeDoublesPages({
       </ol>
       {courante && interieureCourante && (
         <div className={styles.actionsPage}>
-          <Bouton
-            variante="tertiaire"
-            taille="petit"
-            disabled={!actif || rang <= 1}
-            onClick={() => surDeplacer(courante.id, rang - 1)}
-          >
-            ← Déplacer à gauche
-          </Bouton>
-          <Bouton
-            variante="tertiaire"
-            taille="petit"
-            disabled={!actif || rang >= interieures.length}
-            onClick={() => surDeplacer(courante.id, rang + 1)}
-          >
-            Déplacer à droite →
-          </Bouton>
-          <Bouton
-            variante="tertiaire"
-            taille="petit"
-            disabled={!actif || !peutChangerGabarit}
-            onClick={surChangerGabarit}
-          >
-            Changer le gabarit
-          </Bouton>
           <Bouton
             variante="tertiaire"
             taille="petit"

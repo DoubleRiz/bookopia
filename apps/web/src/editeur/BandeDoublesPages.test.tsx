@@ -54,11 +54,9 @@ function rendre(courante: DoublePageDuLivre) {
       photos={new Map()}
       actif
       peutAjouter
-      peutChangerGabarit
       surChoisir={() => {}}
       surAjouter={() => {}}
       surDeplacer={() => {}}
-      surChangerGabarit={() => {}}
       surDupliquer={() => {}}
       surSupprimer={() => {}}
     />,
@@ -86,23 +84,28 @@ describe("BandeDoublesPages", () => {
 
   it("n'offre que les gestes d'une intérieure sur une intérieure", () => {
     const html = rendre(premiere);
-    expect(html).toContain("Déplacer à gauche");
+    expect(html).toContain("Dupliquer");
     expect(html).toContain("Supprimer");
   });
 
   it.each([couverture, quatrieme])(
-    "ne propose ni déplacer, ni dupliquer, ni supprimer sur $role",
+    "ne propose ni dupliquer, ni supprimer sur $role",
     (courante) => {
       const html = rendre(courante);
-      expect(html).not.toContain("Déplacer");
       expect(html).not.toContain("Dupliquer");
       expect(html).not.toContain("Supprimer");
-      expect(html).not.toContain("Changer le gabarit");
     },
   );
 
   it("ne laisse glisser que les intérieures", () => {
     const html = rendre(couverture);
     expect(html.match(/draggable="true"/g)).toHaveLength(2);
+  });
+
+  it("annonce le déplacement au clavier sur les seules intérieures", () => {
+    const html = rendre(couverture);
+    expect(
+      html.match(/aria-keyshortcuts="Alt\+ArrowLeft Alt\+ArrowRight"/g),
+    ).toHaveLength(2);
   });
 });

@@ -44,9 +44,10 @@ export async function allerA(page: Page, pages: string) {
 // Applique un gabarit à la double page courante, s'il ne l'est pas déjà. Les pages sont vides :
 // aucun avertissement.
 export async function appliquerGabarit(page: Page, nom: string) {
-  await bande(page).getByRole("button", { name: "Changer le gabarit" }).click();
+  await page.getByRole("button", { name: "Changer le gabarit" }).click();
   const choix = page.getByRole("dialog", { name: "Changer le gabarit" });
-  const carte = choix.getByRole("button", { name: new RegExp(`^${nom}`) });
+  // Le nom exact, suivi du résumé : « Trio » ne désigne ni « Trio (miroir) » ni « Trio et légendes ».
+  const carte = choix.getByRole("button", { name: new RegExp(`^${nom},`) });
   if (await carte.isDisabled()) {
     await page.keyboard.press("Escape");
   } else {

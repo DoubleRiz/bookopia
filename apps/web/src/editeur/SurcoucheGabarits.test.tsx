@@ -82,7 +82,7 @@ function cartes(html: string): [string, boolean][] {
 }
 
 describe("SurcoucheGabarits", () => {
-  it("montre une carte par gabarit de la famille, dans l'ordre du catalogue", () => {
+  it("montre une carte par gabarit, classées", () => {
     expect(cartes(rendre("b1")).map(([libelle]) => libelle)).toEqual([
       "Pleine double page, 1 photo, gabarit actuel",
       "Pleine page et blanc, 1 photo",

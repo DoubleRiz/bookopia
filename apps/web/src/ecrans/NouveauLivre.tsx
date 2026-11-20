@@ -8,6 +8,7 @@ import {
   useLoaderData,
   useNavigate,
   useNavigation,
+  useSearchParams,
 } from "react-router";
 import { choisirGabaritsInterieurs, creerProjetSchema } from "@bookopia/shared";
 import { listerGabaritsInterieurs, listerModeles } from "../api/catalogue";
@@ -90,7 +91,13 @@ export function NouveauLivre() {
   const resultat = useActionData<typeof actionNouveauLivre>();
   const navigation = useNavigation();
   const navigate = useNavigate();
-  const [selection, setSelection] = useState(modeles[0]?.id ?? "");
+  // ?modele= : le modèle choisi sur la vitrine (E0), s'il est toujours proposé.
+  const [parametres] = useSearchParams();
+  const [selection, setSelection] = useState(
+    modeles.find((candidat) => candidat.id === parametres.get("modele"))?.id ??
+      modeles[0]?.id ??
+      "",
+  );
 
   const enCours =
     navigation.state !== "idle" && navigation.formAction === "/livres/nouveau";
@@ -114,7 +121,11 @@ export function NouveauLivre() {
           </div>
         </>
       ) : (
-        <Form method="post" className={styles.formulaire}>
+        <Form
+          method="post"
+          action="/livres/nouveau"
+          className={styles.formulaire}
+        >
           {resultat?.message && (
             <p className={styles.erreurGlobale} role="alert">
               {resultat.message}

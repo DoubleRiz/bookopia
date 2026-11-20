@@ -1,0 +1,510 @@
+.ecran {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  gap: var(--espace-2);
+  padding: 18px var(--espace-12);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+}
+
+.espaceur {
+  flex: 1;
+}
+
+.lienNavigation {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--cible-min);
+  margin-right: 6px;
+  padding: 12px 14px;
+  border-radius: var(--rayon-pill);
+  color: var(--couleur-encre);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.lienNavigation:hover,
+.lienNavigation[aria-current="page"] {
+  background: var(--couleur-lavande-pale);
+}
+
+.lienNavigation[aria-current="page"] {
+  font-weight: 700;
+}
+
+/* Accroche : texte à gauche, décor à droite, jamais de texte sur la forme. */
+.accroche {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--espace-12);
+  align-items: center;
+  padding: 88px var(--espace-12) 96px 96px;
+  overflow: hidden;
+}
+
+.texteAccroche {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-6);
+}
+
+.surtitre {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-label);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.titre {
+  margin: 0;
+  font-size: 60px;
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* La touche de corail de l'écran. */
+.titreTouche {
+  color: var(--couleur-corail-encre);
+}
+
+.chapo {
+  max-width: 500px;
+  margin: 0;
+  color: var(--couleur-texte-corps);
+  font-size: 18px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espace-3);
+  margin-top: var(--espace-1);
+}
+
+.reassurance,
+.promesse {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espace-2);
+}
+
+.reassurance {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+  line-height: 1.4;
+}
+
+.pastille,
+.pastilleCta {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.pastille {
+  background: var(--couleur-pastille-succes);
+}
+
+.pastilleCta {
+  background: var(--couleur-cta);
+}
+
+.illustration {
+  position: relative;
+  height: 500px;
+}
+
+.forme {
+  position: absolute;
+  top: -40px;
+  right: -140px;
+  width: 720px;
+  height: 580px;
+  border-radius: 58% 42% 55% 45% / 48% 60% 40% 52%;
+  background: var(--couleur-lavande);
+}
+
+.vrac {
+  position: absolute;
+  top: 64px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  padding: 14px;
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-flottant);
+  transform: rotate(-4deg);
+}
+
+.enteteVrac {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--taille-petit);
+}
+
+.enteteVrac span {
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-label);
+}
+
+.grilleVrac {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+.fleche {
+  position: absolute;
+  z-index: 2;
+  top: 250px;
+  left: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
+  color: var(--couleur-cta);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.livreExemple {
+  position: absolute;
+  top: 190px;
+  left: 330px;
+  width: 250px;
+  height: 250px;
+  filter: drop-shadow(0 18px 24px rgb(30 27 46 / 22%));
+  transform: rotate(4deg);
+}
+
+.etiquette {
+  position: absolute;
+  z-index: 2;
+  top: 432px;
+  left: 470px;
+  padding: 7px 12px;
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-corail);
+  color: var(--couleur-fond);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Les trois temps du parcours. */
+.etapes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 96px 96px;
+}
+
+.listeEtapes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.etape {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-3);
+  padding: 28px;
+  border-radius: var(--rayon-carte);
+}
+
+.ciel {
+  --encre-etape: var(--couleur-ciel-encre);
+
+  background: var(--couleur-ciel-pale);
+}
+
+.rose {
+  --encre-etape: var(--couleur-rose-encre);
+
+  background: var(--couleur-rose-pale);
+}
+
+.menthe {
+  --encre-etape: var(--couleur-menthe-encre);
+
+  background: var(--couleur-menthe-pale);
+}
+
+.numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--couleur-fond);
+  color: var(--encre-etape);
+  font-size: var(--taille-corps);
+  font-weight: 800;
+}
+
+.titreEtape {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.texteEtape {
+  margin: 0;
+  color: var(--couleur-texte-corps);
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+  text-wrap: pretty;
+}
+
+.promesse {
+  align-self: center;
+  margin: 0;
+  color: var(--couleur-texte-corps);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Catalogue : « Essayer » mène à l'inscription en gardant le modèle choisi. */
+.catalogue {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 72px 96px 88px;
+  background: var(--couleur-lavande-pale);
+  scroll-margin-top: var(--espace-4);
+}
+
+.enteteCatalogue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+}
+
+.titreCatalogue {
+  margin: 0;
+  font-size: var(--taille-h1);
+  font-weight: 800;
+  line-height: var(--interligne-h1);
+  letter-spacing: var(--approche-titre);
+}
+
+.sousTitre {
+  margin: 0;
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-corps);
+}
+
+.grilleModeles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.carteModele {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--rayon-carte);
+  background: var(--couleur-fond);
+  transition: transform 150ms ease;
+}
+
+.carteModele:hover {
+  transform: translateY(-4px);
+}
+
+.apercu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+}
+
+.livreOuvert {
+  width: 220px;
+  height: 110px;
+  border-radius: 2px;
+  box-shadow: var(--ombre-page);
+}
+
+.livreApercu {
+  width: 130px;
+  height: 130px;
+  border-radius: 3px;
+  background: var(--couleur-fond);
+  box-shadow: var(--ombre-page);
+}
+
+.corpsCarte {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px 20px;
+}
+
+.nomModele {
+  margin: 0;
+  font-size: var(--taille-h3);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pages {
+  margin-bottom: 6px;
+  color: var(--couleur-texte-secondaire);
+  font-size: var(--taille-petit);
+}
+
+.beurre {
+  --encre-etape: var(--couleur-beurre-encre);
+
+  background: var(--couleur-beurre-pale);
+}
+
+/* Engagements : accessibilité, données personnelles, éco-conception. */
+.engagements {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 72px 96px 24px;
+}
+
+.grilleEngagements {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.engagement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-3);
+  padding: 28px;
+  border-radius: var(--rayon-carte);
+}
+
+.reference {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: var(--rayon-pill);
+  background: var(--couleur-fond);
+  color: var(--encre-etape);
+  font-size: var(--taille-label);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-2);
+  margin: 0;
+  padding-left: 1.1em;
+  color: var(--couleur-texte-corps);
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+  text-wrap: pretty;
+}
+
+.pied {
+  display: flex;
+  align-items: center;
+  padding: 28px 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carteModele {
+    transition: none;
+  }
+
+  .carteModele:hover {
+    transform: none;
+  }
+}
+
+@media (width < 1100px) {
+  .accroche {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--espace-12);
+  }
+
+  .illustration {
+    display: none;
+  }
+
+  .etapes,
+  .catalogue,
+  .engagements,
+  .pied {
+    padding-right: var(--espace-12);
+    padding-left: var(--espace-12);
+  }
+}
+
+@media (width < 720px) {
+  .entete {
+    padding: var(--espace-3) var(--espace-4);
+  }
+
+  .accroche {
+    padding: var(--espace-8) var(--espace-4) var(--espace-12);
+  }
+
+  .titre {
+    font-size: 40px;
+  }
+
+  .listeEtapes,
+  .grilleEngagements {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .etapes,
+  .catalogue,
+  .engagements,
+  .pied {
+    padding-right: var(--espace-4);
+    padding-left: var(--espace-4);
+  }
+
+  .catalogue {
+    padding-top: var(--espace-12);
+    padding-bottom: var(--espace-12);
+  }
+}

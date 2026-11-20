@@ -1,4 +1,5 @@
-import { createBrowserRouter, redirect } from "react-router";
+import { createBrowserRouter, Outlet } from "react-router";
+import { Accueil, chargerAccueil } from "./ecrans/Accueil";
 import { AdresseInconnue } from "./ecrans/AdresseInconnue";
 import { actionConnexion, Connexion } from "./ecrans/Connexion";
 import {
@@ -28,23 +29,51 @@ import {
   NouveauLivre,
 } from "./ecrans/NouveauLivre";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
+import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
+
+type DonneesLivre = Awaited<ReturnType<typeof chargerLivreEnCours>>;
+type DonneesExport = Awaited<ReturnType<typeof chargerExport>>;
+// Lu par EcranCreateur : l'écran occupe toute la fenêtre, sans l'en-tête.
+type PleinCadre = { pleinCadre: boolean };
+
+// Racine sans enveloppe : elle ne fait que tenir le titre de l'onglet à jour (handle.titre de chaque route).
+function Racine() {
+  useTitreDePage();
+  return <Outlet />;
+}
+
+function ErreurRacine() {
+  useTitreDePage();
+  return (
+    <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
+      <ErreurChargement />
+    </main>
+  );
+}
 
 // Adresses des spécifications fonctionnelles (§1) : un écran a une adresse propre, rechargeable.
 export const routeur = createBrowserRouter([
   {
     // Dernier filet : une erreur qu'aucun écran n'attrape (action de formulaire en 500, par exemple).
-    ErrorBoundary: () => (
-      <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
-        <ErreurChargement />
-      </main>
-    ),
+    Component: Racine,
+    ErrorBoundary: ErreurRacine,
     children: [
-      // E0 (vitrine) n'existe pas encore : la racine mène à l'espace du Créateur,
-      // qui renvoie à la connexion s'il n'y a pas de session.
-      { path: "/", loader: () => redirect("/livres") },
-      { path: "/connexion", Component: Connexion, action: actionConnexion },
+      // E0, publique. L'espace du Créateur (/livres…) renvoie à la connexion sans session.
+      {
+        path: "/",
+        handle: { titre: "Livres photo prêts à imprimer" } satisfies AvecTitre,
+        loader: chargerAccueil,
+        Component: Accueil,
+      },
+      {
+        path: "/connexion",
+        handle: { titre: "Se connecter" } satisfies AvecTitre,
+        Component: Connexion,
+        action: actionConnexion,
+      },
       {
         path: "/inscription",
+        handle: { titre: "Créer un compte" } satisfies AvecTitre,
         Component: Inscription,
         action: actionInscription,
       },
@@ -70,6 +99,7 @@ export const routeur = createBrowserRouter([
             children: [
               {
                 path: "/livres",
+                handle: { titre: "Mes livres" } satisfies AvecTitre,
                 loader: chargerMesLivres,
                 action: actionMesLivres,
                 Component: MesLivres,
@@ -77,6 +107,7 @@ export const routeur = createBrowserRouter([
                   // S1, surcouche sur E4 : la liste reste affichée dessous.
                   {
                     path: "nouveau",
+                    handle: { titre: "Nouveau livre" } satisfies AvecTitre,
                     loader: chargerNouveauLivre,
                     action: actionNouveauLivre,
                     Component: NouveauLivre,
@@ -87,7 +118,10 @@ export const routeur = createBrowserRouter([
                 // E7, réduit à la réserve. Son id sert à E5, qui lit le livre sans le recharger.
                 id: "livre",
                 path: "/livre/:id",
-                handle: { pleinCadre: true },
+                handle: {
+                  pleinCadre: true,
+                  titre: (d?: DonneesLivre) => d?.projet.titre ?? "Livre",
+                } satisfies AvecTitre & PleinCadre,
                 loader: chargerLivreEnCours,
                 shouldRevalidate: revaliderSaufPageCourante,
                 action: actionLivreEnCours,
@@ -96,6 +130,9 @@ export const routeur = createBrowserRouter([
                   // E5, surcouche sur E7 : la réserve reste affichée dessous.
                   {
                     path: "import",
+                    handle: {
+                      titre: "Importer des photos",
+                    } satisfies AvecTitre,
                     loader: chargerImport,
                     Component: ImportPhotos,
                   },
@@ -104,7 +141,11 @@ export const routeur = createBrowserRouter([
               // E9 : écran à part entière, pas une surcouche de l'éditeur.
               {
                 path: "/livre/:id/export",
-                handle: { pleinCadre: true },
+                handle: {
+                  pleinCadre: true,
+                  titre: (d?: DonneesExport) =>
+                    d ? `Exporter · ${d.projet.titre}` : "Exporter",
+                } satisfies AvecTitre & PleinCadre,
                 loader: chargerExport,
                 Component: Export,
               },
@@ -112,7 +153,11 @@ export const routeur = createBrowserRouter([
           },
         ],
       },
-      { path: "*", Component: AdresseInconnue },
+      {
+        path: "*",
+        handle: { titre: "Adresse inconnue" } satisfies AvecTitre,
+        Component: AdresseInconnue,
+      },
     ],
   },
 ]);

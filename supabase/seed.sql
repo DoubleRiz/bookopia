@@ -101,6 +101,32 @@ values
     {"indice": 3, "nature": "texte", "style": "legende", "x": 15, "y": 162, "largeur": 180, "hauteur": 14},
     {"indice": 4, "nature": "texte", "style": "legende", "x": 225, "y": 162, "largeur": 79, "hauteur": 14},
     {"indice": 5, "nature": "texte", "style": "legende", "x": 319, "y": 162, "largeur": 81, "hauteur": 14}
+  ]'),
+  -- Miroirs : la même disposition, les pages droite et gauche échangées
+  ('00000000-0000-4000-b000-000000000012', 'Pleine page et blanc (miroir)', 'interieur', 'genereux', '[
+    {"indice": 0, "nature": "photo", "x": 220, "y": 0, "largeur": 200, "hauteur": 210}
+  ]'),
+  ('00000000-0000-4000-b000-000000000013', 'Trio (miroir)', 'interieur', 'rythme', '[
+    {"indice": 0, "nature": "photo", "x": 220, "y": 12, "largeur": 188, "hauteur": 186},
+    {"indice": 1, "nature": "photo", "x": 12, "y": 12, "largeur": 188, "hauteur": 88},
+    {"indice": 2, "nature": "photo", "x": 12, "y": 110, "largeur": 188, "hauteur": 88}
+  ]'),
+  ('00000000-0000-4000-b000-000000000014', 'Photo et bloc texte (miroir)', 'interieur', 'raconte', '[
+    {"indice": 0, "nature": "photo", "x": 220, "y": 12, "largeur": 188, "hauteur": 186},
+    {"indice": 1, "nature": "texte", "style": "titre", "x": 30, "y": 66, "largeur": 150, "hauteur": 22},
+    {"indice": 2, "nature": "texte", "style": "legende", "x": 30, "y": 96, "largeur": 150, "hauteur": 48}
+  ]'),
+  ('00000000-0000-4000-b000-000000000015', 'Page de titre (miroir)', 'interieur', 'raconte', '[
+    {"indice": 0, "nature": "photo", "x": 60, "y": 48, "largeur": 90, "hauteur": 90},
+    {"indice": 1, "nature": "texte", "style": "titre_page", "x": 30, "y": 150, "largeur": 150, "hauteur": 24}
+  ]'),
+  ('00000000-0000-4000-b000-000000000016', 'Trio et légendes (miroir)', 'interieur', 'raconte', '[
+    {"indice": 0, "nature": "photo", "x": 220, "y": 30, "largeur": 186, "hauteur": 124},
+    {"indice": 1, "nature": "photo", "x": 111, "y": 30, "largeur": 89, "hauteur": 124},
+    {"indice": 2, "nature": "photo", "x": 12, "y": 30, "largeur": 89, "hauteur": 124},
+    {"indice": 3, "nature": "texte", "style": "legende", "x": 225, "y": 162, "largeur": 180, "hauteur": 14},
+    {"indice": 4, "nature": "texte", "style": "legende", "x": 116, "y": 162, "largeur": 79, "hauteur": 14},
+    {"indice": 5, "nature": "texte", "style": "legende", "x": 20, "y": 162, "largeur": 81, "hauteur": 14}
   ]');
 
 -- ---------------------------------------------------------------------------

@@ -36,7 +36,7 @@ function Entete({
 }) {
   return (
     <header className={styles.entete}>
-      <Logo vers="/livres" />
+      <Logo vers="/" />
       <div className={styles.espaceur} />
       <NavLink to="/livres" className={styles.lienNavigation}>
         Mes livres

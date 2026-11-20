@@ -61,6 +61,29 @@ export async function listerDoublesPages(
 export async function listerGabaritsDuLivre(
   projetId: string,
 ): Promise<GabaritAComposer[]> {
+  const famille = await familleDuLivre(projetId);
+  return famille ? lireGabaritsInterieurs(famille) : [];
+}
+
+// Pour l'éditeur, une seule lecture du catalogue intérieur actif, toutes familles :
+// `tous` sert au choix manuel d'un gabarit, `duLivre` (la famille du modèle) à l'ajout.
+export async function listerGabaritsDeLEditeur(projetId: string): Promise<{
+  duLivre: GabaritAComposer[];
+  tous: GabaritAComposer[];
+}> {
+  const [famille, tous] = await Promise.all([
+    familleDuLivre(projetId),
+    lireGabaritsInterieurs(),
+  ]);
+  return {
+    duLivre: famille
+      ? tous.filter((gabarit) => gabarit.famille === famille)
+      : [],
+    tous,
+  };
+}
+
+async function familleDuLivre(projetId: string): Promise<string | null> {
   const projet = verifier(
     await supabase
       .from("projet")
@@ -68,21 +91,23 @@ export async function listerGabaritsDuLivre(
       .eq("id", projetId)
       .maybeSingle(),
   );
-  const famille = projet?.modele_livre?.famille;
-  if (!famille) {
-    return [];
-  }
-  const gabarits = verifier(
-    await supabase
-      .from("gabarit")
-      .select("id, nom, definition")
-      .eq("actif", true)
-      .eq("role", "interieur")
-      .eq("famille", famille),
-  );
+  return projet?.modele_livre?.famille ?? null;
+}
+
+async function lireGabaritsInterieurs(
+  famille?: string,
+): Promise<(GabaritAComposer & { famille: string })[]> {
+  let requete = supabase
+    .from("gabarit")
+    .select("id, nom, famille, definition")
+    .eq("actif", true)
+    .eq("role", "interieur");
+  if (famille) requete = requete.eq("famille", famille);
+  const gabarits = verifier(await requete);
   return (gabarits ?? []).map((gabarit) => ({
     id: gabarit.id,
     nom: gabarit.nom,
+    famille: gabarit.famille,
     definition: definitionGabaritSchema.parse(gabarit.definition),
   }));
 }
