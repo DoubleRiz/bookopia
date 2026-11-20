@@ -11,10 +11,13 @@ test("le Créateur crée, renomme et supprime un livre", async ({ page }) => {
   await page.getByRole("button", { name: "Créer mon compte" }).click();
 
   await expect(page.getByText("Aucun livre pour l'instant")).toBeVisible();
+  // Un titre d'onglet par écran (RGAA 8.6).
+  await expect(page).toHaveTitle("Mes livres · Bookopia");
 
   // Créer, depuis la surcouche S1.
   await page.getByRole("button", { name: "Créer mon premier livre" }).click();
   await expect(page).toHaveURL("/livres/nouveau");
+  await expect(page).toHaveTitle("Nouveau livre · Mes livres · Bookopia");
   const creation = page.getByRole("dialog", { name: "Nouveau livre" });
   await creation.getByText("Raconté").click();
   await creation.getByLabel("Titre du livre").fill("Été à Lisbonne");
@@ -25,6 +28,7 @@ test("le Créateur crée, renomme et supprime un livre", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Été à Lisbonne" }),
   ).toBeVisible();
+  await expect(page).toHaveTitle("Été à Lisbonne · Bookopia");
   await page.getByRole("link", { name: "Mes livres" }).click();
 
   await expect(page).toHaveURL("/livres");
