@@ -148,3 +148,25 @@
     height: 38px;
   }
 }
+
+/* Zone discrète sous la liste : l'action destructive du compte ne se confond pas avec celles d'un livre. */
+.compteZone {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espace-3, 12px);
+  margin-top: var(--espace-8, 48px);
+  padding-top: var(--espace-6);
+  border-top: 1px solid var(--couleur-lavande);
+}
+
+.compteTitre {
+  margin: 0;
+  font-size: 16px;
+}
+
+.compteTexte {
+  margin: 0;
+  color: var(--couleur-texte-secondaire);
+  font-size: 14px;
+}
