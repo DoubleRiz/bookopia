@@ -19,6 +19,24 @@ test("après une navigation, le focus est sur le titre principal du nouvel écra
   ).toBeFocused();
 });
 
+// Le routeur garde la position de défilement : sans retour en haut, une page longue ouverte depuis
+// le pied d'une autre s'afficherait vers le bas, son titre focalisé mais hors de la vue.
+test("un nouvel écran s'ouvre en haut, son titre visible", async ({ page }) => {
+  await page.goto("/");
+  const pied = page.getByRole("navigation", { name: "Informations légales" });
+  await pied.scrollIntoViewIfNeeded();
+  await pied
+    .getByRole("link", { name: "Politique de confidentialité" })
+    .click();
+
+  const titre = page.getByRole("heading", {
+    level: 1,
+    name: "Politique de confidentialité",
+  });
+  await expect(titre).toBeFocused();
+  await expect(titre).toBeInViewport();
+});
+
 test("le focus ne bouge pas quand seule la recherche de l'adresse change", async ({
   page,
 }) => {

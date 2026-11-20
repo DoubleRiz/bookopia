@@ -16,8 +16,10 @@ export function adresseDeEcran(etapes: UIMatch[]): string {
   return ecran?.pathname ?? "";
 }
 
-// Un client-side routeur ne déplace pas le focus : il reste sur le lien cliqué, et un lecteur d'écran
+// Un routeur côté client ne déplace pas le focus : il reste sur le lien cliqué, et un lecteur d'écran
 // n'annonce rien (RGAA 7.5). Au changement d'écran, le focus va sur le titre principal, ou à défaut sur <main>.
+// Il ne remet pas non plus la page en haut : un écran ouvert depuis le pied d'une page longue
+// s'afficherait vers le bas, son titre focalisé hors de la vue. Le nouvel écran repart donc du haut.
 export function useFocusDePage() {
   const ecran = adresseDeEcran(useMatches());
   const precedent = useRef(ecran);
@@ -28,6 +30,7 @@ export function useFocusDePage() {
     const cible =
       document.querySelector<HTMLElement>("h1") ??
       document.querySelector<HTMLElement>("main");
+    window.scrollTo(0, 0);
     if (!cible) return;
     // Sans tabindex, un titre n'est pas focalisable ; -1 le réserve au focus programmatique (hors ordre du Tab).
     cible.tabIndex = -1;
