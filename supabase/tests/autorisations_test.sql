@@ -155,8 +155,8 @@ select throws_ok(
                                empreinte_fichier, largeur_px, hauteur_px)
      select projet_id, gen_random_uuid(), 'webp', 'intrus.jpg', repeat('c', 64), 10, 10
      from livre where proprietaire = 'bob' $$,
-  'P0001', 'introuvable',
-  'Alice n''ajoute pas de photo au livre de Bob (le plafond vérifie le livre avant la RLS)'
+  '42501', null,
+  'Alice n''ajoute pas de photo au livre de Bob'
 );
 
 select lives_ok(

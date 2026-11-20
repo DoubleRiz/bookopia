@@ -9,8 +9,10 @@
 -- Refuse la photo qui dépasserait le plafond de son livre.
 -- Le livre est verrouillé avant de compter : deux imports simultanés du même livre
 -- passent l'un après l'autre, et ne peuvent pas dépasser 100 à eux deux.
--- verrouiller_projet lève aussi « introuvable » si le livre n'est pas au Créateur.
--- security definer : verrouiller_projet n'est pas exécutable par authenticated.
+-- Le verrou se pose par l'id seul : l'appartenance du livre reste vérifiée par la RLS,
+-- qui passe après les triggers. Une insertion sans jeton (Studio, script de démonstration,
+-- restauration) reste ainsi possible, et plafonnée.
+-- security definer : authenticated n'a pas le droit de verrouiller une ligne de projet.
 create function public.verifier_plafond_photos()
 returns trigger
 language plpgsql
@@ -18,7 +20,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  perform public.verrouiller_projet(new.projet_id);
+  perform 1 from public.projet where id = new.projet_id for update;
 
   if (select count(*) from public.photo where projet_id = new.projet_id) >= 100 then
     raise exception 'plafond' using detail = 'Un livre compte au plus 100 photos';

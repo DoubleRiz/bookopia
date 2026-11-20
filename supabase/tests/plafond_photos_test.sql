@@ -2,7 +2,7 @@
 -- Spec : docs/superpowers/specs/2026-11-20-revue-rls-design.md
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(5);
+select plan(7);
 
 insert into auth.users (id, email, raw_user_meta_data)
 values ('aaaaaaaa-0000-4000-8000-000000000001', 'alice@exemple.fr', '{"nom_affichage": "Alice"}');
@@ -57,6 +57,23 @@ select throws_ok(
   'select pg_temp.ajouter_photos(103, 104)',
   'P0001', 'plafond',
   'Un insert de plusieurs lignes ne dépasse pas le plafond'
+);
+
+-- Sans jeton (Studio, script de démonstration, restauration) : le plafond s'applique,
+-- l'appartenance n'est pas vérifiée par le trigger, c'est le rôle de la RLS.
+reset role;
+select set_config('request.jwt.claims', '', true);
+-- L'insert de plusieurs lignes a été annulé en entier : le livre compte toujours 99 photos.
+
+select lives_ok(
+  'select pg_temp.ajouter_photos(105, 105)',
+  'Une insertion sans jeton passe sous le plafond'
+);
+
+select throws_ok(
+  'select pg_temp.ajouter_photos(106, 106)',
+  'P0001', 'plafond',
+  'Une insertion sans jeton reste plafonnée'
 );
 
 select * from finish();
