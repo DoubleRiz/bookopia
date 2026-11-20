@@ -30,7 +30,9 @@
   color: var(--couleur-cta);
   font-size: 14px;
   font-weight: 600;
-  text-decoration: none;
+  /* Le lien suit une phrase : le soulignement le distingue du texte (RGAA 10.6). */
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .lienEntete:hover {

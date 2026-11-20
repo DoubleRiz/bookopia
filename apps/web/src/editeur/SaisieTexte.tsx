@@ -213,6 +213,14 @@ export function SaisieTexte({
         evenement.preventDefault();
         evenement.stopPropagation();
         courant.rappels.surFin();
+        // Sans cela, le focus tombe sur le <body> quand la saisie se ferme (RGAA 7.3) :
+        // il retourne au cadre texte, d'où l'on repart au clavier.
+        const cadre = courant.lireContexte().emplacement.id;
+        requestAnimationFrame(() =>
+          document
+            .querySelector<SVGElement>(`[data-emplacement="${cadre}"]`)
+            ?.focus(),
+        );
         return true;
       },
     },
