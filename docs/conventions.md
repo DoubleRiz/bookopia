@@ -73,6 +73,23 @@ Chaque fonction SQL est commentée en français, ligne à ligne quand la logique
 - Un commit = une intention.
 - `npm run lint && npm run typecheck && npm test` passe avant tout commit.
 
+## Revue et intégration
+
+Tout changement rejoint `main` par une pull request. `main` est protégée : pas de push direct, et la fusion exige une CI verte sur une branche à jour.
+
+| Moment | Ce qui est vérifié | Comment |
+|---|---|---|
+| Avant la PR | Critères d'acceptation des étapes Notion, tests, revue du code | Commande `/preparer-pr` |
+| Sur la PR | Lint, types, Vitest, pgTAP, parcours e2e | GitHub Actions, `.github/workflows/ci.yml` |
+| Sur la PR | Lien vers au moins une étape Notion | `.github/workflows/lien-notion.yml` |
+| À la fusion | CI verte sur la branche à jour, puis étapes Notion à « Terminé » | Protection de `main`, commande `/fusionner-pr` |
+
+La description de la PR suit `.github/pull_request_template.md` : étapes Notion, critères avec leur preuve, ce qui a été vérifié, ce qui n'est pas traité. Un critère n'est coché, dans la PR comme dans Notion, que s'il a une preuve.
+
+La CI démarre Supabase sur le runner avec la même version de la CLI qu'en local. Les URL et clés de cette instance ne sont pas des secrets : la CI n'utilise aucun secret.
+
+Aucune approbation n'est exigée : GitHub interdit d'approuver sa propre PR. La revue se fait avant la PR, par un agent qui n'a pas écrit le code.
+
 ## Commentaires
 
 Un commentaire explique **pourquoi**, jamais **quoi**. Si le « quoi » n'est pas clair, c'est le code qu'il faut renommer.

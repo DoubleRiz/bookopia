@@ -38,6 +38,8 @@ npm run lint && npm run typecheck    # avant tout commit
 npm test
 ```
 
+Une branche rejoint `main` par une PR, préparée avec `/preparer-pr` et fusionnée avec `/fusionner-pr`. Le processus est décrit dans [`docs/conventions.md`](docs/conventions.md#revue-et-intégration).
+
 ## Règles non négociables
 
 1. **Vocabulaire métier français, littéral**, y compris dans les identifiants de code : `double_page`, `gabarit`, `reserve`, `emplacement`. Jamais « album », « page », « layout », « template ». → [`docs/glossaire.md`](docs/glossaire.md)
