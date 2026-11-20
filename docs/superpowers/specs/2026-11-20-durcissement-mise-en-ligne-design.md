@@ -20,14 +20,14 @@ Lot L9 · Sécurité & tests. Étapes BK-121 (en-têtes de sécurité du front),
 | `style-src` | `'self' 'unsafe-inline'` | L'interface pose des attributs `style` (React, Tiptap, recadrage). Coût assumé : une injection de style reste possible, pas de script. Alternative écartée : un nonce par réponse, impossible avec un front statique |
 | `font-src` | `'self'` | Nunito est servie par le dépôt (`styles/polices`) |
 | `img-src` | `'self' data: blob: https://<projet>.supabase.co https://lh3.googleusercontent.com` | Photos en URL signée Storage, vignettes locales, avatar Google |
-| `connect-src` | `'self' https://<projet>.supabase.co https://accounts.google.com https://photospicker.googleapis.com https://*.googleusercontent.com` | API Supabase, Google Identity, Photos Picker, téléchargement des photos choisies |
+| `connect-src` | `'self' https://*.supabase.co https://accounts.google.com https://photospicker.googleapis.com https://*.googleusercontent.com` | API Supabase, Google Identity, Photos Picker, téléchargement des photos choisies |
 | `frame-src` | `https://accounts.google.com` | Fenêtre de consentement Google Identity |
 | `frame-ancestors` | `'none'` | Aucun affichage du front dans une iframe |
 | `object-src` / `base-uri` / `form-action` | `'none'` / `'self'` / `'self'` | Réduit la surface |
 
 Autres en-têtes : `Referrer-Policy: strict-origin-when-cross-origin`, `X-Content-Type-Options: nosniff`, et `Permissions-Policy` coupant caméra, micro et géolocalisation (aucun usage).
 
-Le `<projet>.supabase.co` n'est connu qu'une fois le projet hébergé créé (BK-098). En local, la CSP n'est pas posée (le serveur Vite ne la sert pas) ; elle se vérifie sur le front construit, servi avec ses en-têtes.
+Le sous-domaine du projet Supabase hébergé n'est connu qu'après BK-098, et `vercel.json` ne lit pas de variable : la politique autorise `https://*.supabase.co`. Coût assumé : n'importe quel projet Supabase est joignable, pas seulement le nôtre ; à resserrer sur l'adresse exacte une fois le projet créé. En local, la CSP n'est pas posée (le serveur Vite ne la sert pas) ; elle se vérifie sur le front construit, servi avec ses en-têtes.
 
 ## Décisions à prendre
 
