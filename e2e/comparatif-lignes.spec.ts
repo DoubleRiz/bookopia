@@ -2,12 +2,12 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   CATALOGUE_POLICES,
-  creerMesure,
   disposerTexte,
   FICHIERS_POLICES,
   type Mesures,
   type Theme,
 } from "@bookopia/shared";
+import { creerMesure } from "@bookopia/shared/mesure-police";
 import { expect, test } from "@playwright/test";
 import { appliquerGabarit, creerLivreRaconte, ecrire } from "./parcours";
 

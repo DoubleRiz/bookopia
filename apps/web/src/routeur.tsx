@@ -1,4 +1,5 @@
 import { createBrowserRouter, Outlet } from "react-router";
+import { LienEvitement } from "./composants/LienEvitement";
 import { Accueil, chargerAccueil } from "./ecrans/Accueil";
 import { AdresseInconnue } from "./ecrans/AdresseInconnue";
 import { actionConnexion, Connexion } from "./ecrans/Connexion";
@@ -8,15 +9,9 @@ import {
   EcranCreateur,
   EcranCreateurProvisoire,
 } from "./ecrans/EcranCreateur";
+import { DeclarationAccessibilite } from "./ecrans/DeclarationAccessibilite";
 import { ErreurChargement } from "./ecrans/ErreurChargement";
-import { chargerExport, Export } from "./ecrans/Export";
-import { chargerImport, ImportPhotos } from "./ecrans/ImportPhotos";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
-import {
-  actionLivreEnCours,
-  chargerLivreEnCours,
-  LivreEnCours,
-} from "./ecrans/LivreEnCours";
 import {
   actionMesLivres,
   chargerMesLivres,
@@ -28,26 +23,43 @@ import {
   chargerNouveauLivre,
   NouveauLivre,
 } from "./ecrans/NouveauLivre";
+import { MentionsLegales } from "./ecrans/MentionsLegales";
+import { PolitiqueConfidentialite } from "./ecrans/PolitiqueConfidentialite";
+import { type AvecSurcouche, useFocusDePage } from "./ecrans/focusDePage";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
 
-type DonneesLivre = Awaited<ReturnType<typeof chargerLivreEnCours>>;
-type DonneesExport = Awaited<ReturnType<typeof chargerExport>>;
+type DonneesLivre = Awaited<
+  ReturnType<typeof import("./ecrans/LivreEnCours").chargerLivreEnCours>
+>;
+type DonneesExport = Awaited<
+  ReturnType<typeof import("./ecrans/Export").chargerExport>
+>;
 // Lu par EcranCreateur : l'écran occupe toute la fenêtre, sans l'en-tête.
 type PleinCadre = { pleinCadre: boolean };
 
-// Racine sans enveloppe : elle ne fait que tenir le titre de l'onglet à jour (handle.titre de chaque route).
+// Racine sans enveloppe : elle tient le titre de l'onglet à jour (handle.titre de chaque route)
+// et rend le focus au titre de l'écran à chaque navigation. Elle porte aussi le lien d'évitement.
 function Racine() {
   useTitreDePage();
-  return <Outlet />;
+  useFocusDePage();
+  return (
+    <>
+      <LienEvitement />
+      <Outlet />
+    </>
+  );
 }
 
 function ErreurRacine() {
   useTitreDePage();
   return (
-    <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
-      <ErreurChargement />
-    </main>
+    <>
+      <LienEvitement />
+      <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
+        <ErreurChargement />
+      </main>
+    </>
   );
 }
 
@@ -107,7 +119,10 @@ export const routeur = createBrowserRouter([
                   // S1, surcouche sur E4 : la liste reste affichée dessous.
                   {
                     path: "nouveau",
-                    handle: { titre: "Nouveau livre" } satisfies AvecTitre,
+                    handle: {
+                      titre: "Nouveau livre",
+                      surcouche: true,
+                    } satisfies AvecTitre & AvecSurcouche,
                     loader: chargerNouveauLivre,
                     action: actionNouveauLivre,
                     Component: NouveauLivre,
@@ -122,19 +137,31 @@ export const routeur = createBrowserRouter([
                   pleinCadre: true,
                   titre: (d?: DonneesLivre) => d?.projet.titre ?? "Livre",
                 } satisfies AvecTitre & PleinCadre,
-                loader: chargerLivreEnCours,
                 shouldRevalidate: revaliderSaufPageCourante,
-                action: actionLivreEnCours,
-                Component: LivreEnCours,
+                // L'éditeur, l'import et l'export ne sont téléchargés qu'à leur ouverture (BK-133).
+                lazy: async () => {
+                  const m = await import("./ecrans/LivreEnCours");
+                  return {
+                    loader: m.chargerLivreEnCours,
+                    action: m.actionLivreEnCours,
+                    Component: m.LivreEnCours,
+                  };
+                },
                 children: [
                   // E5, surcouche sur E7 : la réserve reste affichée dessous.
                   {
                     path: "import",
                     handle: {
                       titre: "Importer des photos",
-                    } satisfies AvecTitre,
-                    loader: chargerImport,
-                    Component: ImportPhotos,
+                      surcouche: true,
+                    } satisfies AvecTitre & AvecSurcouche,
+                    lazy: async () => {
+                      const m = await import("./ecrans/ImportPhotos");
+                      return {
+                        loader: m.chargerImport,
+                        Component: m.ImportPhotos,
+                      };
+                    },
                   },
                 ],
               },
@@ -146,12 +173,31 @@ export const routeur = createBrowserRouter([
                   titre: (d?: DonneesExport) =>
                     d ? `Exporter · ${d.projet.titre}` : "Exporter",
                 } satisfies AvecTitre & PleinCadre,
-                loader: chargerExport,
-                Component: Export,
+                lazy: async () => {
+                  const m = await import("./ecrans/Export");
+                  return { loader: m.chargerExport, Component: m.Export };
+                },
               },
             ],
           },
         ],
+      },
+      {
+        path: "/mentions-legales",
+        handle: { titre: "Mentions légales" } satisfies AvecTitre,
+        Component: MentionsLegales,
+      },
+      {
+        path: "/politique-de-confidentialite",
+        handle: {
+          titre: "Politique de confidentialité",
+        } satisfies AvecTitre,
+        Component: PolitiqueConfidentialite,
+      },
+      {
+        path: "/accessibilite",
+        handle: { titre: "Déclaration d'accessibilité" } satisfies AvecTitre,
+        Component: DeclarationAccessibilite,
       },
       {
         path: "*",

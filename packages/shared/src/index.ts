@@ -7,7 +7,9 @@ export * from "./entrees";
 export * from "./gabarit";
 export * from "./mise-en-lignes";
 export * from "./polices";
-export * from "./rendu-pdf";
+// Types seuls : le code de rendu (pdf-lib) et de mesure (fontkit) a son point d'entrée,
+// « @bookopia/shared/rendu-pdf » et « @bookopia/shared/mesure-police ».
+export type * from "./rendu-pdf";
 export * from "./taille-original";
 export * from "./texte-riche";
 export * from "./typographie";

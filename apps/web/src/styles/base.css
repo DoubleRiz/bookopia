@@ -61,6 +61,11 @@ a {
   box-shadow: var(--anneau-focus);
 }
 
+/* Titre ou <main> qui reçoivent le focus au changement d'écran : pas interactifs, donc sans anneau. */
+[tabindex="-1"]:focus-visible {
+  box-shadow: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

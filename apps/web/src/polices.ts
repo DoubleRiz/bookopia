@@ -31,11 +31,11 @@ import alexBrush400 from "@bookopia/shared/polices/alex-brush-400.ttf?url";
 import {
   type ClePolice,
   clePolice,
-  creerMesure,
   type Mesures,
   type MesureTexte,
   type Typographie,
 } from "@bookopia/shared";
+import { creerMesure } from "@bookopia/shared/mesure-police";
 
 // Les polices des livres, servies par l'application : aucun appel à un tiers.
 // Les mêmes octets servent à l'écran (FontFace), à la mesure des textes et au PDF.

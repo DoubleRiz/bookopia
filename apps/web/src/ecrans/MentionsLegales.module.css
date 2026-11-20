@@ -1,0 +1,68 @@
+.ecran {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.entete {
+  display: flex;
+  align-items: center;
+  padding: 18px var(--espace-12);
+  border-bottom: 1px solid var(--couleur-lavande-pale);
+}
+
+/* Colonne de lecture : des lignes courtes se lisent mieux et se zooment sans défiler de côté. */
+.corps {
+  flex: 1;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--espace-12) var(--espace-4);
+  color: var(--couleur-texte-corps);
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+}
+
+.titre {
+  margin: 0 0 var(--espace-8);
+  color: var(--couleur-encre);
+  font-size: var(--taille-h1);
+  line-height: var(--interligne-h1);
+}
+
+.corps h2 {
+  margin: var(--espace-8) 0 var(--espace-2);
+  color: var(--couleur-encre);
+  font-size: var(--taille-h2);
+  line-height: var(--interligne-h2);
+}
+
+/* Sous-rubriques de la déclaration d'accessibilité. */
+.corps h3 {
+  margin: var(--espace-4) 0 var(--espace-1);
+  color: var(--couleur-encre);
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+}
+
+.corps p {
+  margin: 0 0 var(--espace-2);
+  text-wrap: pretty;
+}
+
+@media (width < 720px) {
+  .entete {
+    padding: var(--espace-3) var(--espace-4);
+  }
+}
+
+/* Pages de lecture longue (politique de confidentialité) : listes alignées sur le texte. */
+.corps ul {
+  margin: 0 0 var(--espace-2);
+  padding-left: var(--espace-6);
+}
+
+.corps li {
+  margin-bottom: var(--espace-1);
+}

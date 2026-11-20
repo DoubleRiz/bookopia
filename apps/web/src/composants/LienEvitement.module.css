@@ -1,0 +1,19 @@
+/* Hors de la fenêtre tant qu'il n'a pas le focus, pour que la souris ne le voie jamais ;
+   l'anneau de focus est celui du design system (base.css, :focus-visible). */
+.lien {
+  position: fixed;
+  top: var(--espace-2);
+  left: var(--espace-2);
+  z-index: 1000;
+  padding: var(--espace-2) var(--espace-4);
+  border-radius: var(--rayon-champ);
+  background: var(--couleur-fond);
+  color: var(--couleur-cta);
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(calc(-100% - var(--espace-4)));
+}
+
+.lien:focus {
+  transform: none;
+}

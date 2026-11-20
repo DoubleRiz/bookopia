@@ -24,7 +24,8 @@ import {
   EPAISSEUR_SOULIGNEMENT,
   tronquerPourTenir,
 } from "./mise-en-lignes";
-import { type ClePolice, creerMesure, type MesureTexte } from "./polices";
+import { creerMesure } from "./mesure-police";
+import type { ClePolice, MesureTexte } from "./polices";
 import { type DocumentTexte, estVide } from "./texte-riche";
 import { type Theme } from "./typographie";
 
