@@ -2,7 +2,7 @@
 
 Lot L9 · Sécurité & tests. Étapes BK-123 (suppression du compte), BK-126 (purger les fichiers orphelins du stockage), BK-048 (reste : prouver par un test que les entrées des fonctions `security definer` sont revérifiées). Écran touché : le minimum, un bouton de suppression du compte avec confirmation (l'écran exact est à fixer avec la décision 1). Règles : « la clé `service_role` n'est jamais utilisée par l'application » (`CLAUDE.md`), « les règles métier vivent dans Supabase ».
 
-**Statut : en attente de décision.** Les décisions 1 à 3 sont ouvertes ; rien n'est implémenté.
+**Statut : décisions validées par Gautier le 2026-11-20** (option A pour BK-123 et BK-126, délai de 24 h, bouton en bas de E4 ; décision 3 retenue telle quelle). Implémenté.
 
 ## Objectif
 
@@ -106,6 +106,13 @@ Il n'existe pas d'écran de compte dans les spécifications E0 à E10 ; l'étape
 | BK-126 | Délai justifié dans `architecture.md` | Proposition de texte, sur accord |
 | BK-126 | Fichier référencé jamais touché | `purge_orphelins_test.sql` |
 | BK-048 | Entrées des fonctions `security definer` vérifiées | `entrees_fonctions_test.sql` |
+
+## Écarts avec l'implémentation et preuves
+
+- Le bouton est une section « Mon compte » sous la liste de E4 (`MesLivres.tsx`), la modale est `SupprimerCompte.tsx`.
+- `entrees_fonctions_test.sql` : 34 assertions. Le contrôle de couverture liste 12 fonctions (les 10 de la liste blanche qui sont `security definer`, plus les deux nouvelles). `privileges_fonctions_test.sql` passe à 14 fonctions autorisées.
+- **Essai de bout en bout, par l'API** (même suite d'appels que le front), compte `@bookopia.test` : trois fichiers déposés (original, vignette, PDF) ; la fonction refuse (`fichiers`) tant qu'ils existent ; `lister_fichiers_orphelins` les liste une fois vieillis à 48 h ; après suppression par l'API Storage, le disque du conteneur Storage passe de 3 fichiers à 0 ; `supprimer_mon_compte` rend 204 et plus rien du compte ne reste dans `auth.users`, `utilisateur`, `projet` ni `storage.objects`.
+- **Non essayé dans le navigateur** : la session n'était ouverte dans aucune fenêtre, la page ne s'affichait pas. Le parcours de l'écran (saisie du mot, bouton inactif, redirection) est couvert seulement par le test de rendu et le typecheck.
 
 ## Hors périmètre, à signaler
 
