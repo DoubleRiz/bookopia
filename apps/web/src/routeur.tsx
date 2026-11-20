@@ -1,4 +1,5 @@
 import { createBrowserRouter, Outlet } from "react-router";
+import { LienEvitement } from "./composants/LienEvitement";
 import { Accueil, chargerAccueil } from "./ecrans/Accueil";
 import { AdresseInconnue } from "./ecrans/AdresseInconnue";
 import { actionConnexion, Connexion } from "./ecrans/Connexion";
@@ -38,19 +39,27 @@ type DonneesExport = Awaited<ReturnType<typeof chargerExport>>;
 type PleinCadre = { pleinCadre: boolean };
 
 // Racine sans enveloppe : elle tient le titre de l'onglet à jour (handle.titre de chaque route)
-// et rend le focus au titre de l'écran à chaque navigation.
+// et rend le focus au titre de l'écran à chaque navigation. Elle porte aussi le lien d'évitement.
 function Racine() {
   useTitreDePage();
   useFocusDePage();
-  return <Outlet />;
+  return (
+    <>
+      <LienEvitement />
+      <Outlet />
+    </>
+  );
 }
 
 function ErreurRacine() {
   useTitreDePage();
   return (
-    <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
-      <ErreurChargement />
-    </main>
+    <>
+      <LienEvitement />
+      <main style={{ padding: "var(--espace-12) var(--espace-4)" }}>
+        <ErreurChargement />
+      </main>
+    </>
   );
 }
 
