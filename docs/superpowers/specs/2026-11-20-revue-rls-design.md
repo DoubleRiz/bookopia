@@ -30,7 +30,7 @@ Rien ne le vérifie en revanche : une migration future peut oublier un `revoke` 
 | Deuxième dossier | La règle de **dépôt** exige que le deuxième dossier soit un livre du Créateur, via `est_mon_projet`. Lecture et suppression restent sur le premier dossier seul | Un fichier d'un livre supprimé reste lisible et supprimable par son Créateur : c'est voulu, la purge (BK-126) et la suppression du compte (BK-123) en ont besoin | Vérifier aussi la lecture et la suppression : les fichiers d'un livre supprimé deviendraient impossibles à retirer |
 | Dossier qui n'est pas un uuid | Refusé sans erreur de conversion : `case when … ~ '<uuid>' then est_mon_projet(…::uuid) else false end` | Une expression régulière dans la règle | Un `and` : PostgreSQL ne garantit pas l'ordre d'évaluation, le cast peut lever `22P02` |
 | Tableau des policies | Dans cette spec, section suivante | `docs/architecture.md` ne le reprend pas sans accord | |
-| Preuve « aucune table sans RLS » | Requête sur `pg_class.relrowsecurity` dans `autorisations_test.sql` | Aucun | Une requête à lancer à la main : ne protège pas l'avenir |
+| Preuve « aucune table sans RLS » | Déjà présente dans `autorisations_test.sql` (`pg_tables.rowsecurity`) : rien à ajouter | Aucun | Une requête à lancer à la main : ne protège pas l'avenir |
 
 ## Tableau des policies (BK-048)
 
@@ -54,21 +54,21 @@ Rien ne le vérifie en revanche : une migration future peut oublier un `revoke` 
 
 **Base**
 
-- Migration `20261120100000_controle_depots.sql` :
+- Migration `20261120100000_depot_sous_son_livre.sql` : la policy « Un créateur dépose ses fichiers » est remplacée par une version qui vérifie aussi le deuxième dossier.
+- Migration `20261120100100_plafond_photos.sql` :
   - fonction trigger `verifier_plafond_photos()`, `security definer`, `search_path = ''`, commentée. Elle appelle `verrouiller_projet(new.projet_id)`, compte les photos du livre et lève `raise exception 'plafond' using detail = 'Un livre compte au plus 100 photos'` à partir de 100. Exécution révoquée à `public`, `anon`, `authenticated` ;
-  - trigger `before insert` sur `photo` ;
-  - la policy « Un créateur dépose ses fichiers » est remplacée par une version qui vérifie aussi le deuxième dossier.
+  - trigger `before insert` sur `photo`. Il passe avant le `with check` de la RLS : une photo ajoutée au livre d'un autre lève `introuvable` au lieu de `42501`.
 - `supabase/tests/privileges_fonctions_test.sql` (BK-118) :
   - aucune fonction de `public` exécutable par `anon` (`has_function_privilege`) ;
-  - les fonctions de `public` exécutables par `authenticated` sont exactement la liste blanche : `est_mon_projet`, `creer_projet`, `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page`, `remplir_emplacements`, `composer_livre`, `changer_gabarit`, `changer_theme`, `segments_texte_valides`, `contenu_texte_valide`, `placer_cadre_texte` (signatures complètes, `regprocedure`) ;
+  - les fonctions de `public` exécutables par `authenticated` sont exactement la liste blanche : `est_mon_projet`, `creer_projet`, `inserer_double_page`, `deplacer_double_page`, `supprimer_double_page`, `dupliquer_double_page`, `composer_livre`, `changer_gabarit`, `changer_theme`, `segments_texte_valides`, `contenu_texte_valide`, `placer_cadre_texte` (signatures complètes, `regprocedure`) ;
   - aucune fonction `security definer` de `public` sans `search_path` dans `proconfig` ;
   - les fonctions qui appartiennent à une extension (`pg_depend`, `deptype = 'e'`) sont exclues, pgTAP compris.
 - `supabase/tests/autorisations_test.sql` :
-  - toute table de `public` a `relrowsecurity` ;
   - le dépôt existant passe sous le vrai `projet_id` d'Alice ;
   - Alice ne dépose ni sous le livre de Bob dans son propre dossier, ni sous un dossier qui n'est pas un uuid ;
+  - un livre écrit en majuscules reste reconnu ;
   - même vérification pour le bucket `exports`.
-- Test du plafond (dans `fonctions_metier_test.sql` ou un fichier à part, au choix de l'implémentation) : 100 photos passent, la 101e lève `plafond` ; une suppression libère une place.
+- `supabase/tests/plafond_photos_test.sql` : 100 photos passent, la 101e lève `plafond` ; une suppression libère une place.
 
 **`packages/shared`**
 
@@ -78,7 +78,7 @@ Rien ne le vérifie en revanche : une migration future peut oublier un `revoke` 
 
 - `importer.ts` : les empreintes déjà lues donnent le nombre de photos du livre. Chaque fichier nouveau (ni doublon ni refusé par le filtre) réserve une place avant sa préparation ; sans place, il finit en échec de raison `plafond`, sans être préparé ni déposé. Une erreur `plafond` renvoyée par la base (autre onglet) donne la même raison, via une `ErreurPlafond` levée par `envoyer.ts` sur le modèle d'`ErreurDoublon`. Les fichiers déjà déposés sont supprimés par le `catch` existant d'`envoyer.ts`, comme pour tout échec d'insertion.
 - `ImportPhotos.tsx` : libellé de la raison `plafond` : « Livre complet (100 photos) ».
-- Tests Vitest de `importer` : avec 98 photos et 5 fichiers nouveaux, 2 importés et 3 en `plafond`, aucun préparé au-delà ; les doublons ne consomment pas de place.
+- Tests Vitest de `importer` : avec 98 photos et 5 fichiers nouveaux, 2 importés et 3 en `plafond`, aucun préparé au-delà ; les doublons ne consomment pas de place ; un échec d'envoi rend sa place. Test d'`envoyer` : le refus `plafond` de la base devient `ErreurPlafond`, fichiers supprimés.
 
 ## Hors périmètre, à signaler
 
@@ -89,5 +89,4 @@ Rien ne le vérifie en revanche : une migration future peut oublier un `revoke` 
 
 ## Laissé à l'implémentation
 
-- Le nom exact du fichier de test du plafond.
-- Le contrôle du deuxième dossier peut passer par une petite fonction `est_mon_dossier_projet(text)` si l'expression `case` rend la policy illisible ; elle entre alors dans la liste blanche et dans le tableau.
+- Le contrôle du deuxième dossier reste une expression `case` dans la policy : lisible une fois commentée, sans fonction de plus.
