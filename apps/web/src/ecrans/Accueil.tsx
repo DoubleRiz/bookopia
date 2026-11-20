@@ -263,7 +263,7 @@ export function Accueil() {
                       <LienBouton
                         vers={adresseEssai(modele.id, connecte)}
                         taille="petit"
-                        aria-label={`Essayer le modèle ${modele.nom}`}
+                        aria-label={`Essayer ce modèle : ${modele.nom}`}
                       >
                         Essayer ce modèle
                       </LienBouton>
