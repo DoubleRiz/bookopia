@@ -3,7 +3,8 @@ import { Logo } from "./Logo";
 import styles from "./PiedDePage.module.css";
 
 // Pied des écrans publics : le logo, et les pages d'information que la loi demande d'atteindre
-// depuis le site. Chaque nouvelle page légale (accessibilité) s'ajoute ici.
+// depuis le site. Le lien d'accessibilité porte l'état de conformité, comme le demande le RGAA :
+// il change avec la déclaration.
 export function PiedDePage() {
   return (
     <footer className={styles.pied}>
@@ -18,6 +19,11 @@ export function PiedDePage() {
           <li>
             <Link to="/politique-de-confidentialite" className={styles.lien}>
               Politique de confidentialité
+            </Link>
+          </li>
+          <li>
+            <Link to="/accessibilite" className={styles.lien}>
+              Accessibilité : partiellement conforme
             </Link>
           </li>
         </ul>

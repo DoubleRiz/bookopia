@@ -9,6 +9,7 @@ import {
   EcranCreateur,
   EcranCreateurProvisoire,
 } from "./ecrans/EcranCreateur";
+import { DeclarationAccessibilite } from "./ecrans/DeclarationAccessibilite";
 import { ErreurChargement } from "./ecrans/ErreurChargement";
 import { actionInscription, Inscription } from "./ecrans/Inscription";
 import {
@@ -192,6 +193,11 @@ export const routeur = createBrowserRouter([
           titre: "Politique de confidentialité",
         } satisfies AvecTitre,
         Component: PolitiqueConfidentialite,
+      },
+      {
+        path: "/accessibilite",
+        handle: { titre: "Déclaration d'accessibilité" } satisfies AvecTitre,
+        Component: DeclarationAccessibilite,
       },
       {
         path: "*",

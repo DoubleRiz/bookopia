@@ -38,6 +38,14 @@
   line-height: var(--interligne-h2);
 }
 
+/* Sous-rubriques de la déclaration d'accessibilité. */
+.corps h3 {
+  margin: var(--espace-4) 0 var(--espace-1);
+  color: var(--couleur-encre);
+  font-size: var(--taille-corps);
+  line-height: var(--interligne-corps);
+}
+
 .corps p {
   margin: 0 0 var(--espace-2);
   text-wrap: pretty;
