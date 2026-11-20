@@ -16,7 +16,7 @@ Prépare la PR de la branche courante vers `main`. Le processus est décrit dans
 
 ## 2. Étapes Notion et critères d'acceptation
 
-- Les étapes vivent dans la base « 🗺️ Suivi du projet » (`collection://5be075ee-cce9-45b6-be65-542444a51a8d`). Si aucune n'est indiquée, chercher dans cette base celles qui correspondent au diff, puis faire confirmer la liste.
+- Les étapes vivent dans la base « 🗺️ Suivi du projet » (`collection://7731b961-f581-836e-82b9-873f77b7750f`). Si aucune n'est indiquée, chercher dans cette base celles qui correspondent au diff, puis faire confirmer la liste.
 - Lire chaque étape : sa section « Critères d'acceptation », son Livrable et l'écran visé (spécifications E0 à E10).
 - Pour chaque critère, chercher la preuve : un test qui le couvre, un résultat de commande, un essai dans le navigateur. Classer chaque critère en **vérifié** (avec sa preuve) ou **non vérifié** (avec la raison). Ne jamais présenter un critère comme rempli sans preuve.
 - Un critère que le diff ne couvre pas est signalé, pas ignoré.
