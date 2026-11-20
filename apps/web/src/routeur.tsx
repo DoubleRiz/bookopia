@@ -1,4 +1,5 @@
-import { createBrowserRouter, redirect } from "react-router";
+import { createBrowserRouter } from "react-router";
+import { Accueil, chargerAccueil } from "./ecrans/Accueil";
 import { AdresseInconnue } from "./ecrans/AdresseInconnue";
 import { actionConnexion, Connexion } from "./ecrans/Connexion";
 import {
@@ -39,9 +40,8 @@ export const routeur = createBrowserRouter([
       </main>
     ),
     children: [
-      // E0 (vitrine) n'existe pas encore : la racine mène à l'espace du Créateur,
-      // qui renvoie à la connexion s'il n'y a pas de session.
-      { path: "/", loader: () => redirect("/livres") },
+      // E0, publique. L'espace du Créateur (/livres…) renvoie à la connexion sans session.
+      { path: "/", loader: chargerAccueil, Component: Accueil },
       { path: "/connexion", Component: Connexion, action: actionConnexion },
       {
         path: "/inscription",

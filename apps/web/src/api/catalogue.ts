@@ -5,13 +5,28 @@ import { verifier } from "./client";
 // seuls les actifs sont proposés.
 export async function listerModeles() {
   const modeles = verifier(
-    await supabase
-      .from("modele_livre")
-      .select("id, nom, famille, nombre_doubles_pages_depart, theme(nom)")
-      .eq("actif", true)
-      .order("nom"),
+    await requeteModeles(
+      "id, nom, famille, nombre_doubles_pages_depart, theme(nom)",
+    ),
   );
   return modeles ?? [];
+}
+
+// Pour la vitrine (E0) : le Visiteur lit les modèles, pas les thèmes (droits accordés à anon).
+export async function listerModelesPublics() {
+  const modeles = verifier(
+    await requeteModeles("id, nom, famille, nombre_doubles_pages_depart"),
+  );
+  return modeles ?? [];
+}
+
+// Le filtre et l'ordre communs aux deux lectures du catalogue de modèles.
+function requeteModeles<Colonnes extends string>(colonnes: Colonnes) {
+  return supabase
+    .from("modele_livre")
+    .select(colonnes)
+    .eq("actif", true)
+    .order("nom");
 }
 
 export async function listerGabaritsInterieurs() {
