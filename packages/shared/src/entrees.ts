@@ -66,3 +66,7 @@ export const connexionSchema = z.object({
 
 export type EntreeInscription = z.infer<typeof inscriptionSchema>;
 export type EntreeConnexion = z.infer<typeof connexionSchema>;
+
+// Plafond de photos par livre. La base fait foi : le trigger verifier_plafond_photos refuse
+// la 101e ligne. L'import le vérifie avant de préparer, pour ne déposer aucun fichier inutile.
+export const PHOTOS_PAR_LIVRE_MAX = 100;

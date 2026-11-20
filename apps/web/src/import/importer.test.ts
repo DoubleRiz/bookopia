@@ -1,9 +1,11 @@
+import { PHOTOS_PAR_LIVRE_MAX } from "@bookopia/shared";
 import { describe, expect, it } from "vitest";
 import { ErreurNonAuthentifie } from "../api/client";
 import {
   type Avancement,
   type DependancesImport,
   ErreurDoublon,
+  ErreurPlafond,
   importer,
   type PhotoPreparee,
   type Source,
@@ -215,5 +217,103 @@ describe("importer", () => {
     await expect(importer(sources, dependances())).rejects.toBeInstanceOf(
       ErreurGoogleNonAutorise,
     );
+  });
+});
+
+describe("importer, plafond de photos", () => {
+  // Les empreintes déjà dans le livre : n photos.
+  const livreDe = (n: number) => async () =>
+    new Set(Array.from({ length: n }, (_, i) => `deja${i}`));
+
+  it("n'importe que les places restantes", async () => {
+    const preparees: string[] = [];
+    const dep = dependances({
+      lireEmpreintes: livreDe(PHOTOS_PAR_LIVRE_MAX - 2),
+      preparer: async (f) => {
+        preparees.push(f.name);
+        return preparee();
+      },
+    });
+    const fichiers = ["a", "b", "c", "d", "e"].map(fichier);
+    const bilan = await importer(fichiers, dep);
+    expect(bilan.importees).toBe(2);
+    expect(bilan.echecs).toHaveLength(3);
+    expect(bilan.echecs.every((e) => e.raison === "plafond")).toBe(true);
+    expect(preparees).toHaveLength(2);
+  });
+
+  it("les doublons ne prennent pas de place", async () => {
+    const dep = dependances({
+      lireEmpreintes: livreDe(PHOTOS_PAR_LIVRE_MAX - 1),
+    });
+    const bilan = await importer(
+      [fichier("deja0"), fichier("deja1"), fichier("nouvelle")],
+      dep,
+    );
+    expect(bilan.doublons).toBe(2);
+    expect(bilan.importees).toBe(1);
+    expect(bilan.echecs).toEqual([]);
+  });
+
+  it("un livre plein ne prépare rien", async () => {
+    let preparations = 0;
+    const dep = dependances({
+      lireEmpreintes: livreDe(PHOTOS_PAR_LIVRE_MAX),
+      preparer: async () => {
+        preparations += 1;
+        return preparee();
+      },
+    });
+    const bilan = await importer(["a", "b", "c"].map(fichier), dep);
+    expect(bilan.echecs).toEqual([
+      { nom: "a", raison: "plafond" },
+      { nom: "b", raison: "plafond" },
+      { nom: "c", raison: "plafond" },
+    ]);
+    expect(preparations).toBe(0);
+    expect(dep.envoyes).toEqual([]);
+  });
+
+  it("le refus de la base compte comme plafond", async () => {
+    const envoyes: string[] = [];
+    const dep = dependances({
+      envoyer: async (photo) => {
+        if (photo.nomFichier === "a") throw new ErreurPlafond();
+        envoyes.push(photo.nomFichier);
+      },
+    });
+    const bilan = await importer(["a", "b", "c"].map(fichier), dep);
+    expect(bilan.echecs).toEqual([{ nom: "a", raison: "plafond" }]);
+    expect(envoyes.sort()).toEqual(["b", "c"]);
+    expect(bilan.importees).toBe(2);
+  });
+
+  it("un échec d'envoi rend sa place", async () => {
+    let signalerEchec = () => {};
+    const echecDeA = new Promise<void>((resolve) => {
+      signalerEchec = resolve;
+    });
+    const dep = dependances({
+      lireEmpreintes: livreDe(PHOTOS_PAR_LIVRE_MAX - 1),
+      envoyer: async (photo) => {
+        if (photo.nomFichier === "a") {
+          signalerEchec();
+          throw new Error("réseau");
+        }
+      },
+    });
+    // « b » n'arrive qu'après l'échec de « a » : il ne trouve de place que si « a » l'a rendue.
+    const b: Source = {
+      nom: "b",
+      obtenir: async () => {
+        await echecDeA;
+        // Laisse l'import traiter l'échec de « a » avant de continuer.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return new File(["b"], "b", { type: "image/jpeg" });
+      },
+    };
+    const bilan = await importer([fichier("a"), b], dep);
+    expect(bilan.importees).toBe(1);
+    expect(bilan.echecs).toEqual([{ nom: "a", raison: "envoi" }]);
   });
 });
