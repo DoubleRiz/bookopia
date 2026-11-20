@@ -67,3 +67,39 @@ export async function ecrire(page: Page, cadre: string, texte: string) {
   await page.keyboard.type(texte);
   return zone;
 }
+
+export const MOT_DE_PASSE = "parcours-e2e-local";
+
+// Un Créateur neuf avec un livre « Carnet de test » et `nombre` photos dans sa réserve, sur la
+// réserve. Rend l'adresse du compte, pour se reconnecter.
+export async function creerLivreImporte(page: Page, nombre = 2) {
+  const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@bookopia.test`;
+  await page.goto("/inscription");
+  await page.getByLabel("Votre nom").fill("Créateur de test");
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByLabel("Mot de passe").fill(MOT_DE_PASSE);
+  await page.getByRole("button", { name: "Créer mon compte" }).click();
+
+  await page.getByRole("button", { name: "Créer mon premier livre" }).click();
+  const creation = page.getByRole("dialog", { name: "Nouveau livre" });
+  await creation.getByLabel("Titre du livre").fill("Carnet de test");
+  await creation.getByRole("button", { name: "Créer le livre" }).click();
+
+  await page.getByRole("button", { name: "Importer des photos" }).click();
+  const fenetre = page.getByRole("dialog", { name: "Importer des photos" });
+  await fenetre.getByLabel(/Depuis votre appareil/).setInputFiles(
+    Array.from({ length: nombre }, (_, rang) => ({
+      name: `photo-${rang + 1}.png`,
+      mimeType: "image/png",
+      buffer: png(1200, 800, [40 + 60 * rang, 80, 200 - 60 * rang]),
+    })),
+  );
+  await fenetre
+    .getByRole("button", {
+      name: `Importer ${nombre} photo${nombre > 1 ? "s" : ""}`,
+    })
+    .click();
+  await expect(fenetre.getByText(/ajoutées? à la réserve/)).toBeVisible();
+  await fenetre.getByRole("button", { name: "Voir la réserve" }).click();
+  return email;
+}
