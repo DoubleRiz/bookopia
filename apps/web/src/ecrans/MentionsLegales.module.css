@@ -48,3 +48,13 @@
     padding: var(--espace-3) var(--espace-4);
   }
 }
+
+/* Pages de lecture longue (politique de confidentialité) : listes alignées sur le texte. */
+.corps ul {
+  margin: 0 0 var(--espace-2);
+  padding-left: var(--espace-6);
+}
+
+.corps li {
+  margin-bottom: var(--espace-1);
+}

@@ -23,6 +23,7 @@ import {
   NouveauLivre,
 } from "./ecrans/NouveauLivre";
 import { MentionsLegales } from "./ecrans/MentionsLegales";
+import { PolitiqueConfidentialite } from "./ecrans/PolitiqueConfidentialite";
 import { type AvecSurcouche, useFocusDePage } from "./ecrans/focusDePage";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
@@ -184,6 +185,13 @@ export const routeur = createBrowserRouter([
         path: "/mentions-legales",
         handle: { titre: "Mentions légales" } satisfies AvecTitre,
         Component: MentionsLegales,
+      },
+      {
+        path: "/politique-de-confidentialite",
+        handle: {
+          titre: "Politique de confidentialité",
+        } satisfies AvecTitre,
+        Component: PolitiqueConfidentialite,
       },
       {
         path: "*",

@@ -3,7 +3,7 @@ import { Logo } from "./Logo";
 import styles from "./PiedDePage.module.css";
 
 // Pied des écrans publics : le logo, et les pages d'information que la loi demande d'atteindre
-// depuis le site. Chaque nouvelle page légale (confidentialité, accessibilité) s'ajoute ici.
+// depuis le site. Chaque nouvelle page légale (accessibilité) s'ajoute ici.
 export function PiedDePage() {
   return (
     <footer className={styles.pied}>
@@ -13,6 +13,11 @@ export function PiedDePage() {
           <li>
             <Link to="/mentions-legales" className={styles.lien}>
               Mentions légales
+            </Link>
+          </li>
+          <li>
+            <Link to="/politique-de-confidentialite" className={styles.lien}>
+              Politique de confidentialité
             </Link>
           </li>
         </ul>
