@@ -16,7 +16,7 @@ async function creerLivreAvecPhotos(page: Page) {
 
   await page.getByRole("button", { name: "Importer des photos" }).click();
   const fenetre = page.getByRole("dialog", { name: "Importer des photos" });
-  await fenetre.getByLabel(/Glissez vos photos ici/).setInputFiles(
+  await fenetre.getByLabel(/Depuis votre appareil/).setInputFiles(
     (
       [
         ["rouge", [200, 40, 40]],
@@ -105,7 +105,9 @@ test("le Créateur pose, recadre et vide des photos, et organise ses doubles pag
     bande.getByRole("button", { name: "Pages 6 et 7" }),
   ).toHaveAttribute("aria-current", "page");
 
-  await bande.getByRole("button", { name: "← Déplacer à gauche" }).click();
+  // Au clavier : Alt + flèche gauche ramène la copie au rang 2, elle reste la page courante.
+  await bande.getByRole("button", { name: "Pages 6 et 7" }).focus();
+  await page.keyboard.press("Alt+ArrowLeft");
   await expect(
     bande.getByRole("button", { name: "Pages 4 et 5" }),
   ).toHaveAttribute("aria-current", "page");
@@ -142,14 +144,11 @@ test("le Créateur change le gabarit d'une double page, après avertissement", a
     name: /^Cadre \d+, photo posée/,
   });
   await expect(cadresRemplis.first()).toBeVisible();
-  const bande = page.getByRole("navigation", {
-    name: "Doubles pages du livre",
-  });
   const choix = page.getByRole("dialog", { name: "Changer le gabarit" });
   const autreGabarit = choix.locator("button:not([disabled])").first();
 
   // La page porte une photo : on prévient, « Garder l'actuel » ne retire rien.
-  await bande.getByRole("button", { name: "Changer le gabarit" }).click();
+  await page.getByRole("button", { name: "Changer le gabarit" }).click();
   await expect(choix.getByText("Actuel")).toBeVisible();
   const nom = await autreGabarit.getAttribute("aria-label");
   await autreGabarit.click();
@@ -176,7 +175,7 @@ test("le Créateur change le gabarit d'une double page, après avertissement", a
   await expect(
     page.getByRole("button", { name: "Supprimer « rouge.png »" }),
   ).toBeVisible();
-  await bande.getByRole("button", { name: "Changer le gabarit" }).click();
+  await page.getByRole("button", { name: "Changer le gabarit" }).click();
   await expect(
     choix.getByRole("button", { name: `${nom}, gabarit actuel` }),
   ).toBeDisabled();

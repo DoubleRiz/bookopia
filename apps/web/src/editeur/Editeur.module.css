@@ -118,6 +118,10 @@
     grid-template-columns: 240px minmax(0, 1fr) 300px;
   }
 
+  .espaceTravail.reserveReplieeEspace {
+    grid-template-columns: 240px minmax(0, 1fr) 56px;
+  }
+
   .espaceTravail > .bande {
     order: 0;
   }
@@ -138,6 +142,7 @@
 
 /* Plan de travail lavande, pleine hauteur ; la double page courante y est posée en élévation. */
 .planDeTravail {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--espace-6);
@@ -184,6 +189,39 @@
   width: 100%;
   max-width: 960px;
   margin: 0 auto;
+}
+
+/* Le gabarit : un bouton icône flottant dans l'angle haut droit du plan de travail lilas. */
+.boutonGabarit {
+  position: absolute;
+  top: var(--espace-4);
+  right: var(--espace-4);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 50%;
+  background: var(--couleur-fond);
+  color: var(--couleur-encre);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  cursor: pointer;
+}
+
+.boutonGabarit:hover:not(:disabled) {
+  background: var(--couleur-lavande-pale);
+}
+
+.boutonGabarit:focus-visible {
+  outline: 2px solid var(--couleur-cta);
+  outline-offset: 2px;
+}
+
+.boutonGabarit:disabled {
+  cursor: default;
+  opacity: 0.4;
 }
 
 .invitation {
@@ -341,10 +379,96 @@
   }
 }
 
+.contenuReserve {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espace-4);
+}
+
+.contenuReserve[hidden] {
+  display: none;
+}
+
+.importerReserve {
+  gap: var(--espace-2);
+  align-self: stretch;
+}
+
 .enteteReserve {
+  margin: 0;
+}
+
+.basculeReserve {
   display: flex;
   align-items: baseline;
   gap: var(--espace-3);
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.basculeReserve:focus-visible {
+  outline: 2px solid var(--couleur-cta);
+  outline-offset: 2px;
+}
+
+/* Le chevron : vers le bas quand la réserve est dépliée, vers la droite quand elle est repliée. */
+.chevronReserve {
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg);
+}
+
+.reserveRepliee .chevronReserve {
+  transform: rotate(-45deg);
+}
+
+/* Rail replié sur grand écran : seul le chevron reste, la place revient au plan de travail. */
+@media (width >= 1100px) {
+  .reserveRepliee {
+    padding-inline: var(--espace-2);
+  }
+
+  .reserveRepliee .basculeReserve {
+    justify-content: center;
+  }
+
+  .reserveRepliee .titreReserve,
+  .reserveRepliee .compte {
+    display: none;
+  }
+}
+
+/* Import en icône seule, réserve repliée : même pastille que le bouton de gabarit. */
+.importerRepliee {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--couleur-bordure);
+  border-radius: 50%;
+  background: var(--couleur-fond);
+  color: var(--couleur-encre);
+  cursor: pointer;
+}
+
+.importerRepliee:hover {
+  background: var(--couleur-lavande-pale);
+}
+
+.importerRepliee:focus-visible {
+  outline: 2px solid var(--couleur-cta);
+  outline-offset: 2px;
 }
 
 .compte {
@@ -544,7 +668,7 @@
   }
 }
 
-/* Choix de gabarit : une carte par gabarit de la famille, l'actuel marqué et non choisissable. */
+/* Choix de gabarit : une carte par gabarit du catalogue, l'actuel marqué et non choisissable. */
 .gabarits {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -707,4 +831,14 @@
 
 .annonceSaisie:empty {
   display: none;
+}
+
+/* Choix de gabarit : deux groupes, avec et sans texte. */
+.groupeGabarits + .groupeGabarits {
+  margin-top: var(--espace-6);
+}
+
+.titreGroupeGabarits {
+  margin: 0 0 var(--espace-3);
+  font-size: 1rem;
 }

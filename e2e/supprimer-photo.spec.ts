@@ -22,7 +22,7 @@ test("le Créateur supprime une photo de la réserve, puis la réimporte", async
     await page.getByRole("button", { name: "Importer des photos" }).click();
     const fenetre = page.getByRole("dialog", { name: "Importer des photos" });
     await fenetre
-      .getByLabel(/Glissez vos photos ici/)
+      .getByLabel(/Depuis votre appareil/)
       .setInputFiles([
         { name: "vert.png", mimeType: "image/png", buffer: vert },
       ]);

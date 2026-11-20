@@ -29,7 +29,7 @@ test("le Créateur compose son livre, puis le recompose après confirmation", as
 
   await page.getByRole("button", { name: "Importer des photos" }).click();
   const fenetre = page.getByRole("dialog", { name: "Importer des photos" });
-  await fenetre.getByLabel(/Glissez vos photos ici/).setInputFiles(
+  await fenetre.getByLabel(/Depuis votre appareil/).setInputFiles(
     [
       [200, 40, 40],
       [40, 160, 60],

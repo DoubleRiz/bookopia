@@ -98,9 +98,9 @@ async function compterLignesDeTexte(pdf: Uint8Array): Promise<number> {
 }
 
 describe("le catalogue du seed", () => {
-  it("contient les gabarits (11 intérieurs, couverture, quatrième) et 4 thèmes", () => {
-    // 11 intérieurs, puis la définition partagée des couvertures et celle des quatrièmes.
-    expect(gabarits).toHaveLength(13);
+  it("contient les gabarits (16 intérieurs, couverture, quatrième) et 4 thèmes", () => {
+    // 11 intérieurs et 5 miroirs, puis la définition partagée des couvertures et celle des quatrièmes.
+    expect(gabarits).toHaveLength(18);
     expect(themes.map(({ nom }) => nom)).toEqual([
       "Classique",
       "Moderne",
