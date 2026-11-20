@@ -37,7 +37,9 @@ select set_eq(
     'changer_theme(uuid,uuid)',
     'segments_texte_valides(jsonb)',
     'contenu_texte_valide(jsonb)',
-    'placer_cadre_texte(uuid,numeric,numeric,numeric,numeric)'
+    'placer_cadre_texte(uuid,numeric,numeric,numeric,numeric)',
+    'supprimer_mon_compte()',
+    'lister_fichiers_orphelins()'
   ],
   'authenticated n''exécute que la liste blanche'
 );
