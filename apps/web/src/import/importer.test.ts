@@ -288,6 +288,46 @@ describe("importer, plafond de photos", () => {
     expect(bilan.importees).toBe(2);
   });
 
+  it("après un refus de la base, plus rien n'est préparé", async () => {
+    const preparees: string[] = [];
+    let signalerRefus = () => {};
+    const refusDeA = new Promise<void>((resolve) => {
+      signalerRefus = resolve;
+    });
+    const dep = dependances({
+      preparer: async (f) => {
+        preparees.push(f.name);
+        return preparee();
+      },
+      envoyer: async (photo) => {
+        if (photo.nomFichier === "a") {
+          signalerRefus();
+          throw new ErreurPlafond();
+        }
+      },
+    });
+    // « b » et « c » n'arrivent qu'après le refus de « a » par la base (autre onglet).
+    const apresRefus = (nom: string): Source => ({
+      nom,
+      obtenir: async () => {
+        await refusDeA;
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return new File([nom], nom, { type: "image/jpeg" });
+      },
+    });
+    const bilan = await importer(
+      [fichier("a"), apresRefus("b"), apresRefus("c")],
+      dep,
+    );
+    expect(preparees).toEqual(["a"]);
+    expect(bilan.importees).toBe(0);
+    expect(bilan.echecs.map((e) => e.raison)).toEqual([
+      "plafond",
+      "plafond",
+      "plafond",
+    ]);
+  });
+
   it("un échec d'envoi rend sa place", async () => {
     let signalerEchec = () => {};
     const echecDeA = new Promise<void>((resolve) => {

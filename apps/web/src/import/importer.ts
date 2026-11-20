@@ -150,7 +150,9 @@ export async function importer(
       });
     } catch (erreur) {
       if (erreur instanceof ErreurPlafond) {
-        // La base a refusé : la place n'existait pas, rien à rendre.
+        // La base a refusé : le livre est plein. Les fichiers suivants finissent en plafond
+        // sans être préparés ni déposés.
+        places = 0;
         avancement.echecs.push({ nom: fichier.name, raison: "plafond" });
         return;
       }
