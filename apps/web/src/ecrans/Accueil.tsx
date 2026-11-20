@@ -4,6 +4,7 @@ import { listerModelesPublics } from "../api/catalogue";
 import { ErreurNonAuthentifie } from "../api/client";
 import { LienBouton } from "../composants/Bouton";
 import { Logo } from "../composants/Logo";
+import { PiedDePage } from "../composants/PiedDePage";
 import livreExemple1x from "../assets/accueil/livre-exemple-250.webp";
 import livreExemple2x from "../assets/accueil/livre-exemple-500.webp";
 import ouvertGenereux1x from "../assets/accueil/ouvert-genereux-220.webp";
@@ -289,9 +290,7 @@ export function Accueil() {
         </section>
       </main>
 
-      <footer className={styles.pied}>
-        <Logo vers="/" />
-      </footer>
+      <PiedDePage />
     </div>
   );
 }

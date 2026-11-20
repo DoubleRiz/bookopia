@@ -22,6 +22,7 @@ import {
   chargerNouveauLivre,
   NouveauLivre,
 } from "./ecrans/NouveauLivre";
+import { MentionsLegales } from "./ecrans/MentionsLegales";
 import { type AvecSurcouche, useFocusDePage } from "./ecrans/focusDePage";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
@@ -178,6 +179,11 @@ export const routeur = createBrowserRouter([
             ],
           },
         ],
+      },
+      {
+        path: "/mentions-legales",
+        handle: { titre: "Mentions légales" } satisfies AvecTitre,
+        Component: MentionsLegales,
       },
       {
         path: "*",

@@ -8,6 +8,8 @@ for (const adresse of ["/", "/connexion", "/une-adresse-qui-n-existe-pas"]) {
     await page.goto(adresse);
     const lien = page.getByRole("link", { name: "Aller au contenu" });
 
+    // L'accueil attend son chargement avant d'afficher quoi que ce soit : un Tab trop tôt se perdrait.
+    await expect(page.locator("main")).toBeVisible();
     // À la souris, il reste hors de la fenêtre.
     await expect(lien).not.toBeInViewport();
 

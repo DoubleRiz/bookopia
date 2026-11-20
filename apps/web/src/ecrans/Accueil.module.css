@@ -442,12 +442,6 @@
   text-wrap: pretty;
 }
 
-.pied {
-  display: flex;
-  align-items: center;
-  padding: 28px 96px;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .carteModele {
     transition: none;
@@ -470,8 +464,7 @@
 
   .etapes,
   .catalogue,
-  .engagements,
-  .pied {
+  .engagements {
     padding-right: var(--espace-12);
     padding-left: var(--espace-12);
   }
@@ -497,8 +490,7 @@
 
   .etapes,
   .catalogue,
-  .engagements,
-  .pied {
+  .engagements {
     padding-right: var(--espace-4);
     padding-left: var(--espace-4);
   }
