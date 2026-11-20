@@ -66,7 +66,7 @@ test("le navigateur et le module partagé coupent les lignes au même endroit", 
   page,
 }) => {
   // Sous Chromium Linux, le navigateur coupe plus tôt que le module partagé pour quatre polices.
-  // Écart suivi dans Notion : https://app.notion.com/p/416a0f33d5288167ad3bf7c7b522dcea
+  // Écart suivi dans Notion : https://app.notion.com/p/7a11b961f5818306ab57816a9ce085c2
   test.fixme(
     process.platform === "linux",
     "coupures différentes du PDF sous Chromium Linux",
