@@ -11,6 +11,7 @@ import {
 } from "react-router";
 import { renommerProjetSchema } from "@bookopia/shared";
 import { ErreurBase } from "../api/client";
+import { purgerOrphelins } from "../api/compte";
 import {
   listerProjets,
   type ResumeProjet,
@@ -31,9 +32,14 @@ import {
 } from "../session";
 import styles from "./MesLivres.module.css";
 import { NouveauLivreEnChargement } from "./NouveauLivre";
+import { ModaleSupprimerCompte } from "./SupprimerCompte";
 
 export async function chargerMesLivres({ request }: LoaderFunctionArgs) {
-  return sousSession(request, listerProjets);
+  const projets = await sousSession(request, listerProjets);
+  // Session confirmée : on retire en arrière-plan les fichiers abandonnés (BK-126), sans attendre.
+  // Une seule fois par chargement de page, voir purgerOrphelins.
+  void purgerOrphelins();
+  return projets;
 }
 
 type ResultatAction = ResultatFormulaire & { reussi?: true };
@@ -239,6 +245,7 @@ export function MesLivres() {
   const navigate = useNavigate();
   const navigation = useNavigation();
   const [demande, setDemande] = useState<Demande | null>(null);
+  const [suppressionCompte, setSuppressionCompte] = useState(false);
   // Stable : la modale s'en sert dans un effet.
   const fermer = useCallback(() => setDemande(null), []);
 
@@ -287,6 +294,24 @@ export function MesLivres() {
       )}
       {demande?.action === "supprimer" && (
         <ModaleSupprimer projet={demande.projet} onFermer={fermer} />
+      )}
+      <section className={styles.compteZone} aria-labelledby="titre-compte">
+        <h2 id="titre-compte" className={styles.compteTitre}>
+          Mon compte
+        </h2>
+        <p className={styles.compteTexte}>
+          Supprimer votre compte efface aussi tous vos livres et leurs fichiers.
+        </p>
+        <Bouton
+          variante="secondaire"
+          taille="petit"
+          onClick={() => setSuppressionCompte(true)}
+        >
+          Supprimer mon compte
+        </Bouton>
+      </section>
+      {suppressionCompte && (
+        <ModaleSupprimerCompte onFermer={() => setSuppressionCompte(false)} />
       )}
       {nouveauEnChargement ? <NouveauLivreEnChargement /> : <Outlet />}
     </>
