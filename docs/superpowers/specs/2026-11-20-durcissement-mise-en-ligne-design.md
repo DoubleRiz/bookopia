@@ -85,7 +85,7 @@ L'adresse du front en ligne n'existe qu'après BK-098 : en attendant, les critè
 
 1. `ajoute l'audit des dépendances à la CI` et `configure Dependabot` (BK-122). Preuve : audit vert localement, CI verte.
 2. `durcit la configuration locale d'Auth` (BK-119) : `config.toml`, puis `supabase db reset` / `supabase test db` et les e2e (inscription avec un mot de passe conforme).
-3. `sert les en-têtes de sécurité du front` (BK-121) : fichier d'hébergeur selon la décision 1. Preuve : `npm run build -w apps/web` puis `vite preview`, en-têtes lus au `curl -I`, parcours (connexion, import local, export) sans violation dans la console ; Google Photos sans compte Google de test : à essayer à la main en ligne.
+3. `sert les en-têtes de sécurité du front` (BK-121) : fichier d'hébergeur selon la décision 1. Preuve : `npm run build -w apps/web`, le build servi avec les en-têtes de `vercel.json` (`vite preview` ne les lit pas : un petit serveur qui les rejoue, ou `vercel dev`) puis `curl -I`, parcours (connexion, import local, export) sans violation dans la console ; Google Photos sans compte Google de test : à essayer à la main en ligne.
 4. Liste des réglages Auth à poser sur le projet hébergé, dans la PR.
 
 ## Non traité (à reporter après BK-098)

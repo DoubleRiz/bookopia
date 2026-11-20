@@ -35,10 +35,9 @@ describe("en-têtes de sécurité du front (BK-121)", () => {
   it("part d'une base fermée et limite les connexions à Supabase et Google", () => {
     expect(directive("default-src")).toBe("default-src 'self'");
     expect(directive("object-src")).toBe("object-src 'none'");
-    const connexions = directive("connect-src");
-    expect(connexions).toContain("https://*.supabase.co");
-    expect(connexions).toContain("https://photospicker.googleapis.com");
-    expect(connexions).not.toContain("*  ");
+    expect(directive("connect-src")).toBe(
+      "connect-src 'self' https://*.supabase.co https://accounts.google.com https://photospicker.googleapis.com https://*.googleusercontent.com",
+    );
   });
 
   it("sert Referrer-Policy et nosniff", () => {
