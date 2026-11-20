@@ -28,6 +28,7 @@ import {
   chargerNouveauLivre,
   NouveauLivre,
 } from "./ecrans/NouveauLivre";
+import { type AvecSurcouche, useFocusDePage } from "./ecrans/focusDePage";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
 
@@ -36,9 +37,11 @@ type DonneesExport = Awaited<ReturnType<typeof chargerExport>>;
 // Lu par EcranCreateur : l'écran occupe toute la fenêtre, sans l'en-tête.
 type PleinCadre = { pleinCadre: boolean };
 
-// Racine sans enveloppe : elle ne fait que tenir le titre de l'onglet à jour (handle.titre de chaque route).
+// Racine sans enveloppe : elle tient le titre de l'onglet à jour (handle.titre de chaque route)
+// et rend le focus au titre de l'écran à chaque navigation.
 function Racine() {
   useTitreDePage();
+  useFocusDePage();
   return <Outlet />;
 }
 
@@ -107,7 +110,10 @@ export const routeur = createBrowserRouter([
                   // S1, surcouche sur E4 : la liste reste affichée dessous.
                   {
                     path: "nouveau",
-                    handle: { titre: "Nouveau livre" } satisfies AvecTitre,
+                    handle: {
+                      titre: "Nouveau livre",
+                      surcouche: true,
+                    } satisfies AvecTitre & AvecSurcouche,
                     loader: chargerNouveauLivre,
                     action: actionNouveauLivre,
                     Component: NouveauLivre,
@@ -132,7 +138,8 @@ export const routeur = createBrowserRouter([
                     path: "import",
                     handle: {
                       titre: "Importer des photos",
-                    } satisfies AvecTitre,
+                      surcouche: true,
+                    } satisfies AvecTitre & AvecSurcouche,
                     loader: chargerImport,
                     Component: ImportPhotos,
                   },
