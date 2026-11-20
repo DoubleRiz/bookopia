@@ -4,7 +4,7 @@ Lot L3 · Import. Étapes 24 (envoi dans Storage puis ligne `photo`), 25 (envoi 
 
 ## Objectif
 
-Le Créateur ouvre un livre, importe jusqu'à 300 photos, et les retrouve en vignettes dans la réserve du livre.
+Le Créateur ouvre un livre, importe jusqu'à 100 photos (plafond par livre, voir [la revue des RLS](2026-11-20-revue-rls-design.md)), et les retrouve en vignettes dans la réserve du livre.
 
 ## Décisions
 
@@ -106,4 +106,4 @@ L'état « Interrompu » se résume à la reprise par l'empreinte (voir Décisio
 | Vitest | `tailleOriginal` : jamais d'agrandissement, cadre le plus exigeant retenu, photo portrait et paysage, fond perdu compris. `filtrer` : taille, types, SVG et HEIC refusés. `importer` avec `preparer` et `envoyer` simulés : doublons du livre et de la sélection, échec isolé, décompte, trois au plus en même temps. Écrits avant le code. |
 | pgTAP | Rien de nouveau : l'insertion dans le livre d'un autre et l'unicité sont couvertes. Relancés. |
 | Playwright | Créer un livre, arriver sur `/livre/:id`, importer deux images de test (dont une en double), voir une vignette et « 1 déjà dans le livre ». |
-| Manuel | Safari : vignette en JPEG si le WebP n'est pas encodé. Import de 300 photos : mémoire stable, interface utilisable. Fermer l'onglet pendant l'envoi : alerte, puis reprise par resélection. |
+| Manuel | Safari : vignette en JPEG si le WebP n'est pas encodé. Import de 100 photos : mémoire stable, interface utilisable. Fermer l'onglet pendant l'envoi : alerte, puis reprise par resélection. |

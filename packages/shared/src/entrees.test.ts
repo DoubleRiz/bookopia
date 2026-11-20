@@ -6,6 +6,7 @@ import {
   deplacerDoublePageSchema,
   insererDoublePageSchema,
   inscriptionSchema,
+  PHOTOS_PAR_LIVRE_MAX,
   poserPhotoSchema,
   renommerProjetSchema,
 } from "./entrees";
@@ -132,5 +133,13 @@ describe("connexionSchema", () => {
     expect(
       accepte(connexionSchema)({ email: "bob@exemple.fr", motDePasse: "" }),
     ).toBe(false);
+  });
+});
+
+describe("PHOTOS_PAR_LIVRE_MAX", () => {
+  // La même valeur est écrite dans le trigger verifier_plafond_photos
+  // (supabase/migrations/20261120100100_plafond_photos.sql) : changer l'une, c'est changer l'autre.
+  it("vaut le plafond de la base", () => {
+    expect(PHOTOS_PAR_LIVRE_MAX).toBe(100);
   });
 });

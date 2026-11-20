@@ -60,7 +60,7 @@ function dessiner(image: ImageBitmap, largeur: number, hauteur: number) {
   return canvas;
 }
 
-// Un canvas garde sa mémoire tant qu'il n'est pas ramené à zéro : à 300 photos, ça compte.
+// Un canvas garde sa mémoire tant qu'il n'est pas ramené à zéro : à 100 photos, ça compte.
 function liberer(canvas: HTMLCanvasElement) {
   canvas.width = 0;
   canvas.height = 0;

@@ -1,3 +1,4 @@
+import { PHOTOS_PAR_LIVRE_MAX } from "@bookopia/shared";
 import { ErreurNonAuthentifie } from "../api/client";
 import { filtrer } from "./filtrer";
 import { ErreurGoogleNonAutorise } from "./google/selecteur";
@@ -35,6 +36,15 @@ export class ErreurDoublon extends Error {
   }
 }
 
+// Le trigger de la base a refusé la ligne : le livre est plein. Arrive quand un autre onglet
+// a rempli le livre pendant cet import ; les fichiers déposés ont déjà été supprimés.
+export class ErreurPlafond extends Error {
+  constructor() {
+    super("Livre complet");
+    this.name = "ErreurPlafond";
+  }
+}
+
 export type DependancesImport = {
   lireEmpreintes: () => Promise<Set<string>>;
   calculerEmpreinte: (fichier: File) => Promise<string>;
@@ -44,7 +54,8 @@ export type DependancesImport = {
 
 export type Echec = {
   nom: string;
-  raison: "illisible" | "envoi" | "telechargement" | "format" | "taille";
+  raison:
+    "illisible" | "envoi" | "telechargement" | "format" | "taille" | "plafond";
 };
 
 export type Avancement = {
@@ -80,6 +91,9 @@ export async function importer(
   // Lues une fois : la reprise d'un import interrompu saute ainsi ce qui est déjà arrivé.
   // Chaque empreinte y entre avant la préparation, ce qui écarte aussi les doublons de la sélection.
   const empreintes = await dependances.lireEmpreintes();
+  // Chaque fichier nouveau réserve une place avant sa préparation, et la rend s'il échoue.
+  // Aucun await entre la lecture et la réservation : deux ouvriers ne prennent pas la même place.
+  let places = PHOTOS_PAR_LIVRE_MAX - empreintes.size;
   const file = [...sources];
   let arrete = false;
 
@@ -113,11 +127,17 @@ export async function importer(
       return;
     }
     empreintes.add(empreinte);
+    if (places <= 0) {
+      avancement.echecs.push({ nom: fichier.name, raison: "plafond" });
+      return;
+    }
+    places -= 1;
 
     let photo: PhotoPreparee;
     try {
       photo = await dependances.preparer(fichier);
     } catch {
+      places += 1;
       avancement.echecs.push({ nom: fichier.name, raison: "illisible" });
       return;
     }
@@ -129,10 +149,19 @@ export async function importer(
         empreinte,
       });
     } catch (erreur) {
+      if (erreur instanceof ErreurPlafond) {
+        // La base a refusé : le livre est plein. Les fichiers suivants finissent en plafond
+        // sans être préparés ni déposés.
+        places = 0;
+        avancement.echecs.push({ nom: fichier.name, raison: "plafond" });
+        return;
+      }
       if (erreur instanceof ErreurDoublon) {
+        // La même photo est arrivée par un autre onglet : elle occupe la place réservée.
         avancement.doublons += 1;
         return;
       }
+      places += 1;
       if (erreur instanceof ErreurNonAuthentifie) {
         throw erreur;
       }
