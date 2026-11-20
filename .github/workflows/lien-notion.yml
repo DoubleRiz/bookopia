@@ -18,8 +18,11 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Chercher un lien Notion dans la description
-        # Les mises à jour de dépendances de Dependabot ne correspondent à aucune étape.
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        # Les mises à jour de Dependabot et les branches d'outillage (chore/*) ne correspondent
+        # à aucune étape du suivi.
+        if: >-
+          github.event.pull_request.user.login != 'dependabot[bot]' &&
+          !startsWith(github.event.pull_request.head.ref, 'chore/')
         # La description passe par une variable d'environnement, jamais interpolée dans le
         # script : un texte de PR ne doit pas pouvoir s'exécuter.
         env:
