@@ -414,6 +414,7 @@ function CibleTexte({
         y={emplacement.y}
         width={emplacement.largeur}
         height={emplacement.hauteur}
+        data-emplacement={emplacement.id}
         tabIndex={0}
         role="button"
         aria-pressed={selectionne}
