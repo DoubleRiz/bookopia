@@ -1,3 +1,4 @@
+import { PHOTOS_PAR_LIVRE_MAX } from "@bookopia/shared";
 import { type DragEvent, useEffect, useId, useState } from "react";
 import {
   type LoaderFunctionArgs,
@@ -47,6 +48,7 @@ const RAISONS_ECHEC: Record<Echec["raison"], string> = {
   telechargement: "Téléchargement impossible",
   format: RAISONS_REFUS.format,
   taille: RAISONS_REFUS.taille,
+  plafond: `Livre complet (${PHOTOS_PAR_LIVRE_MAX} photos)`,
 };
 
 function pluriel(nombre: number, singulier: string, plurielTexte: string) {

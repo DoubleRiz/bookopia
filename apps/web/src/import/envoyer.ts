@@ -6,7 +6,7 @@ import {
   deposerFichier,
   supprimerFichiers,
 } from "../api/photos";
-import { ErreurDoublon, type PhotoAEnvoyer } from "./importer";
+import { ErreurDoublon, ErreurPlafond, type PhotoAEnvoyer } from "./importer";
 
 // Code PostgreSQL de la violation d'unicité.
 const VIOLATION_UNICITE = "23505";
@@ -63,6 +63,10 @@ export function envoyeur(utilisateurId: string, projetId: string) {
       }
       if (erreur instanceof ErreurBase && erreur.code === VIOLATION_UNICITE) {
         throw new ErreurDoublon();
+      }
+      // Code levé par le trigger verifier_plafond_photos.
+      if (erreur instanceof ErreurBase && erreur.code === "plafond") {
+        throw new ErreurPlafond();
       }
       throw erreur;
     }
