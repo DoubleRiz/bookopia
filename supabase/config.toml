@@ -155,12 +155,13 @@ max_indexes = 5
 [auth]
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
-# in emails.
-site_url = "http://127.0.0.1:3000"
+# in emails. Local : le front de `npm run dev`. Sur le projet hébergé : l'adresse du front en ligne,
+# et elle seule.
+site_url = "http://localhost:5173"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["http://localhost:5173"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -182,6 +183,9 @@ enable_manual_linking = false
 minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
+# Laissé vide en local : les parcours e2e (e2e/*.spec.ts) créent leurs comptes avec un mot de passe
+# sans majuscule ni chiffre. Sur le projet hébergé : `lower_upper_letters_digits` (voir la spec
+# docs/superpowers/specs/2026-11-20-durcissement-mise-en-ligne-design.md).
 password_requirements = ""
 
 # Configure passkey sign-ins.
@@ -223,9 +227,11 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
+# Désactivé en local (pas de boîte mail pour les comptes @bookopia.test des e2e) ; activé sur le
+# projet hébergé.
 enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
-secure_password_change = false
+secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1s"
 # Number of characters used in the email OTP.
