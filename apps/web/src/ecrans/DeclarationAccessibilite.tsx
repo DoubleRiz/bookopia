@@ -49,8 +49,9 @@ export function DeclarationAccessibilite() {
           </p>
           <p>
             Deux critères n'ont pas encore été vérifiés : la compatibilité des
-            composants de l'éditeur avec un lecteur d'écran, et la validité du
-            code source. Le taux sera mis à jour quand ils le seront.
+            composants de l'import, de l'éditeur et de l'export avec un lecteur
+            d'écran, et la validité du code source. Le taux sera mis à jour
+            quand ils le seront.
           </p>
         </section>
 
@@ -70,9 +71,10 @@ export function DeclarationAccessibilite() {
             l'imprimeur, fait des photos personnelles du Créateur. Le rendre
             accessible demanderait de décrire chaque photo, ce que seul le
             Créateur peut faire : la charge serait disproportionnée pour un
-            fichier qui n'est pas fait pour être lu à l'écran. Le contenu du
-            livre, textes compris, se consulte dans l'éditeur, double page par
-            double page.
+            fichier qui n'est pas fait pour être lu à l'écran. Les textes du
+            livre et l'ordre de ses doubles pages se consultent dans l'éditeur ;
+            les photos y seront décrites quand la non-conformité ci-dessus sera
+            corrigée.
           </p>
           <h3>Contenus non soumis à l'obligation d'accessibilité</h3>
           <p>Aucun.</p>

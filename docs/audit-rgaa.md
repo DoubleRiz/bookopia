@@ -64,7 +64,7 @@ Ce qui n'a pas été fait :
 
 | Critère | Page | Contenu | Justification |
 |---|---|---|---|
-| 13.3, 13.4 | X | Le PDF exporté | Charge disproportionnée. C'est un fichier d'impression, destiné à l'imprimeur, fait des photos personnelles du Créateur. Le rendre accessible demanderait de baliser le PDF (pdf-lib ne le permet pas) et de faire décrire chaque photo au Créateur. Une version accessible à côté se heurte au même obstacle : sans description des photos, elle ne donne pas la même information. Alternative : le contenu du livre se consulte dans l'éditeur, double page par double page, textes compris |
+| 13.3, 13.4 | X | Le PDF exporté | Charge disproportionnée. C'est un fichier d'impression, destiné à l'imprimeur, fait des photos personnelles du Créateur. Le rendre accessible demanderait de baliser le PDF (pdf-lib ne le permet pas) et de faire décrire chaque photo au Créateur. Une version accessible à côté se heurte au même obstacle : sans description des photos, elle ne donne pas la même information. Alternative partielle : les textes et l'ordre des doubles pages se consultent dans l'éditeur ; les photos n'y seront décrites qu'une fois 1.3 corrigé |
 
 ## Corrections de BK-135
 
