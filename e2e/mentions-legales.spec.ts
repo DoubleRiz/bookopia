@@ -6,7 +6,7 @@ test("le Visiteur lit les mentions légales depuis le pied de l'accueil", async 
 }) => {
   await page.goto("/");
   await page
-    .getByRole("navigation", { name: "Informations légales" })
+    .getByRole("navigation", { name: "Informations sur le site" })
     .getByRole("link", { name: "Mentions légales" })
     .click();
 

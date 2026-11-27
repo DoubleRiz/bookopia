@@ -7,7 +7,7 @@ test("le Visiteur lit la politique de confidentialité depuis le pied de l'accue
 }) => {
   await page.goto("/");
   await page
-    .getByRole("navigation", { name: "Informations légales" })
+    .getByRole("navigation", { name: "Informations sur le site" })
     .getByRole("link", { name: "Politique de confidentialité" })
     .click();
 

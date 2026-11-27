@@ -15,6 +15,7 @@ import {
 } from "../api/authentification";
 import { Bouton } from "../composants/Bouton";
 import { Logo } from "../composants/Logo";
+import { PiedDePage } from "../composants/PiedDePage";
 import { Squelette } from "../composants/Squelette";
 import { sousSession } from "../session";
 import styles from "./EcranCreateur.module.css";
@@ -67,7 +68,8 @@ function Entete({
 }
 
 // Enveloppe des écrans du Créateur : en-tête commun, contenu de l'écran dessous.
-// Les écrans plein cadre (éditeur, export) portent leur propre barre : pas d'en-tête commun, pas de marges.
+// Les écrans plein cadre (éditeur, export) portent leur propre barre : pas d'en-tête commun, pas de marges,
+// pas de pied de page. Les autres gardent le pied de page des écrans publics, qui mène au plan du site.
 export function EcranCreateur() {
   const utilisateur = useLoaderData<typeof chargerEcranCreateur>();
   const pleinCadre = useMatches().some(
@@ -80,6 +82,7 @@ export function EcranCreateur() {
       <main className={pleinCadre ? styles.pleinCadre : styles.corps}>
         <Outlet />
       </main>
+      {!pleinCadre && <PiedDePage />}
     </div>
   );
 }
@@ -99,6 +102,7 @@ export function EcranCreateurProvisoire({
       <main className={styles.corps} aria-busy={enChargement || undefined}>
         {children}
       </main>
+      <PiedDePage />
     </div>
   );
 }

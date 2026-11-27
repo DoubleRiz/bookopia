@@ -23,7 +23,9 @@ test("après une navigation, le focus est sur le titre principal du nouvel écra
 // le pied d'une autre s'afficherait vers le bas, son titre focalisé mais hors de la vue.
 test("un nouvel écran s'ouvre en haut, son titre visible", async ({ page }) => {
   await page.goto("/");
-  const pied = page.getByRole("navigation", { name: "Informations légales" });
+  const pied = page.getByRole("navigation", {
+    name: "Informations sur le site",
+  });
   await pied.scrollIntoViewIfNeeded();
   await pied
     .getByRole("link", { name: "Politique de confidentialité" })

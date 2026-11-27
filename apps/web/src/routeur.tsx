@@ -25,6 +25,7 @@ import {
 } from "./ecrans/NouveauLivre";
 import { MentionsLegales } from "./ecrans/MentionsLegales";
 import { PolitiqueConfidentialite } from "./ecrans/PolitiqueConfidentialite";
+import { PlanDuSite } from "./ecrans/PlanDuSite";
 import { type AvecSurcouche, useFocusDePage } from "./ecrans/focusDePage";
 import { revaliderSaufPageCourante } from "./ecrans/revalidation";
 import { type AvecTitre, useTitreDePage } from "./ecrans/titreDePage";
@@ -198,6 +199,11 @@ export const routeur = createBrowserRouter([
         path: "/accessibilite",
         handle: { titre: "Déclaration d'accessibilité" } satisfies AvecTitre,
         Component: DeclarationAccessibilite,
+      },
+      {
+        path: "/plan-du-site",
+        handle: { titre: "Plan du site" } satisfies AvecTitre,
+        Component: PlanDuSite,
       },
       {
         path: "*",
