@@ -11,7 +11,7 @@
 
 .saisie {
   padding: 12px 14px;
-  border: 1px solid var(--couleur-bordure);
+  border: 1px solid var(--couleur-bordure-champ);
   border-radius: var(--rayon-champ);
   background: var(--couleur-fond);
   color: var(--couleur-encre);

@@ -15,24 +15,31 @@ describe("DeclarationAccessibilite", () => {
   it("annonce l'état de conformité et le taux mesuré par l'audit", () => {
     expect(page).toContain("partiellement conforme");
     expect(page).toContain("RGAA, version 4.1.2");
-    expect(page).toContain("89,5 %");
+    expect(page).toContain("98,3 %");
   });
 
-  it("liste les non-conformités relevées par l'audit", () => {
-    for (const defaut of [
-      "nom de fichier",
-      "bordure des champs",
-      "320 pixels",
-      "PDF exporté",
-    ]) {
-      expect(page).toContain(defaut);
-    }
+  it("liste la non-conformité restante de l'audit", () => {
+    const nonConformites = page.slice(
+      page.indexOf("<h3>Non-conformités</h3>"),
+      page.indexOf("Dérogations pour charge disproportionnée"),
+    );
+    expect(nonConformites).toContain("nom de fichier");
+    expect(nonConformites.match(/<li>/g)).toHaveLength(1);
+  });
+
+  // Le PDF exporté relève d'une dérogation : il est déclaré à part, avec sa justification.
+  it("déclare la dérogation du PDF exporté et sa justification", () => {
+    const derogations = page.slice(
+      page.indexOf("Dérogations pour charge disproportionnée"),
+      page.indexOf("Contenus non soumis"),
+    );
+    expect(derogations).toContain("PDF exporté");
+    expect(derogations).toContain("imprimeur");
+    expect(derogations).not.toContain("Aucune.");
   });
 
   it("dit ce qui n'a pas encore été vérifié", () => {
-    expect(page).toContain(
-      "Quatre critères n&#x27;ont pas encore été vérifiés",
-    );
+    expect(page).toContain("Deux critères n&#x27;ont pas encore été vérifiés");
     expect(page).toContain("lecteur d&#x27;écran");
   });
 

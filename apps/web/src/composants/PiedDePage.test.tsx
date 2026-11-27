@@ -9,7 +9,7 @@ it("mène aux mentions légales par une navigation nommée", () => {
       <PiedDePage />
     </MemoryRouter>,
   );
-  expect(html).toContain('aria-label="Informations légales"');
+  expect(html).toContain('aria-label="Informations sur le site"');
   expect(html).toContain('href="/mentions-legales"');
   expect(html).toContain("Mentions légales");
 });
@@ -23,4 +23,15 @@ it("mène à la déclaration d'accessibilité en annonçant l'état de conformit
   );
   expect(html).toContain('href="/accessibilite"');
   expect(html).toContain("Accessibilité : partiellement conforme");
+});
+
+// RGAA 12.1 : le plan du site, deuxième système de navigation, est atteint depuis chaque page.
+it("mène au plan du site", () => {
+  const html = renderToStaticMarkup(
+    <MemoryRouter>
+      <PiedDePage />
+    </MemoryRouter>,
+  );
+  expect(html).toContain('href="/plan-du-site"');
+  expect(html).toContain("Plan du site");
 });

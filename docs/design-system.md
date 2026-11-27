@@ -15,6 +15,9 @@ Ce document est la transcription de [`maquettes/Bookopia design system.dc.html`]
 | Texte corps | `#3E3856` |
 | Texte secondaire | `#5E5873` |
 | Bordure | `#CDBCEB` |
+| Bordure de champ | `#8A76BB` |
+
+La bordure sert aux filets et aux contours décoratifs. La bordure de champ délimite les composants d'interface sans autre limite visible (champs de saisie, cadres de l'éditeur) : 3:1 au moins sur blanc, sur la page crème et sur lavande pâle (RGAA 3.3).
 
 ### Principale · lavande
 
@@ -270,7 +273,7 @@ Cinq composants : **bannière** dans la page, **état vide**, **progression**, *
 
 ## 7 · Champs et sélection
 
-- **Champ** : 400 · 15, padding 12 × 14, contour 1 px `#CDBCEB`, rayon 10. Libellé au-dessus, 600 · 13.
+- **Champ** : 400 · 15, padding 12 × 14, contour 1 px `#8A76BB` (bordure de champ), rayon 10. Libellé au-dessus, 600 · 13.
 - **Focus** : contour `#7B52B8` + halo `0 0 0 3px #E2D5F8`.
 - **Erreur** : contour `#D43F5E` + halo `0 0 0 3px #FDEEF3`, message sous le champ en `#B0304F`, 12 px.
 
@@ -327,7 +330,7 @@ Quatre étapes toujours visibles en haut de l'espace de création : **Importer �
 - **Emplacement sélectionné** : contour 2 px ; barre d'outils flottante au-dessus (Recadrer, Remplacer, Vider).
 - **Cadre texte sélectionné** : contour 2 px et 8 poignées carrées de 10 px. Il se déplace en glissant ou aux flèches (pas de 2 mm), se redimensionne par les poignées ou Maj + flèches, s'accroche aux bords des autres cadres et reste dans les marges de 12 mm.
 - **Saisie d'un texte** : un clic sélectionne le cadre et affiche la barre de mise en forme, qui agit sur tout le texte. Un second clic ouvre l'éditeur à la place du dessin, dans la police et à l'échelle du livre, pour mettre en forme des passages. La barre remplace la barre du cadre, à la même hauteur : police, taille (6 à 72 pt), gras, italique, souligné, couleur (couleurs du thème en raccourci), alignement, liste à puces, « Revenir au thème ». Un bouton dont la variante de police n'existe pas est grisé. `Échap` ou un clic ailleurs referme la saisie (`Échap` garde le cadre sélectionné) ; « Le cadre est plein » s'annonce sous le cadre.
-- **Emplacement vide** : pointillé lavande, « Déposer une photo ».
+- **Emplacement vide** : pointillé en bordure de champ `#8A76BB`, « Déposer une photo ». Les cadres texte portent le même pointillé, plus fin.
 - **Navigateur de doubles pages** : bande en bas de l'éditeur. Double page active : anneau lavande. Glisser pour réordonner. Bouton `+` en fin de bande.
 - **Réserve** : photos gardées au tri, à glisser dans les emplacements. Une photo posée reste visible à 45 %.
 

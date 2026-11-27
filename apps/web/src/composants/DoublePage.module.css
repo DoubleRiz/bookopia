@@ -16,7 +16,7 @@
 
 .cadreVide {
   fill: var(--couleur-lavande-pale);
-  stroke: var(--couleur-bordure);
+  stroke: var(--couleur-bordure-champ);
   stroke-width: 0.6;
   stroke-dasharray: 2 1.5;
 }
@@ -42,8 +42,7 @@
 
 .cadreTexte {
   fill: none;
-  stroke: var(--couleur-pastille-neutre);
-  stroke-opacity: 0.5;
+  stroke: var(--couleur-bordure-champ);
   stroke-width: 0.4;
   stroke-dasharray: 2 1.5;
 }

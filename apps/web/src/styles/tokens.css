@@ -8,6 +8,9 @@
   --couleur-texte-corps: #3e3856;
   --couleur-texte-secondaire: #5e5873;
   --couleur-bordure: #cdbceb;
+  /* Limite des composants d'interface (champs, cadres de l'éditeur) : 3:1 au moins sur blanc,
+     sur la page crème et sur lavande pâle (RGAA 3.3). */
+  --couleur-bordure-champ: #8a76bb;
 
   /* Lavande */
   --couleur-lavande-pale: #f4effc;

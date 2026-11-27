@@ -185,6 +185,14 @@
   text-align: center;
 }
 
+/* Le bouton du gabarit flotte dans l'angle : l'aide s'en écarte des deux côtés, pour rester
+   centrée sans passer dessous (RGAA 10.11). Sous 600 px, le bouton rejoint le flux. */
+@media (width >= 600px) {
+  .aide {
+    padding-inline: var(--espace-8);
+  }
+}
+
 .pageCourante {
   width: 100%;
   max-width: 960px;
@@ -665,6 +673,13 @@
 @media (width < 600px) {
   .planDeTravail {
     padding: var(--espace-4);
+  }
+
+  /* Dans l'angle, le bouton recouvrirait l'aide, qui occupe toute la largeur (RGAA 10.11) :
+     il rejoint le flux, au-dessus de la double page, calé à droite. */
+  .boutonGabarit {
+    position: static;
+    margin: 0 0 var(--espace-3) auto;
   }
 
   .grille {
